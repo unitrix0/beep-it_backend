@@ -11,6 +11,13 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.1.2" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.1.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="WebLib">
+      <HintPath>..\..\..\WebLib\WebLib\bin\Debug\netcoreapp2.1\WebLib.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
