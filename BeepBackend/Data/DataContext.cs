@@ -11,7 +11,7 @@ namespace BeepBackend.Data
 
         public DbSet<Article> Articles { get; set; }
         public DbSet<ArticleUserSetting> ArticleUserSettings { get; set; }
-        //public DbSet<ArticleGroup> ArticleGroups { get; set; }
+        public DbSet<ArticleGroup> ArticleGroups { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -19,6 +19,11 @@ namespace BeepBackend.Data
                 .HasOne(us => us.Article)
                 .WithMany(a => a.ArticleUserSettings)
                 .HasForeignKey(us => us.ArticleFk);
+
+            modelBuilder.Entity<ArticleGroup>()
+                .HasMany(ag => ag.Articles)
+                .WithOne(a => a.ArticleGroup)
+                .HasForeignKey(a => a.ArticleGroupFk);
         }
     }
 }

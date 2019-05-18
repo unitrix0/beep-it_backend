@@ -13,7 +13,8 @@ namespace BeepBackend.Models
         public int TypicalLifetime { get; set; }
         public bool HasLifetime { get; set; }
 
-        //public ArticleGroup ArticleGroup { get; set; }
+        public int ArticleGroupFk { get; set; }
+        public ArticleGroup ArticleGroup { get; set; }
         public ICollection<ArticleUserSetting> ArticleUserSettings { get; set; }
     }
 }

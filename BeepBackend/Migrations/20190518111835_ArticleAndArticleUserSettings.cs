@@ -1,18 +1,35 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BeepBackend.Migrations
 {
-    public partial class ArticleUserSettings : Migration
+    public partial class ArticleAndArticleUserSettings : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Articles",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
+                    Name = table.Column<string>(nullable: true),
+                    Barcode = table.Column<string>(nullable: true),
+                    TypicalLifetime = table.Column<int>(nullable: false),
+                    HasLifetime = table.Column<bool>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Articles", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "ArticleUserSettings",
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     StockAmount = table.Column<int>(nullable: false),
                     KeppStockMode = table.Column<int>(nullable: false),
                     IsOpened = table.Column<bool>(nullable: false),
@@ -41,6 +58,9 @@ namespace BeepBackend.Migrations
         {
             migrationBuilder.DropTable(
                 name: "ArticleUserSettings");
+
+            migrationBuilder.DropTable(
+                name: "Articles");
         }
     }
 }

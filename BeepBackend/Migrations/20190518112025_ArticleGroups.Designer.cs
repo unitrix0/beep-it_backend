@@ -3,25 +3,31 @@ using System;
 using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20190516115811_ArticleUserSettings")]
-    partial class ArticleUserSettings
+    [Migration("20190518112025_ArticleGroups")]
+    partial class ArticleGroups
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.1.11-servicing-32099");
+                .HasAnnotation("ProductVersion", "2.1.11-servicing-32099")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128)
+                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("BeepBackend.Models.Article", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("ArticleGroupFk");
 
                     b.Property<string>("Barcode");
 
@@ -33,13 +39,29 @@ namespace BeepBackend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ArticleGroupFk");
+
                     b.ToTable("Articles");
+                });
+
+            modelBuilder.Entity("BeepBackend.Models.ArticleGroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Name");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ArticleGroups");
                 });
 
             modelBuilder.Entity("BeepBackend.Models.ArticleUserSetting", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<int>("AmountOnStock");
 
@@ -58,6 +80,14 @@ namespace BeepBackend.Migrations
                     b.HasIndex("ArticleFk");
 
                     b.ToTable("ArticleUserSettings");
+                });
+
+            modelBuilder.Entity("BeepBackend.Models.Article", b =>
+                {
+                    b.HasOne("BeepBackend.Models.ArticleGroup", "ArticleGroup")
+                        .WithMany("Articles")
+                        .HasForeignKey("ArticleGroupFk")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("BeepBackend.Models.ArticleUserSetting", b =>

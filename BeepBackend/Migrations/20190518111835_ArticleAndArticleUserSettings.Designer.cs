@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20190518111835_ArticleAndArticleUserSettings")]
+    partial class ArticleAndArticleUserSettings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,8 +27,6 @@ namespace BeepBackend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int>("ArticleGroupFk");
-
                     b.Property<string>("Barcode");
 
                     b.Property<bool>("HasLifetime");
@@ -37,22 +37,7 @@ namespace BeepBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ArticleGroupFk");
-
                     b.ToTable("Articles");
-                });
-
-            modelBuilder.Entity("BeepBackend.Models.ArticleGroup", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<string>("Name");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ArticleGroups");
                 });
 
             modelBuilder.Entity("BeepBackend.Models.ArticleUserSetting", b =>
@@ -78,14 +63,6 @@ namespace BeepBackend.Migrations
                     b.HasIndex("ArticleFk");
 
                     b.ToTable("ArticleUserSettings");
-                });
-
-            modelBuilder.Entity("BeepBackend.Models.Article", b =>
-                {
-                    b.HasOne("BeepBackend.Models.ArticleGroup", "ArticleGroup")
-                        .WithMany("Articles")
-                        .HasForeignKey("ArticleGroupFk")
-                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("BeepBackend.Models.ArticleUserSetting", b =>

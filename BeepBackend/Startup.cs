@@ -21,7 +21,7 @@ namespace BeepBackend
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<DataContext>(o =>
-                o.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+                o.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
