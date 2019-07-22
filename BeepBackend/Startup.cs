@@ -1,4 +1,6 @@
-﻿using BeepBackend.Data;
+﻿using System;
+using AutoMapper;
+using BeepBackend.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +25,7 @@ namespace BeepBackend
             services.AddDbContext<DataContext>(o =>
                 o.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

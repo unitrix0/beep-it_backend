@@ -16,5 +16,7 @@ namespace BeepBackend.Models
         public int ArticleGroupFk { get; set; }
         public ArticleGroup ArticleGroup { get; set; }
         public ICollection<ArticleUserSetting> ArticleUserSettings { get; set; }
+        public ICollection<ArticleStore> Stores { get; set; }
+        public ICollection<UserArticle> UserArticles { get; set; }
     }
 }

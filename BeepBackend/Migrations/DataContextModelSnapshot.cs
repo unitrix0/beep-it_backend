@@ -55,6 +55,19 @@ namespace BeepBackend.Migrations
                     b.ToTable("ArticleGroups");
                 });
 
+            modelBuilder.Entity("BeepBackend.Models.ArticleStore", b =>
+                {
+                    b.Property<int>("ArticleId");
+
+                    b.Property<int>("StoreId");
+
+                    b.HasKey("ArticleId", "StoreId");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("ArticleStore");
+                });
+
             modelBuilder.Entity("BeepBackend.Models.ArticleUserSetting", b =>
                 {
                     b.Property<int>("Id")
@@ -64,6 +77,8 @@ namespace BeepBackend.Migrations
                     b.Property<int>("AmountOnStock");
 
                     b.Property<int>("ArticleFk");
+
+                    b.Property<int>("EnvironmentFk");
 
                     b.Property<bool>("IsOpened");
 
@@ -77,7 +92,78 @@ namespace BeepBackend.Migrations
 
                     b.HasIndex("ArticleFk");
 
+                    b.HasIndex("EnvironmentFk");
+
                     b.ToTable("ArticleUserSettings");
+                });
+
+            modelBuilder.Entity("BeepBackend.Models.Environment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Name");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Environments");
+                });
+
+            modelBuilder.Entity("BeepBackend.Models.Store", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Name");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Stores");
+                });
+
+            modelBuilder.Entity("BeepBackend.Models.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Email");
+
+                    b.Property<byte[]>("PasswordHash");
+
+                    b.Property<byte[]>("PasswordSalt");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("BeepBackend.Models.UserArticle", b =>
+                {
+                    b.Property<int>("ArticleId");
+
+                    b.Property<int>("UserId");
+
+                    b.HasKey("ArticleId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserArticle");
+                });
+
+            modelBuilder.Entity("BeepBackend.Models.UserEnvironment", b =>
+                {
+                    b.Property<int>("EnvironmentId");
+
+                    b.Property<int>("UserId");
+
+                    b.HasKey("EnvironmentId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserEnvironment");
                 });
 
             modelBuilder.Entity("BeepBackend.Models.Article", b =>
@@ -88,11 +174,55 @@ namespace BeepBackend.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
+            modelBuilder.Entity("BeepBackend.Models.ArticleStore", b =>
+                {
+                    b.HasOne("BeepBackend.Models.Article", "Article")
+                        .WithMany("Stores")
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("BeepBackend.Models.Store", "Store")
+                        .WithMany("Articles")
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("BeepBackend.Models.ArticleUserSetting", b =>
                 {
                     b.HasOne("BeepBackend.Models.Article", "Article")
                         .WithMany("ArticleUserSettings")
                         .HasForeignKey("ArticleFk")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("BeepBackend.Models.Environment", "Environment")
+                        .WithMany("ArticleUserSettings")
+                        .HasForeignKey("EnvironmentFk")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("BeepBackend.Models.UserArticle", b =>
+                {
+                    b.HasOne("BeepBackend.Models.Article", "Article")
+                        .WithMany("UserArticles")
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("BeepBackend.Models.User", "User")
+                        .WithMany("UserArticles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("BeepBackend.Models.UserEnvironment", b =>
+                {
+                    b.HasOne("BeepBackend.Models.Environment", "Environment")
+                        .WithMany("Users")
+                        .HasForeignKey("EnvironmentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("BeepBackend.Models.User", "User")
+                        .WithMany("Environments")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618

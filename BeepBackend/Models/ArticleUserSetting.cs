@@ -13,5 +13,7 @@ namespace BeepBackend.Models
 
         public int ArticleFk { get; set; }
         public Article Article { get; set; }
+        public int EnvironmentFk { get; set; }
+        public Environment Environment { get; set; }
     }
 }
