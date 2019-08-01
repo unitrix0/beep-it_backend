@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20190801135454_AddPermissionsTable")]
+    partial class AddPermissionsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -111,19 +113,6 @@ namespace BeepBackend.Migrations
                     b.ToTable("Environments");
                 });
 
-            modelBuilder.Entity("BeepBackend.Models.EnvironmentPermission", b =>
-                {
-                    b.Property<int>("EnvironmentId");
-
-                    b.Property<int>("PermissionId");
-
-                    b.HasKey("EnvironmentId", "PermissionId");
-
-                    b.HasIndex("PermissionId");
-
-                    b.ToTable("EnvironmentPermissions");
-                });
-
             modelBuilder.Entity("BeepBackend.Models.Permission", b =>
                 {
                     b.Property<int>("Id")
@@ -144,11 +133,7 @@ namespace BeepBackend.Migrations
 
                     b.Property<bool>("RemoveMember");
 
-                    b.Property<int?>("UserId");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Permissions");
                 });
@@ -229,27 +214,6 @@ namespace BeepBackend.Migrations
                 {
                     b.HasOne("BeepBackend.Models.User", "User")
                         .WithMany("Environments")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("BeepBackend.Models.EnvironmentPermission", b =>
-                {
-                    b.HasOne("BeepBackend.Models.BeepEnvironment", "Environment")
-                        .WithMany("EnvironmentPermissions")
-                        .HasForeignKey("EnvironmentId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("BeepBackend.Models.Permission", "Permission")
-                        .WithMany("EnvironmentPermissions")
-                        .HasForeignKey("PermissionId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("BeepBackend.Models.Permission", b =>
-                {
-                    b.HasOne("BeepBackend.Models.User", "User")
-                        .WithMany("Permissions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });

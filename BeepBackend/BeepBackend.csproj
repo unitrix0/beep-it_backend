@@ -5,6 +5,43 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Migrations\20190522124159_AddUserEnvironments.cs" />
+    <Compile Remove="Migrations\20190522124159_AddUserEnvironments.Designer.cs" />
+    <Compile Remove="Migrations\20190722114429_ArticleUserSettingsEnvironment.cs" />
+    <Compile Remove="Migrations\20190722114429_ArticleUserSettingsEnvironment.Designer.cs" />
+    <Compile Remove="Migrations\20190722123630_UserArticles.cs" />
+    <Compile Remove="Migrations\20190722123630_UserArticles.Designer.cs" />
+    <Compile Remove="Migrations\20190722150133_UserPermission.cs" />
+    <Compile Remove="Migrations\20190722150133_UserPermission.Designer.cs" />
+    <Compile Remove="Migrations\20190726083551_UsernameRename.cs" />
+    <Compile Remove="Migrations\20190726083551_UsernameRename.Designer.cs" />
+    <Compile Remove="Migrations\20190731150033_AddUserArticleJoinTable.cs" />
+    <Compile Remove="Migrations\20190731150033_AddUserArticleJoinTable.Designer.cs" />
+    <Compile Remove="Migrations\20190731153944_AddEnvironmentTable.cs" />
+    <Compile Remove="Migrations\20190731153944_AddEnvironmentTable.Designer.cs" />
+    <Compile Remove="Migrations\20190731154157_AddEnvironmentTable.cs" />
+    <Compile Remove="Migrations\20190731154157_AddEnvironmentTable.Designer.cs" />
+    <Compile Remove="Migrations\20190731154858_AddEnvironmentTable.cs" />
+    <Compile Remove="Migrations\20190731154858_AddEnvironmentTable.Designer.cs" />
+    <Compile Remove="Migrations\20190731155708_AddEnvironmentTable.cs" />
+    <Compile Remove="Migrations\20190731155708_AddEnvironmentTable.Designer.cs" />
+    <Compile Remove="Migrations\20190731160447_AddEnvironmentTable.cs" />
+    <Compile Remove="Migrations\20190731160447_AddEnvironmentTable.Designer.cs" />
+    <Compile Remove="Migrations\20190801084621_AddEnvironmentsTable.cs" />
+    <Compile Remove="Migrations\20190801084621_AddEnvironmentsTable.Designer.cs" />
+    <Compile Remove="Migrations\20190801084834_AddEnvironmentsTable.cs" />
+    <Compile Remove="Migrations\20190801084834_AddEnvironmentsTable.Designer.cs" />
+    <Compile Remove="Migrations\20190801135620_AddRelationUserPermissions.cs" />
+    <Compile Remove="Migrations\20190801135620_AddRelationUserPermissions.Designer.cs" />
+    <Compile Remove="Migrations\20190801140346_AddEnvironmentPermissionsTable.cs" />
+    <Compile Remove="Migrations\20190801140346_AddEnvironmentPermissionsTable.Designer.cs" />
+    <Compile Remove="Migrations\20190801141301_AddEnvironmentPermissionsTable.cs" />
+    <Compile Remove="Migrations\20190801141301_AddEnvironmentPermissionsTable.Designer.cs" />
+    <Compile Remove="Migrations\20190801144949_AddEnvironmentPermissionsTable.cs" />
+    <Compile Remove="Migrations\20190801144949_AddEnvironmentPermissionsTable.Designer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

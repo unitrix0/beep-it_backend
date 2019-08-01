@@ -14,7 +14,10 @@ namespace BeepBackend.Data
         public DbSet<ArticleGroup> ArticleGroups { get; set; }
         public DbSet<Store> Stores { get; set; }
         public DbSet<User> Users { get; set; }
-        public DbSet<Environment> Environments { get; set; }
+        public DbSet<UserArticle> UserArticles { get; set; }
+        public DbSet<BeepEnvironment> Environments { get; set; }
+        public DbSet<Permission> Permissions { get; set; }
+        public DbSet<EnvironmentPermission> EnvironmentPermissions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -22,12 +25,6 @@ namespace BeepBackend.Data
                 .HasOne(us => us.Article)
                 .WithMany(a => a.ArticleUserSettings)
                 .HasForeignKey(us => us.ArticleFk);
-
-            modelBuilder.Entity<ArticleUserSetting>()
-                .HasOne(us => us.Environment)
-                .WithMany(e => e.ArticleUserSettings)
-                .HasForeignKey(us => us.EnvironmentFk);
-
 
             modelBuilder.Entity<ArticleGroup>()
                 .HasMany(ag => ag.Articles)
@@ -49,32 +46,42 @@ namespace BeepBackend.Data
                 .HasForeignKey(ast => ast.StoreId);
 
 
-            modelBuilder.Entity<UserEnvironment>()
-                .HasKey(ue => new { ue.EnvironmentId, ue.UserId });
-
-            modelBuilder.Entity<UserEnvironment>()
-                .HasOne(ue => ue.User)
-                .WithMany(u => u.Environments)
-                .HasForeignKey(ue => ue.UserId);
-
-            modelBuilder.Entity<UserEnvironment>()
-                .HasOne(ue => ue.Environment)
-                .WithMany(e => e.Users)
-                .HasForeignKey(ue => ue.EnvironmentId);
-
-
             modelBuilder.Entity<UserArticle>()
-                .HasKey(ua => new {ua.ArticleId, ua.UserId});
+                .HasKey(ua => new { ua.UserId, ua.ArticleId });
 
             modelBuilder.Entity<UserArticle>()
                 .HasOne(ua => ua.User)
                 .WithMany(u => u.UserArticles)
-                .HasForeignKey(ua => ua.UserId);
+                .HasForeignKey(ua => ua.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<UserArticle>()
                 .HasOne(ua => ua.Article)
                 .WithMany(a => a.UserArticles)
-                .HasForeignKey(ua => ua.ArticleId);
+                .HasForeignKey(ua => ua.ArticleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+            modelBuilder.Entity<User>()
+                .HasMany(u => u.Permissions)
+                .WithOne(p => p.User)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+            modelBuilder.Entity<EnvironmentPermission>()
+                .HasKey(ep => new {ep.EnvironmentId, ep.PermissionId});
+
+            modelBuilder.Entity<EnvironmentPermission>()
+                .HasOne(ep => ep.Environment)
+                .WithMany(e => e.EnvironmentPermissions)
+                .HasForeignKey(ep => ep.EnvironmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<EnvironmentPermission>()
+                .HasOne(ep => ep.Permission)
+                .WithMany(p => p.EnvironmentPermissions)
+                .HasForeignKey(ep => ep.PermissionId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
