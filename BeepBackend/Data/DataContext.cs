@@ -26,6 +26,11 @@ namespace BeepBackend.Data
                 .WithMany(a => a.ArticleUserSettings)
                 .HasForeignKey(us => us.ArticleFk);
 
+            modelBuilder.Entity<ArticleUserSetting>()
+                .HasOne(us => us.Environment)
+                .WithMany(e => e.ArticleUserSettings)
+                .HasForeignKey(us => us.EnvironmentFk);
+
             modelBuilder.Entity<ArticleGroup>()
                 .HasMany(ag => ag.Articles)
                 .WithOne(a => a.ArticleGroup)

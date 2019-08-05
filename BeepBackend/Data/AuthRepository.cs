@@ -1,8 +1,6 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using BeepBackend.Models;
+﻿using BeepBackend.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 using Utrix.WebLib.Authentication;
 
 namespace BeepBackend.Data
@@ -20,18 +18,16 @@ namespace BeepBackend.Data
             CreatePasswordHash(password, out var hash, out var salt);
             user.PasswordHash = hash;
             user.PasswordSalt = salt;
-            
-            //var environment = new Environment(){ Name = "Zu Hause"};
-            //var userEnvironment = new UserEnvironment()
-            //{
-            //    User = user,
-            //    IsOwner = true,
-            //    Environment = environment
-            //};
-            
-            //await _context.AddAsync(environment);
-            //await _context.AddAsync(userEnvironment);
+
+            var environment = new BeepEnvironment() { Name = $"Zu Hause von {user.Username}", User = user };
+            var permissions = new Permission() { IsOwner = true, User = user };
+            var ep = new EnvironmentPermission() { Environment = environment, Permission = permissions };
+
+
             await _context.AddAsync(user);
+            await _context.AddAsync(environment);
+            await _context.AddAsync(ep);
+            await _context.AddAsync(permissions);
             await _context.SaveChangesAsync();
 
             return user;
@@ -39,7 +35,13 @@ namespace BeepBackend.Data
 
         public override async Task<User> Login(string username, string password)
         {
-            throw new NotImplementedException();
+            var user = await _context.Users
+                .Include(u => u.Permissions)
+                .FirstOrDefaultAsync(u => u.Username == username);
+
+            if (user == null) return null;
+
+            return !VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt) ? null : user;
         }
 
         public override async Task<bool> UserExists(string username)

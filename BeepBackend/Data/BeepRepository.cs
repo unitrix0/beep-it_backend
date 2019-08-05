@@ -1,8 +1,6 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using BeepBackend.Models;
+﻿using BeepBackend.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace BeepBackend.Data
 {
@@ -17,7 +15,14 @@ namespace BeepBackend.Data
 
         public async Task<User> GetUser(int id)
         {
-            throw new NotImplementedException();
+            var user = await _context.Users
+                .Include(u => u.Environments)
+                .ThenInclude(e => e.EnvironmentPermissions)
+                .ThenInclude(ep => ep.Permission)
+                .ThenInclude(p => p.User)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            return user;
         }
     }
 }

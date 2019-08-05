@@ -2,7 +2,9 @@
 {
     public class PermissionsDto
     {
-        public int EnvironmentId { get; set; }
+        public int UserId { get; set; }
+        public string Username { get; set; }
+
         public bool IsOwner { get; set; }
         public bool CanView { get; set; }
         public bool CheckIn { get; set; }

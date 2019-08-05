@@ -4,6 +4,7 @@ using BeepBackend.Data;
 using BeepBackend.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Utrix.WebLib.Pagination;
 
 namespace BeepBackend.Controllers
 {
@@ -24,6 +25,8 @@ namespace BeepBackend.Controllers
         [HttpGet("{id}", Name = nameof(GetUser))]
         public async Task<IActionResult> GetUser(int id)
         {
+            if (!this.VerifyUser(id)) return Unauthorized();
+
             var userFromRepo = await _repo.GetUser(id);
             if (userFromRepo == null) return Unauthorized();
 
