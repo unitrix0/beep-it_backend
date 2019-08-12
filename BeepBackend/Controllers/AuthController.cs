@@ -44,10 +44,13 @@ namespace BeepBackend.Controllers
             var userFromRepo = await _authRepo.Login(user.Username.ToLower(), user.Password);
             if (userFromRepo == null) return Unauthorized();
 
+            var mappedUser = _mapper.Map<UserForTokenDto>(userFromRepo);
+
             return Ok(new
             {
                 token = CreateToken(userFromRepo.Id.ToString(), userFromRepo.Username,
-                    _config.GetSection("AppSettings:Token").Value)
+                    _config.GetSection("AppSettings:Token").Value),
+                mappedUser
             });
         }
     }

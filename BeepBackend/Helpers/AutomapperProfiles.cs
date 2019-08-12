@@ -22,6 +22,7 @@ namespace BeepBackend.Helpers
                 .ForMember(p => p.UserId, opt => { opt.MapFrom(src => src.User.Id); });
 
             CreateMap<User, UserForEditDto>();
+            CreateMap<User, UserForTokenDto>();
         }
     }
 }
