@@ -20,13 +20,11 @@ namespace BeepBackend.Data
             user.PasswordSalt = salt;
 
             var environment = new BeepEnvironment() { Name = $"Zu Hause von {user.Username}", User = user };
-            var permissions = new Permission() { IsOwner = true, User = user };
-            var ep = new EnvironmentPermission() { Environment = environment, Permission = permissions };
+            var permissions = new Permission() { IsOwner = true, User = user, Environment = environment};
 
 
             await _context.AddAsync(user);
             await _context.AddAsync(environment);
-            await _context.AddAsync(ep);
             await _context.AddAsync(permissions);
             await _context.SaveChangesAsync();
 

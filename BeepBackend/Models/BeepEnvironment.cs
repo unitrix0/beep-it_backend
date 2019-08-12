@@ -13,7 +13,7 @@ namespace BeepBackend.Models
         public int UserId { get; set; }
         public User User { get; set; }
 
-        public ICollection<EnvironmentPermission> EnvironmentPermissions { get; set; }
+        public ICollection<Permission> Permissions { get; set; }
         public ICollection<ArticleUserSetting> ArticleUserSettings { get; set; }
     }
 }

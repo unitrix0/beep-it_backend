@@ -10,8 +10,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20190802192603_AddArticleUserSettingsEnvironmentRelation")]
-    partial class AddArticleUserSettingsEnvironmentRelation
+    [Migration("20190812084205_AddRelationPermissionEnvironment")]
+    partial class AddRelationPermissionEnvironment
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -80,8 +80,6 @@ namespace BeepBackend.Migrations
 
                     b.Property<int>("ArticleFk");
 
-                    b.Property<int>("EnvironmentFk");
-
                     b.Property<bool>("IsOpened");
 
                     b.Property<int>("KeppStockMode");
@@ -93,8 +91,6 @@ namespace BeepBackend.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ArticleFk");
-
-                    b.HasIndex("EnvironmentFk");
 
                     b.ToTable("ArticleUserSettings");
                 });
@@ -117,19 +113,6 @@ namespace BeepBackend.Migrations
                     b.ToTable("Environments");
                 });
 
-            modelBuilder.Entity("BeepBackend.Models.EnvironmentPermission", b =>
-                {
-                    b.Property<int>("EnvironmentId");
-
-                    b.Property<int>("PermissionId");
-
-                    b.HasKey("EnvironmentId", "PermissionId");
-
-                    b.HasIndex("PermissionId");
-
-                    b.ToTable("EnvironmentPermissions");
-                });
-
             modelBuilder.Entity("BeepBackend.Models.Permission", b =>
                 {
                     b.Property<int>("Id")
@@ -144,6 +127,8 @@ namespace BeepBackend.Migrations
 
                     b.Property<bool>("EditArticleSettings");
 
+                    b.Property<int?>("EnvironmentId");
+
                     b.Property<bool>("Invite");
 
                     b.Property<bool>("IsOwner");
@@ -153,6 +138,8 @@ namespace BeepBackend.Migrations
                     b.Property<int?>("UserId");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EnvironmentId");
 
                     b.HasIndex("UserId");
 
@@ -229,11 +216,6 @@ namespace BeepBackend.Migrations
                         .WithMany("ArticleUserSettings")
                         .HasForeignKey("ArticleFk")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("BeepBackend.Models.BeepEnvironment", "Environment")
-                        .WithMany("ArticleUserSettings")
-                        .HasForeignKey("EnvironmentFk")
-                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("BeepBackend.Models.BeepEnvironment", b =>
@@ -244,21 +226,12 @@ namespace BeepBackend.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("BeepBackend.Models.EnvironmentPermission", b =>
-                {
-                    b.HasOne("BeepBackend.Models.BeepEnvironment", "Environment")
-                        .WithMany("EnvironmentPermissions")
-                        .HasForeignKey("EnvironmentId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("BeepBackend.Models.Permission", "Permission")
-                        .WithMany("EnvironmentPermissions")
-                        .HasForeignKey("PermissionId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
             modelBuilder.Entity("BeepBackend.Models.Permission", b =>
                 {
+                    b.HasOne("BeepBackend.Models.BeepEnvironment", "Environment")
+                        .WithMany("Permissions")
+                        .HasForeignKey("EnvironmentId");
+
                     b.HasOne("BeepBackend.Models.User", "User")
                         .WithMany("Permissions")
                         .HasForeignKey("UserId")

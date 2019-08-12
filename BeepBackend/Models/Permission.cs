@@ -14,6 +14,6 @@ namespace BeepBackend.Models
         public bool RemoveMember { get; set; }
 
         public User User { get; set; }
-        public ICollection<EnvironmentPermission> EnvironmentPermissions { get; set; }
+        public BeepEnvironment Environment { get; set; }
     }
 }

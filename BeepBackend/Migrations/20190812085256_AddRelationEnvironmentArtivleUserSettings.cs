@@ -2,42 +2,41 @@
 
 namespace BeepBackend.Migrations
 {
-    public partial class AddArticleUserSettingsEnvironmentRelation : Migration
+    public partial class AddRelationEnvironmentArtivleUserSettings : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
-                name: "EnvironmentFk",
+                name: "EnvironmentId",
                 table: "ArticleUserSettings",
-                nullable: false,
-                defaultValue: 0);
+                nullable: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ArticleUserSettings_EnvironmentFk",
+                name: "IX_ArticleUserSettings_EnvironmentId",
                 table: "ArticleUserSettings",
-                column: "EnvironmentFk");
+                column: "EnvironmentId");
 
             migrationBuilder.AddForeignKey(
-                name: "FK_ArticleUserSettings_Environments_EnvironmentFk",
+                name: "FK_ArticleUserSettings_Environments_EnvironmentId",
                 table: "ArticleUserSettings",
-                column: "EnvironmentFk",
+                column: "EnvironmentId",
                 principalTable: "Environments",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Restrict);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_ArticleUserSettings_Environments_EnvironmentFk",
+                name: "FK_ArticleUserSettings_Environments_EnvironmentId",
                 table: "ArticleUserSettings");
 
             migrationBuilder.DropIndex(
-                name: "IX_ArticleUserSettings_EnvironmentFk",
+                name: "IX_ArticleUserSettings_EnvironmentId",
                 table: "ArticleUserSettings");
 
             migrationBuilder.DropColumn(
-                name: "EnvironmentFk",
+                name: "EnvironmentId",
                 table: "ArticleUserSettings");
         }
     }

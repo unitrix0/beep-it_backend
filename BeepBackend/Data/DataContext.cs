@@ -17,7 +17,6 @@ namespace BeepBackend.Data
         public DbSet<UserArticle> UserArticles { get; set; }
         public DbSet<BeepEnvironment> Environments { get; set; }
         public DbSet<Permission> Permissions { get; set; }
-        public DbSet<EnvironmentPermission> EnvironmentPermissions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,8 +27,7 @@ namespace BeepBackend.Data
 
             modelBuilder.Entity<ArticleUserSetting>()
                 .HasOne(us => us.Environment)
-                .WithMany(e => e.ArticleUserSettings)
-                .HasForeignKey(us => us.EnvironmentFk);
+                .WithMany(e => e.ArticleUserSettings);
 
             modelBuilder.Entity<ArticleGroup>()
                 .HasMany(ag => ag.Articles)
@@ -70,22 +68,6 @@ namespace BeepBackend.Data
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Permissions)
                 .WithOne(p => p.User)
-                .OnDelete(DeleteBehavior.Cascade);
-
-
-            modelBuilder.Entity<EnvironmentPermission>()
-                .HasKey(ep => new {ep.EnvironmentId, ep.PermissionId});
-
-            modelBuilder.Entity<EnvironmentPermission>()
-                .HasOne(ep => ep.Environment)
-                .WithMany(e => e.EnvironmentPermissions)
-                .HasForeignKey(ep => ep.EnvironmentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            modelBuilder.Entity<EnvironmentPermission>()
-                .HasOne(ep => ep.Permission)
-                .WithMany(p => p.EnvironmentPermissions)
-                .HasForeignKey(ep => ep.PermissionId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

@@ -2,6 +2,7 @@
 {
     public class PermissionsDto
     {
+        public int EnvironmentId { get; set; }
         public int UserId { get; set; }
         public string Username { get; set; }
 
