@@ -19,7 +19,7 @@ namespace BeepBackend.Data
             user.PasswordHash = hash;
             user.PasswordSalt = salt;
 
-            var environment = new BeepEnvironment() { Name = $"Zu Hause von {user.Username}", User = user };
+            var environment = new BeepEnvironment() { Name = $"Zu Hause von {user.DisplayName}", User = user };
             var permissions = new Permission() { IsOwner = true, User = user, Environment = environment};
 
 
