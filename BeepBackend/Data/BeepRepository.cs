@@ -1,5 +1,7 @@
 ﻿using BeepBackend.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace BeepBackend.Data
@@ -44,6 +46,27 @@ namespace BeepBackend.Data
             var ownerId = await _context.Environments.FirstOrDefaultAsync(e => e.Id == environmentId);
 
             return ownerId?.Id ?? 0;
+        }
+
+        public async Task<BeepEnvironment> AddEnvironment(int userId)
+        {
+            var owner = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+            var newEnv = new BeepEnvironment() { Name = "Neue Umgebung", User = owner };
+            var permission = new Permission() { IsOwner = true, Environment = newEnv, User = owner };
+
+            await _context.Permissions.AddAsync(permission);
+            await _context.Environments.AddAsync(newEnv);
+
+            return await _context.SaveChangesAsync() > 0 ? newEnv : null;
+        }
+
+        public async Task<IEnumerable<BeepEnvironment>> GetEnvironments(int userId)
+        {
+            return await _context.Environments
+                .Include(e => e.Permissions)
+                .Where(e => e.UserId == userId)
+                .ToListAsync();
         }
     }
 

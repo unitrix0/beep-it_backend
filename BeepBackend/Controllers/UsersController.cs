@@ -4,7 +4,10 @@ using BeepBackend.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using BeepBackend.Models;
 using Utrix.WebLib.Pagination;
 
 namespace BeepBackend.Controllers
@@ -48,6 +51,29 @@ namespace BeepBackend.Controllers
                 return NoContent();
 
             throw new Exception($"Error saving permissions user:{newPermission.UserId} env:{newPermission.EnvironmentId}");
+        }
+
+        [HttpPost("addenvironment/{userId}")]
+        public async Task<IActionResult> AddEnvironment(int userId)
+        {
+            if (!this.VerifyUser(userId)) return Unauthorized();
+
+            var newEnv = await _repo.AddEnvironment(userId);
+            if (newEnv == null) return BadRequest("Error creating environment");
+
+            var newEnvDto = _mapper.Map<EnvironmentDto>(newEnv);
+            return Ok(new { newEnvDto });
+        }
+
+        [HttpGet("GetEnvironments/{userId}")]
+        public async Task<IActionResult> GetEnvironments(int userId)
+        {
+            if (!this.VerifyUser(userId)) return Unauthorized();
+
+            var envs = await _repo.GetEnvironments(userId);
+            var envsDto = _mapper.Map<IEnumerable<BeepEnvironment>,IEnumerable<EnvironmentDto>>(envs);
+
+            return Ok(envsDto);
         }
     }
 }

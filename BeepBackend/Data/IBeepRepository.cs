@@ -1,4 +1,5 @@
-﻿using BeepBackend.Models;
+﻿using System.Collections.Generic;
+using BeepBackend.Models;
 using System.Threading.Tasks;
 
 namespace BeepBackend.Data
@@ -9,5 +10,7 @@ namespace BeepBackend.Data
         Task<Permission> GetUserPermission(int environmentId, int userId);
         Task<bool> SaveAll();
         Task<int> GetEnvironmentOwnerId(int environmentId);
+        Task<BeepEnvironment> AddEnvironment(int userId);
+        Task<IEnumerable<BeepEnvironment>> GetEnvironments(int userId);
     }
 }
