@@ -5,10 +5,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using BeepBackend.Models;
-using Utrix.WebLib.Pagination;
+using Utrix.WebLib.Authentication;
 
 namespace BeepBackend.Controllers
 {
