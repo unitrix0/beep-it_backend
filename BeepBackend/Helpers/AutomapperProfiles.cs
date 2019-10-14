@@ -13,7 +13,7 @@ namespace BeepBackend.Helpers
                 .ForMember(be => be.Permissions, opt => { opt.MapFrom(src => src.Permissions); });
 
             CreateMap<Permission, PermissionsDto>()
-                .ForMember(p => p.Username, opt => { opt.MapFrom(src => src.User.Username); })
+                .ForMember(p => p.Username, opt => { opt.MapFrom(src => src.User.UserName); })
                 .ForMember(p => p.UserId, opt => { opt.MapFrom(src => src.User.Id); })
                 .ForMember(p => p.EnvironmentId, opt => { opt.MapFrom(src => src.Environment.Id); });
 

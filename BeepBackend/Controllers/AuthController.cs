@@ -48,7 +48,7 @@ namespace BeepBackend.Controllers
 
             return Ok(new
             {
-                token = CreateToken(userFromRepo.Id.ToString(), userFromRepo.Username,
+                token = CreateToken(userFromRepo.Id.ToString(), userFromRepo.UserName,
                     _config.GetSection("AppSettings:Token").Value),
                 mappedUser
             });

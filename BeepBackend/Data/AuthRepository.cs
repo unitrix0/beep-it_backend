@@ -15,8 +15,9 @@ namespace BeepBackend.Data
         }
         public override async Task<User> Register(User user, string password)
         {
+            //TODO Register
             CreatePasswordHash(password, out var hash, out var salt);
-            user.PasswordHash = hash;
+            //user.PasswordHash = hash;
             user.PasswordSalt = salt;
 
             var environment = new BeepEnvironment() { Name = $"Zu Hause von {user.DisplayName}", User = user };
@@ -33,18 +34,20 @@ namespace BeepBackend.Data
 
         public override async Task<User> Login(string username, string password)
         {
+
+            //TODO Login
             var user = await _context.Users
                 .Include(u => u.Permissions)
-                .FirstOrDefaultAsync(u => u.Username == username);
+                .FirstOrDefaultAsync(u => u.UserName == username);
 
             if (user == null) return null;
 
-            return !VerifyPasswordHash(password, user.PasswordHash, user.PasswordSalt) ? null : user;
+            return !VerifyPasswordHash(password, null, user.PasswordSalt) ? null : user;
         }
 
         public override async Task<bool> UserExists(string username)
         {
-            return await _context.Users.AnyAsync(u => u.Username == username);
+            return await _context.Users.AnyAsync(u => u.UserName == username);
         }
     }
 }
