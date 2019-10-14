@@ -1,6 +1,8 @@
 ﻿using BeepBackend.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
+using BeepBackend.Helpers;
+using Microsoft.AspNetCore.Identity;
 using Utrix.WebLib.Authentication;
 
 namespace BeepBackend.Data
@@ -8,46 +10,45 @@ namespace BeepBackend.Data
     public class AuthRepository : AuthRepositoryBase<User>
     {
         private readonly DataContext _context;
+        private readonly UserManager<User> _userMgr;
+        private readonly SignInManager<User> _signInMgr;
 
-        public AuthRepository(DataContext context)
+        public AuthRepository(DataContext context, UserManager<User> userMgr, SignInManager<User> signInMgr)
         {
             _context = context;
+            _userMgr = userMgr;
+            _signInMgr = signInMgr;
         }
-        public override async Task<User> Register(User user, string password)
+
+        public override async Task<User> Register(User newUser, string password)
         {
-            //TODO Register
-            CreatePasswordHash(password, out var hash, out var salt);
-            //user.PasswordHash = hash;
-            user.PasswordSalt = salt;
+            IdentityResult result = await _userMgr.CreateAsync(newUser, password);
+            if (!result.Succeeded) return null;
+            await _userMgr.AddToRoleAsync(newUser, RoleNames.Member);
 
-            var environment = new BeepEnvironment() { Name = $"Zu Hause von {user.DisplayName}", User = user };
-            var permissions = new Permission() { IsOwner = true, User = user, Environment = environment};
+            var environment = new BeepEnvironment() { Name = $"Zu Hause von {newUser.DisplayName}", User = newUser };
+            var permissions = new Permission() { IsOwner = true, User = newUser, Environment = environment};
 
-
-            await _context.AddAsync(user);
             await _context.AddAsync(environment);
             await _context.AddAsync(permissions);
             await _context.SaveChangesAsync();
 
-            return user;
+            return newUser;
         }
 
         public override async Task<User> Login(string username, string password)
         {
-
-            //TODO Login
-            var user = await _context.Users
-                .Include(u => u.Permissions)
-                .FirstOrDefaultAsync(u => u.UserName == username);
-
+            User user = await _userMgr.FindByNameAsync(username);
             if (user == null) return null;
+            SignInResult result = await _signInMgr.CheckPasswordSignInAsync(user, password, false);
 
-            return !VerifyPasswordHash(password, null, user.PasswordSalt) ? null : user;
+            return result.Succeeded ? user : null;
         }
 
         public override async Task<bool> UserExists(string username)
         {
-            return await _context.Users.AnyAsync(u => u.UserName == username);
+            User user = await _userMgr.FindByNameAsync(username);
+            return user != null;
         }
     }
 }

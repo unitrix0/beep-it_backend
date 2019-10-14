@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using BeepBackend.DTOs;
 using BeepBackend.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Utrix.WebLib.Authentication;
@@ -26,19 +27,21 @@ namespace BeepBackend.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> Register(UserForRegistrationDto newUser)
         {
             newUser.Username = newUser.Username.ToLower();
             if (await _authRepo.UserExists(newUser.Username)) return BadRequest("Username already taken");
 
             var userToCreate = _mapper.Map<User>(newUser);
-            var createdUser = await _authRepo.Register(userToCreate, newUser.Password);
+            User createdUser = await _authRepo.Register(userToCreate, newUser.Password);
 
             var userToReturn= _mapper.Map<UserForEditDto>(createdUser);
             return CreatedAtRoute(nameof(UsersController.GetUser), new {controller = "Users", id = createdUser.Id}, userToReturn);
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(UserForLoginDto user)
         {
             var userFromRepo = await _authRepo.Login(user.Username.ToLower(), user.Password);
