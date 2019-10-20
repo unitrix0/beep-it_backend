@@ -9,6 +9,7 @@ namespace BeepBackend.Models
         public int Id { get; set; }
         [Required]
         public string Name { get; set; }
+        public bool DefaultEnvironment { get; set; }
 
         public int UserId { get; set; }
         public User User { get; set; }

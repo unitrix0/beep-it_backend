@@ -1,13 +1,15 @@
-﻿using BeepBackend.Models;
-using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
-using BeepBackend.Helpers;
+﻿using BeepBackend.Helpers;
+using BeepBackend.Models;
 using Microsoft.AspNetCore.Identity;
-using Utrix.WebLib.Authentication;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 namespace BeepBackend.Data
 {
-    public class AuthRepository : AuthRepositoryBase<User>
+    public class AuthRepository : IAuthRepository
     {
         private readonly DataContext _context;
         private readonly UserManager<User> _userMgr;
@@ -20,14 +22,14 @@ namespace BeepBackend.Data
             _signInMgr = signInMgr;
         }
 
-        public override async Task<User> Register(User newUser, string password)
+        public async Task<User> Register(User newUser, string password)
         {
             IdentityResult result = await _userMgr.CreateAsync(newUser, password);
             if (!result.Succeeded) return null;
             await _userMgr.AddToRoleAsync(newUser, RoleNames.Member);
 
-            var environment = new BeepEnvironment() { Name = $"Zu Hause von {newUser.DisplayName}", User = newUser };
-            var permissions = new Permission() { IsOwner = true, User = newUser, Environment = environment};
+            var environment = new BeepEnvironment() { Name = $"Zu Hause von {newUser.DisplayName}", User = newUser, DefaultEnvironment = true };
+            var permissions = new Permission() { IsOwner = true, User = newUser, Environment = environment, Serial = GeneratePermissionSerial() };
 
             await _context.AddAsync(environment);
             await _context.AddAsync(permissions);
@@ -36,7 +38,7 @@ namespace BeepBackend.Data
             return newUser;
         }
 
-        public override async Task<User> Login(string username, string password)
+        public async Task<User> Login(string username, string password)
         {
             User user = await _userMgr.FindByNameAsync(username);
             if (user == null) return null;
@@ -45,10 +47,43 @@ namespace BeepBackend.Data
             return result.Succeeded ? user : null;
         }
 
-        public override async Task<bool> UserExists(string username)
+        public async Task<IList<string>> GetUserRoles(User user)
         {
-            User user = await _userMgr.FindByNameAsync(username);
-            return user != null;
+            IList<string> roles = await _userMgr.GetRolesAsync(user);
+            return roles;
+        }
+
+        public async Task<bool> UserExists(string username)
+        {
+            return await _userMgr.FindByNameAsync(username) != null;
+        }
+
+        public async Task<Permission> GetDefaultPermissions(int userId)
+        {
+            Permission permission = await _context.Permissions
+                .Include(p => p.Environment)
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.Environment.DefaultEnvironment);
+
+            return permission;
+        }
+
+        public async Task<Permission> GetUserPermissions(int userId, int environmentId)
+        {
+            Permission permissions = await _context.Permissions
+                .Include(p => p.User)
+                .Include(p => p.Environment)
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.Environment.Id == environmentId);
+
+            return permissions;
+        }
+
+        public static string GeneratePermissionSerial()
+        {
+            var rng = RandomNumberGenerator.Create();
+            var randomNumber = new byte[32];
+
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
         }
     }
 }

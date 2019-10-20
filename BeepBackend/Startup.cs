@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using BeepBackend.Data;
+using BeepBackend.Helpers;
 using BeepBackend.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -14,23 +16,24 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Diagnostics;
 using System.Net;
 using System.Text;
-using Microsoft.AspNetCore.Identity;
+using System.Threading;
+using System.Threading.Tasks;
 using Utrix.WebLib;
-using Utrix.WebLib.Authentication;
 using Role = BeepBackend.Models.Role;
 
 namespace BeepBackend
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
         }
-
-        public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -47,11 +50,13 @@ namespace BeepBackend
                 {
                     AuthorizationPolicy policy = new AuthorizationPolicyBuilder()
                         .RequireAuthenticatedUser()
+                        .AddRequirements(new IsEnvironmentMemberRequirement())
                         .Build();
 
                     options.Filters.Add(new AuthorizeFilter(policy));
                 })
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -65,6 +70,7 @@ namespace BeepBackend
                         ValidateIssuer = false,
                         ValidateAudience = false
                     };
+                    options.Events = services.BuildServiceProvider().GetService<BeepBearerEvents>();
                 });
 
 
@@ -74,7 +80,10 @@ namespace BeepBackend
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             services.AddScoped<IBeepRepository, BeepRepository>();
-            services.AddScoped<IAuthRepository<User>, AuthRepository>();
+            services.AddScoped<IAuthRepository, AuthRepository>();
+            services.AddTransient<IAuthorizationHandler, IsEnvironmentMemberHandler>();
+            services.AddTransient<BeepBearerEvents>();
+            services.AddSingleton<IPermissionsCache, PermissionsCache>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -108,4 +117,27 @@ namespace BeepBackend
             app.UseMvc();
         }
     }
+
+
+    public class IsEnvironmentMemberHandler : AuthorizationHandler<IsEnvironmentMemberRequirement>
+    {
+        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, IsEnvironmentMemberRequirement requirement)
+        {
+            context.Succeed(requirement);
+            return Task.CompletedTask;
+        }
+    }
+
+    public class HasEnvironmentPermissionHandler : AuthorizationHandler<HasEnvironmentPermissionRequirement>
+    {
+        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, HasEnvironmentPermissionRequirement requirement)
+        {
+            context.Succeed(requirement);
+            return Task.CompletedTask;
+        }
+    }
+
+    public class HasEnvironmentPermissionRequirement : IAuthorizationRequirement { }
+
+    public class IsEnvironmentMemberRequirement : IAuthorizationRequirement { }
 }

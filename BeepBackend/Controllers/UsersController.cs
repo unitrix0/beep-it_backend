@@ -46,6 +46,7 @@ namespace BeepBackend.Controllers
 
             var currentPermission = await _repo.GetUserPermission(newPermission.EnvironmentId, newPermission.UserId);
             _mapper.Map(newPermission, currentPermission);
+            currentPermission.Serial = AuthRepository.GeneratePermissionSerial();
             if (await _repo.SaveAll())
                 return NoContent();
 

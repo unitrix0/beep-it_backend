@@ -9,7 +9,6 @@ namespace BeepBackend.Models
     public class User : IdentityUser<int>
     {
         public string DisplayName { get; set; }
-        public byte[] PasswordSalt { get; set; }
 
         public ICollection<UserArticle> UserArticles { get; set; }
         public ICollection<BeepEnvironment> Environments { get; set; }
