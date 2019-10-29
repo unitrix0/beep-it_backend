@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BeepBackend.Models
 {
@@ -16,5 +15,6 @@ namespace BeepBackend.Models
 
         public ICollection<Permission> Permissions { get; set; }
         public ICollection<ArticleUserSetting> ArticleUserSettings { get; set; }
+        public ICollection<Invitation> Invitations { get; set; }
     }
 }

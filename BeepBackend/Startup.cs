@@ -16,13 +16,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Diagnostics;
 using System.Net;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Utrix.WebLib;
-using Role = BeepBackend.Models.Role;
 
 namespace BeepBackend
 {
@@ -46,32 +42,12 @@ namespace BeepBackend
             builder.AddRoleManager<RoleManager<Role>>();
             builder.AddSignInManager<SignInManager<User>>();
 
-            services.AddMvc(options =>
-                {
-                    AuthorizationPolicy policy = new AuthorizationPolicyBuilder()
-                        .RequireAuthenticatedUser()
-                        .AddRequirements(new IsEnvironmentMemberRequirement())
-                        .Build();
-
-                    options.Filters.Add(new AuthorizeFilter(policy));
-                })
+            services.AddMvc(ConfigureMvc)
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
-                {
-                    options.TokenValidationParameters = new TokenValidationParameters()
-                    {
-                        ValidateIssuerSigningKey = true,
-                        IssuerSigningKey =
-                            new SymmetricSecurityKey(
-                                Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
-                        ValidateIssuer = false,
-                        ValidateAudience = false
-                    };
-                    options.Events = services.BuildServiceProvider().GetService<BeepBearerEvents>();
-                });
+                .AddJwtBearer(options => ConfigureBearerToken(options, services));
 
 
             services.AddDbContext<DataContext>(o =>
@@ -81,7 +57,7 @@ namespace BeepBackend
 
             services.AddScoped<IBeepRepository, BeepRepository>();
             services.AddScoped<IAuthRepository, AuthRepository>();
-            services.AddTransient<IAuthorizationHandler, IsEnvironmentMemberHandler>();
+            services.AddTransient<IAuthorizationHandler, HasEnvironmentPermissionHandler>();
             services.AddTransient<BeepBearerEvents>();
             services.AddSingleton<IPermissionsCache, PermissionsCache>();
         }
@@ -116,28 +92,29 @@ namespace BeepBackend
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders("location"));
             app.UseMvc();
         }
-    }
 
-
-    public class IsEnvironmentMemberHandler : AuthorizationHandler<IsEnvironmentMemberRequirement>
-    {
-        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, IsEnvironmentMemberRequirement requirement)
+        private void ConfigureBearerToken(JwtBearerOptions options, IServiceCollection services)
         {
-            context.Succeed(requirement);
-            return Task.CompletedTask;
+            options.TokenValidationParameters = new TokenValidationParameters()
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey =
+                    new SymmetricSecurityKey(
+                        Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
+                ValidateIssuer = false,
+                ValidateAudience = false
+            };
+            options.Events = services.BuildServiceProvider().GetService<BeepBearerEvents>();
+        }
+
+        private static void ConfigureMvc(MvcOptions options)
+        {
+            AuthorizationPolicy policy = new AuthorizationPolicyBuilder()
+                .RequireAuthenticatedUser()
+                .AddRequirements(new HasEnvironmentPermissionRequirement())
+                .Build();
+
+            options.Filters.Add(new AuthorizeFilter(policy));
         }
     }
-
-    public class HasEnvironmentPermissionHandler : AuthorizationHandler<HasEnvironmentPermissionRequirement>
-    {
-        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, HasEnvironmentPermissionRequirement requirement)
-        {
-            context.Succeed(requirement);
-            return Task.CompletedTask;
-        }
-    }
-
-    public class HasEnvironmentPermissionRequirement : IAuthorizationRequirement { }
-
-    public class IsEnvironmentMemberRequirement : IAuthorizationRequirement { }
 }

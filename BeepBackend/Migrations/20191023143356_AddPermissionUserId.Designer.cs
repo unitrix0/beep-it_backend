@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20191023143356_AddPermissionUserId")]
+    partial class AddPermissionUserId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -117,31 +119,11 @@ namespace BeepBackend.Migrations
                     b.ToTable("Environments");
                 });
 
-            modelBuilder.Entity("BeepBackend.Models.Invitation", b =>
-                {
-                    b.Property<int>("InviteeId");
-
-                    b.Property<int>("EnvironmentId");
-
-                    b.Property<DateTime>("AnsweredOn");
-
-                    b.Property<DateTime>("IssuedAt");
-
-                    b.Property<string>("Serial")
-                        .IsRequired();
-
-                    b.HasKey("InviteeId", "EnvironmentId");
-
-                    b.HasIndex("EnvironmentId");
-
-                    b.ToTable("Invitations");
-                });
-
             modelBuilder.Entity("BeepBackend.Models.Permission", b =>
                 {
-                    b.Property<int>("UserId");
-
-                    b.Property<int>("EnvironmentId");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<bool>("CanView");
 
@@ -150,6 +132,8 @@ namespace BeepBackend.Migrations
                     b.Property<bool>("CheckOut");
 
                     b.Property<bool>("EditArticleSettings");
+
+                    b.Property<int?>("EnvironmentId");
 
                     b.Property<bool>("Invite");
 
@@ -160,9 +144,13 @@ namespace BeepBackend.Migrations
                     b.Property<string>("Serial")
                         .IsRequired();
 
-                    b.HasKey("UserId", "EnvironmentId");
+                    b.Property<int>("UserId");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("EnvironmentId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Permissions");
                 });
@@ -396,30 +384,16 @@ namespace BeepBackend.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("BeepBackend.Models.Invitation", b =>
-                {
-                    b.HasOne("BeepBackend.Models.BeepEnvironment", "Environment")
-                        .WithMany("Invitations")
-                        .HasForeignKey("EnvironmentId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("BeepBackend.Models.User", "Invitee")
-                        .WithMany("InvitedFrom")
-                        .HasForeignKey("InviteeId")
-                        .OnDelete(DeleteBehavior.Restrict);
-                });
-
             modelBuilder.Entity("BeepBackend.Models.Permission", b =>
                 {
                     b.HasOne("BeepBackend.Models.BeepEnvironment", "Environment")
                         .WithMany("Permissions")
-                        .HasForeignKey("EnvironmentId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("EnvironmentId");
 
                     b.HasOne("BeepBackend.Models.User", "User")
                         .WithMany("Permissions")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("BeepBackend.Models.UserArticle", b =>

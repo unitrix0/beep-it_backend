@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20191026173955_AddEnvironmentIdAndRelation")]
+    partial class AddEnvironmentIdAndRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -115,26 +117,6 @@ namespace BeepBackend.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Environments");
-                });
-
-            modelBuilder.Entity("BeepBackend.Models.Invitation", b =>
-                {
-                    b.Property<int>("InviteeId");
-
-                    b.Property<int>("EnvironmentId");
-
-                    b.Property<DateTime>("AnsweredOn");
-
-                    b.Property<DateTime>("IssuedAt");
-
-                    b.Property<string>("Serial")
-                        .IsRequired();
-
-                    b.HasKey("InviteeId", "EnvironmentId");
-
-                    b.HasIndex("EnvironmentId");
-
-                    b.ToTable("Invitations");
                 });
 
             modelBuilder.Entity("BeepBackend.Models.Permission", b =>
@@ -394,19 +376,6 @@ namespace BeepBackend.Migrations
                         .WithMany("Environments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("BeepBackend.Models.Invitation", b =>
-                {
-                    b.HasOne("BeepBackend.Models.BeepEnvironment", "Environment")
-                        .WithMany("Invitations")
-                        .HasForeignKey("EnvironmentId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("BeepBackend.Models.User", "Invitee")
-                        .WithMany("InvitedFrom")
-                        .HasForeignKey("InviteeId")
-                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("BeepBackend.Models.Permission", b =>

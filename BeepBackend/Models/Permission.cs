@@ -5,7 +5,6 @@ namespace BeepBackend.Models
 {
     public class Permission
     {
-        public int Id { get; set; }
         public bool IsOwner { get; set; }
         public bool CanView { get; set; }
         public bool CheckIn { get; set; }
@@ -18,6 +17,8 @@ namespace BeepBackend.Models
 
         public int UserId { get; set; }
         public User User { get; set; }
+
+        public int EnvironmentId { get; set; }
         public BeepEnvironment Environment { get; set; }
     }
 }

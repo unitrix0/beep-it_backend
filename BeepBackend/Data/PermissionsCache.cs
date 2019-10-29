@@ -29,6 +29,16 @@ namespace BeepBackend.Data
             _serialsCache.Add(key, new Tuple<string, DateTime>(serial, lifetime));
         }
 
+        public void Update(string userUserName, int environmentId, string serial)
+        {
+            string key = $"{userUserName},{environmentId}";
+            if (!_serialsCache.ContainsKey(key)) return;
+
+            Tuple<string, DateTime> current = _serialsCache[key];
+            _serialsCache.Remove(key);
+            _serialsCache.Add(key, new Tuple<string, DateTime>(serial, current.Item2));
+        }
+
         private void Cleanup(object state)
         {
             IEnumerable<string> oldKeys = _serialsCache.Where(c => c.Value.Item2 < DateTime.Now).Select(c => c.Key);

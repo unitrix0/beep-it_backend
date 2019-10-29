@@ -43,6 +43,20 @@
     <Compile Remove="Migrations\20190801145315_AddEnvironmentPermissionsTable.Designer.cs" />
     <Compile Remove="Migrations\20190802192603_AddArticleUserSettingsEnvironmentRelation.cs" />
     <Compile Remove="Migrations\20190802192603_AddArticleUserSettingsEnvironmentRelation.Designer.cs" />
+    <Compile Remove="Migrations\20191023143223_AddInvitation.cs" />
+    <Compile Remove="Migrations\20191023143223_AddInvitation.Designer.cs" />
+    <Compile Remove="Migrations\20191023143452_AddInvitations.cs" />
+    <Compile Remove="Migrations\20191023143452_AddInvitations.Designer.cs" />
+    <Compile Remove="Migrations\20191023144222_AddInvitations.cs" />
+    <Compile Remove="Migrations\20191023144222_AddInvitations.Designer.cs" />
+    <Compile Remove="Migrations\20191023144501_AddInvitations.cs" />
+    <Compile Remove="Migrations\20191023144501_AddInvitations.Designer.cs" />
+    <Compile Remove="Migrations\20191023144955_AddInvitations.cs" />
+    <Compile Remove="Migrations\20191023144955_AddInvitations.Designer.cs" />
+    <Compile Remove="Migrations\20191023150928_AddInvitations.cs" />
+    <Compile Remove="Migrations\20191023150928_AddInvitations.Designer.cs" />
+    <Compile Remove="Migrations\20191023151218_AddInvitations.cs" />
+    <Compile Remove="Migrations\20191023151218_AddInvitations.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

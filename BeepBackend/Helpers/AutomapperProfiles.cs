@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BeepBackend.DTOs;
 using BeepBackend.Models;
+using System.Linq;
 
 namespace BeepBackend.Helpers
 {
@@ -10,7 +11,10 @@ namespace BeepBackend.Helpers
         {
             CreateMap<UserForRegistrationDto, User>();
             CreateMap<BeepEnvironment, EnvironmentDto>()
-                .ForMember(be => be.Permissions, opt => { opt.MapFrom(src => src.Permissions); });
+                .ForMember(be => be.Permissions, 
+                    opt => { opt.MapFrom(src => src.Permissions
+                        .OrderByDescending(p => p.IsOwner)
+                        .ThenBy(p => p.User.UserName)); });
 
             CreateMap<Permission, PermissionsDto>()
                 .ForMember(p => p.Username, opt => { opt.MapFrom(src => src.User.UserName); })
@@ -21,6 +25,11 @@ namespace BeepBackend.Helpers
 
             CreateMap<User, UserForEditDto>();
             CreateMap<User, UserForTokenDto>();
+
+            CreateMap<Invitation, InvitationListItemDto>()
+                .ForMember(i => i.EnvironmentName, opt => { opt.MapFrom(src => src.Environment.Name); })
+                .ForMember(i => i.EnvironmentId, opt => { opt.MapFrom(src => src.Environment.Id); })
+                .ForMember(i => i.Inviter, opt => opt.MapFrom(src => src.Environment.User.DisplayName));
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using BeepBackend.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -45,7 +46,7 @@ namespace BeepBackend.Data
         {
             var ownerId = await _context.Environments.FirstOrDefaultAsync(e => e.Id == environmentId);
 
-            return ownerId?.Id ?? 0;
+            return ownerId?.UserId ?? 0;
         }
 
         public async Task<BeepEnvironment> AddEnvironment(int userId)
@@ -53,7 +54,7 @@ namespace BeepBackend.Data
             var owner = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
             var newEnv = new BeepEnvironment() { Name = "Neue Umgebung", User = owner };
-            var permission = new Permission() { IsOwner = true, Environment = newEnv, User = owner };
+            var permission = new Permission() { IsOwner = true, Environment = newEnv, User = owner, Serial = AuthRepository.GeneratePermissionSerial() };
 
             await _context.Permissions.AddAsync(permission);
             await _context.Environments.AddAsync(newEnv);
@@ -68,6 +69,93 @@ namespace BeepBackend.Data
                 .Where(e => e.UserId == userId)
                 .ToListAsync();
         }
-    }
 
+        public async Task<bool> DeleteEnvironment(int envId)
+        {
+            BeepEnvironment environment = await _context.Environments
+                .Include(e => e.Permissions)
+                .FirstOrDefaultAsync(e => e.Id == envId);
+
+            foreach (Permission permission in environment.Permissions)
+            {
+                _context.Permissions.Remove(permission);
+            }
+
+            _context.Environments.Remove(environment);
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> InviteMember(string inviteeName, int environmentId)
+        {
+            User invitee = await _context.Users.FirstOrDefaultAsync(u => u.UserName == inviteeName);
+
+            var invitation = new Invitation()
+            {
+                Invitee = invitee,
+                EnvironmentId = environmentId,
+                Serial = AuthRepository.GeneratePermissionSerial(),
+                IssuedAt = DateTime.Now
+            };
+
+            await _context.AddAsync(invitation);
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<int> CountInvitations(int userId)
+        {
+            return await _context.Invitations.CountAsync(i =>
+                i.InviteeId == userId &&
+                i.AnsweredOn == DateTime.MinValue);
+        }
+
+        public async Task<int> GetInviteeId(int userId, int environmentId)
+        {
+            Invitation invitation = await _context.Invitations.FirstOrDefaultAsync(i =>
+                i.InviteeId == userId && i.EnvironmentId == environmentId);
+
+            return invitation?.InviteeId ?? 0;
+        }
+
+        public async Task<bool> JoinEnvironment(int userId, int environmentId)
+        {
+            var permission = new Permission()
+            {
+                UserId = userId,
+                EnvironmentId = environmentId,
+                Serial = AuthRepository.GeneratePermissionSerial(),
+                CanView = true
+            };
+            await _context.Permissions.AddAsync(permission);
+
+            Invitation invitation = await _context.Invitations.FirstOrDefaultAsync(i =>
+                i.EnvironmentId == environmentId &&
+                i.InviteeId == userId);
+
+            invitation.AnsweredOn = DateTime.Now;
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> DeleteInvitation(int userId, int environmentId)
+        {
+            var invitation = await _context.Invitations.FirstOrDefaultAsync(i =>
+                i.EnvironmentId == environmentId &&
+                i.InviteeId == userId);
+
+            if (invitation == null) return false;
+
+            _context.Invitations.Remove(invitation);
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<List<Invitation>> GetInvitationsForUser(int inviteeId)
+        {
+            List<Invitation> invitations = await _context.Invitations
+                .Include(i => i.Environment).ThenInclude(e => e.User)
+                .Where(i => i.InviteeId == inviteeId)
+                .ToListAsync();
+
+            return invitations;
+        }
+    }
 }

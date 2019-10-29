@@ -1,5 +1,4 @@
-﻿using BeepBackend.Helpers;
-using BeepBackend.Models;
+﻿using BeepBackend.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +19,7 @@ namespace BeepBackend.Data
         public DbSet<UserArticle> UserArticles { get; set; }
         public DbSet<BeepEnvironment> Environments { get; set; }
         public DbSet<Permission> Permissions { get; set; }
+        public DbSet<Invitation> Invitations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -90,6 +90,39 @@ namespace BeepBackend.Data
                     .WithMany(r => r.UserRoles)
                     .HasForeignKey(ur => ur.RoleId)
                     .IsRequired();
+            });
+
+            modelBuilder.Entity<Invitation>(inv =>
+            {
+                inv.HasKey(i => new { i.InviteeId, i.EnvironmentId });
+
+                inv.HasOne(i => i.Invitee)
+                    .WithMany(u => u.InvitedFrom)
+                    .HasForeignKey(i => i.InviteeId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                inv.HasOne(i => i.Environment)
+                    .WithMany(e => e.Invitations)
+                    .HasForeignKey(i => i.EnvironmentId)
+                    .IsRequired();
+            });
+
+            modelBuilder.Entity<Permission>(per =>
+            {
+                per.HasKey(p => new { p.UserId, p.EnvironmentId });
+
+                per.HasOne(p => p.Environment)
+                    .WithMany(be => be.Permissions)
+                    .HasForeignKey(p => p.EnvironmentId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                per.HasOne(p => p.User)
+                    .WithMany(u => u.Permissions)
+                    .HasForeignKey(p => p.UserId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }
