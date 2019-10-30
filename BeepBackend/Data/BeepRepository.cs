@@ -148,14 +148,52 @@ namespace BeepBackend.Data
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<List<Invitation>> GetInvitationsForUser(int inviteeId)
+        public async Task<bool> DeleteAnsweredInvitations(int userId)
         {
             List<Invitation> invitations = await _context.Invitations
                 .Include(i => i.Environment).ThenInclude(e => e.User)
-                .Where(i => i.InviteeId == inviteeId)
+                .Where(i => i.Environment.User.Id == userId &&
+                            i.AnsweredOn != DateTime.MinValue)
+                .ToListAsync();
+
+            foreach (Invitation invitation in invitations)
+            {
+                _context.Invitations.Remove(invitation);
+            }
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<List<Invitation>> GetReceivedInvitationsForUser(int inviteeId)
+        {
+            List<Invitation> invitations = await _context.Invitations
+                .Include(i => i.Environment).ThenInclude(e => e.User)
+                .Where(i => i.InviteeId == inviteeId && i.AnsweredOn == DateTime.MinValue)
                 .ToListAsync();
 
             return invitations;
+        }
+
+        public async Task<List<Invitation>> GetSentInvitationsForUserAsync(int userId)
+        {
+            List<Invitation> invitations = await _context.Invitations
+                .Include(i => i.Environment).ThenInclude(e => e.User)
+                .Include(i => i.Invitee)
+                .Where(i => i.Environment.UserId == userId)
+                .OrderByDescending(i => i.IssuedAt)
+                .ToListAsync();
+
+            return invitations;
+        }
+
+        public async Task<int> GetInviterId(int environmentId, int inviteeId)
+        {
+            Invitation invitation = await _context.Invitations
+                .Include(i => i.Environment)
+                .FirstOrDefaultAsync(i => i.EnvironmentId == environmentId &&
+                                          i.InviteeId == inviteeId);
+
+            return invitation?.Environment.UserId ?? 0;
         }
     }
 }

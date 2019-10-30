@@ -119,15 +119,41 @@ namespace BeepBackend.Controllers
             throw new Exception("Failed to answer invitation");
         }
 
+        [HttpDelete("DeleteInvitation/{userId}")]
+        public async Task<IActionResult> DeleteInvitation(int userId, int environmentId, int inviteeId)
+        {
+            int inviterId = await _repo.GetInviterId(environmentId, inviteeId);
+            if (!this.VerifyUser(userId) || !this.VerifyUser(inviterId)) return Unauthorized();
+
+            if (await _repo.DeleteInvitation(inviteeId, environmentId)) return Ok();
+
+            throw new Exception("Error deleteing invitation");
+        }
+
+        [HttpDelete("DeleteAnsweredInvitations/{userId}")]
+        public async Task<IActionResult> DeleteAnsweredInvitations(int userId)
+        {
+            if (!this.VerifyUser(userId)) return Unauthorized();
+
+            if (await _repo.DeleteAnsweredInvitations(userId)) return NoContent();
+
+            throw new Exception("Error deleting the invitations");
+        }
+
         [HttpGet("Invitations/{userId}")]
         public async Task<IActionResult> GetInvitationsForUser(int userId)
         {
             if (!this.VerifyUser(userId)) return Unauthorized();
 
-            List<Invitation> invitations = await _repo.GetInvitationsForUser(userId);
-            var invitationsDto = _mapper.Map<IEnumerable<InvitationListItemDto>>(invitations);
+            var invitations = new InvitationsDto();
 
-            return Ok(invitationsDto);
+            List<Invitation> invitationsReceived = await _repo.GetReceivedInvitationsForUser(userId);
+            invitations.ReceivedInvitations = _mapper.Map<IEnumerable<InvitationListItemDto>>(invitationsReceived);
+
+            List<Invitation> invitationsSent = await _repo.GetSentInvitationsForUserAsync(userId);
+            invitations.SentInvitations = _mapper.Map<IEnumerable<InvitationListItemDto>>(invitationsSent);
+
+            return Ok(invitations);
         }
 
     }

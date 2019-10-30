@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System;
+using AutoMapper;
 using BeepBackend.DTOs;
 using BeepBackend.Models;
 using System.Linq;
@@ -29,7 +30,9 @@ namespace BeepBackend.Helpers
             CreateMap<Invitation, InvitationListItemDto>()
                 .ForMember(i => i.EnvironmentName, opt => { opt.MapFrom(src => src.Environment.Name); })
                 .ForMember(i => i.EnvironmentId, opt => { opt.MapFrom(src => src.Environment.Id); })
-                .ForMember(i => i.Inviter, opt => opt.MapFrom(src => src.Environment.User.DisplayName));
+                .ForMember(i => i.Inviter, opt => opt.MapFrom(src => src.Environment.User.DisplayName))
+                .ForMember(i => i.Invitee, opt => opt.MapFrom(src => src.Invitee.DisplayName))
+                .ForMember(i => i.IsAnswered, opt => opt.MapFrom(src => src.AnsweredOn != DateTime.MinValue));
         }
     }
 }

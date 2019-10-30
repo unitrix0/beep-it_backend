@@ -17,7 +17,10 @@ namespace BeepBackend.Data
         Task<int> CountInvitations(int userId);
         Task<int> GetInviteeId(int userId, int environmentId);
         Task<bool> JoinEnvironment(int userId, int environmentId);
-        Task<List<Invitation>> GetInvitationsForUser(int userId);
+        Task<List<Invitation>> GetReceivedInvitationsForUser(int userId);
+        Task<List<Invitation>> GetSentInvitationsForUserAsync(int userId);
         Task<bool> DeleteInvitation(int userId, int environmentId);
+        Task<bool> DeleteAnsweredInvitations(int userId);
+        Task<int> GetInviterId(int environmentId, int inviteeId);
     }
 }
