@@ -93,7 +93,7 @@ namespace BeepBackend.Controllers
 
             Permission permissions = await _authRepo.GetUserPermissions(userId, environmentId);
             newClaims.Add(new Claim(BeepClaimTypes.Permissions, permissions.ToBits()));
-            newClaims.Add(new Claim(BeepClaimTypes.PermissionsSerial, AuthRepository.GeneratePermissionSerial()));
+            newClaims.Add(new Claim(BeepClaimTypes.PermissionsSerial, SerialGenerator.Generate()));
             newClaims.Add(new Claim(BeepClaimTypes.EnvironmentId, permissions.Environment.Id.ToString()));
 
             var mappedUser = _mapper.Map<UserForTokenDto>(permissions.User);
@@ -103,6 +103,15 @@ namespace BeepBackend.Controllers
                 token = newJwtToken,
                 mappedUser
             });
+        }
+
+        [HttpGet("UserExists/{userId}")]
+        public async Task<IActionResult> UserExists(int userId, string username)
+        {
+            if (!this.VerifyUser(userId)) return Unauthorized();
+
+            bool exists = await _authRepo.UserExists(username);
+            return Ok(exists);
         }
 
         private ClaimsPrincipal GetPrincipalFromToken(string token)

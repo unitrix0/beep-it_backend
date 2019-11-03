@@ -15,12 +15,13 @@ namespace BeepBackend.Helpers
 
         private static void CreateRoles(RoleManager<Role> roleMgr)
         {
-            if (roleMgr.Roles.Any()) return;
             var roles = new List<Role>()
             {
                 new Role() {Name = RoleNames.Admin},
-                new Role() {Name = RoleNames.Member}
+                new Role() {Name = RoleNames.Member},
+                new Role() {Name = RoleNames.Dummy}
             };
+            if (roleMgr.Roles.Count() == roles.Count) return;
 
             foreach (Role role in roles)
             {

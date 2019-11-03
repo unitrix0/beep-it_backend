@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20191026174141_AddInvitations")]
+    [Migration("20191101091040_AddInvitations")]
     partial class AddInvitations
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -129,8 +129,7 @@ namespace BeepBackend.Migrations
 
                     b.Property<DateTime>("IssuedAt");
 
-                    b.Property<string>("Serial")
-                        .IsRequired();
+                    b.Property<string>("Serial");
 
                     b.HasKey("InviteeId", "EnvironmentId");
 

@@ -2,9 +2,7 @@
 using BeepBackend.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 namespace BeepBackend.Data
@@ -29,7 +27,7 @@ namespace BeepBackend.Data
             await _userMgr.AddToRoleAsync(newUser, RoleNames.Member);
 
             var environment = new BeepEnvironment() { Name = $"Zu Hause von {newUser.DisplayName}", User = newUser, DefaultEnvironment = true };
-            var permissions = new Permission() { IsOwner = true, User = newUser, Environment = environment, Serial = GeneratePermissionSerial() };
+            var permissions = new Permission() { IsOwner = true, User = newUser, Environment = environment, Serial = SerialGenerator.Generate() };
 
             await _context.AddAsync(environment);
             await _context.AddAsync(permissions);
@@ -75,15 +73,6 @@ namespace BeepBackend.Data
                 .FirstOrDefaultAsync(p => p.UserId == userId && p.Environment.Id == environmentId);
 
             return permissions;
-        }
-
-        public static string GeneratePermissionSerial()
-        {
-            var rng = RandomNumberGenerator.Create();
-            var randomNumber = new byte[32];
-
-            rng.GetBytes(randomNumber);
-            return Convert.ToBase64String(randomNumber);
         }
     }
 }

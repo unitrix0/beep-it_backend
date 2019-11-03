@@ -1,4 +1,6 @@
-﻿using BeepBackend.Models;
+﻿using BeepBackend.Helpers;
+using BeepBackend.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -10,10 +12,12 @@ namespace BeepBackend.Data
     public class BeepRepository : IBeepRepository
     {
         private readonly DataContext _context;
+        private readonly UserManager<User> _userMgr;
 
-        public BeepRepository(DataContext context)
+        public BeepRepository(DataContext context, UserManager<User> userMgr)
         {
             _context = context;
+            _userMgr = userMgr;
         }
 
         public async Task<bool> SaveAll()
@@ -54,7 +58,7 @@ namespace BeepBackend.Data
             var owner = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
             var newEnv = new BeepEnvironment() { Name = "Neue Umgebung", User = owner };
-            var permission = new Permission() { IsOwner = true, Environment = newEnv, User = owner, Serial = AuthRepository.GeneratePermissionSerial() };
+            var permission = new Permission() { IsOwner = true, Environment = newEnv, User = owner, Serial = SerialGenerator.Generate() };
 
             await _context.Permissions.AddAsync(permission);
             await _context.Environments.AddAsync(newEnv);
@@ -93,12 +97,42 @@ namespace BeepBackend.Data
             {
                 Invitee = invitee,
                 EnvironmentId = environmentId,
-                Serial = AuthRepository.GeneratePermissionSerial(),
                 IssuedAt = DateTime.Now
             };
 
             await _context.AddAsync(invitation);
             return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<Invitation> InviteMemberByMail(string email, int envitonmentId)
+        {
+            bool isNewUser = false;
+            User invitee = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            if (invitee == null)
+            {
+                isNewUser = true;
+                invitee = new User()
+                {
+                    UserName = email,
+                    DisplayName = email,
+                    LockoutEnabled = true
+                };
+
+                IdentityResult result = await _userMgr.CreateAsync(invitee, SerialGenerator.Generate());
+                IdentityResult roleResult = await _userMgr.AddToRoleAsync(invitee, RoleNames.Dummy);
+                if (!result.Succeeded || !roleResult.Succeeded) return null;
+            }
+            
+            var invitation = new Invitation()
+            {
+                Invitee = invitee,
+                EnvironmentId = envitonmentId,
+                IssuedAt = DateTime.Now,
+                Serial = isNewUser ? SerialGenerator.Generate() : string.Empty
+            };
+
+            await _context.AddAsync(invitation);
+            return await _context.SaveChangesAsync() > 0 ? invitation : null;
         }
 
         public async Task<int> CountInvitations(int userId)
@@ -122,7 +156,7 @@ namespace BeepBackend.Data
             {
                 UserId = userId,
                 EnvironmentId = environmentId,
-                Serial = AuthRepository.GeneratePermissionSerial(),
+                Serial = SerialGenerator.Generate(),
                 CanView = true
             };
             await _context.Permissions.AddAsync(permission);
@@ -138,13 +172,18 @@ namespace BeepBackend.Data
 
         public async Task<bool> DeleteInvitation(int userId, int environmentId)
         {
-            var invitation = await _context.Invitations.FirstOrDefaultAsync(i =>
+            Invitation invitation = await _context.Invitations
+                .Include(i => i.Invitee)
+                .FirstOrDefaultAsync(i =>
                 i.EnvironmentId == environmentId &&
                 i.InviteeId == userId);
 
             if (invitation == null) return false;
 
             _context.Invitations.Remove(invitation);
+            if (await _userMgr.IsInRoleAsync(invitation.Invitee, RoleNames.Dummy))
+                _context.Users.Remove(invitation.Invitee);
+
             return await _context.SaveChangesAsync() > 0;
         }
 

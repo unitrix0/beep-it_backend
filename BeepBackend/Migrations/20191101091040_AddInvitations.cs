@@ -13,7 +13,7 @@ namespace BeepBackend.Migrations
                 {
                     InviteeId = table.Column<int>(nullable: false),
                     EnvironmentId = table.Column<int>(nullable: false),
-                    Serial = table.Column<string>(nullable: false),
+                    Serial = table.Column<string>(nullable: true),
                     IssuedAt = table.Column<DateTime>(nullable: false),
                     AnsweredOn = table.Column<DateTime>(nullable: false)
                 },

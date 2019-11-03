@@ -22,5 +22,6 @@ namespace BeepBackend.Data
         Task<bool> DeleteInvitation(int userId, int environmentId);
         Task<bool> DeleteAnsweredInvitations(int userId);
         Task<int> GetInviterId(int environmentId, int inviteeId);
+        Task<Invitation> InviteMemberByMail(string email, int envitonmentId);
     }
 }

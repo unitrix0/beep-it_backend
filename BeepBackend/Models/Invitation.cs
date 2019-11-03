@@ -11,9 +11,7 @@ namespace BeepBackend.Models
         public int EnvironmentId { get; set; }
         public BeepEnvironment Environment { get; set; }
 
-        [Required]
         public string Serial { get; set; }
-
         [Required]
         public DateTime IssuedAt { get; set; }
 

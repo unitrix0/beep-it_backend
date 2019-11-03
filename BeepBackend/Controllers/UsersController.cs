@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BeepBackend.Data;
 using BeepBackend.DTOs;
+using BeepBackend.Helpers;
 using BeepBackend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -48,7 +49,7 @@ namespace BeepBackend.Controllers
 
             Permission currentPermission = await _repo.GetUserPermission(newPermission.EnvironmentId, newPermission.UserId);
             _mapper.Map(newPermission, currentPermission);
-            currentPermission.Serial = AuthRepository.GeneratePermissionSerial();
+            currentPermission.Serial = SerialGenerator.Generate();
             _permissionsCache.Update(currentPermission.User.UserName, currentPermission.Environment.Id,
                 currentPermission.Serial);
             if (await _repo.SaveAll())
@@ -85,8 +86,22 @@ namespace BeepBackend.Controllers
             int environmentOwnerId = await _repo.GetEnvironmentOwnerId(invitation.EnvironmentId);
             if (!this.VerifyUser(environmentOwnerId)) return Unauthorized();
 
-            if (await _repo.InviteMember(invitation.InviteeName, invitation.EnvironmentId))
-                return NoContent();
+            if (invitation.SendMail)
+            {
+                Invitation createdInvitation = await _repo.InviteMemberByMail(invitation.InviteeName, invitation.EnvironmentId);
+                if (createdInvitation != null)
+                {
+                    // Wenn keine Serial generiert wurde, ist der Benutzer bereits vorhanden
+                    if (createdInvitation.Serial == string.Empty) return NoContent();
+                    //TODO Send Mail
+                    return NoContent();
+                }
+            }
+            else
+            {
+                if (await _repo.InviteMember(invitation.InviteeName, invitation.EnvironmentId))
+                    return NoContent();
+            }
 
             throw new Exception("Failed to create invitation");
         }
@@ -127,7 +142,7 @@ namespace BeepBackend.Controllers
 
             if (await _repo.DeleteInvitation(inviteeId, environmentId)) return Ok();
 
-            throw new Exception("Error deleteing invitation");
+            throw new Exception("Error deleting invitation");
         }
 
         [HttpDelete("DeleteAnsweredInvitations/{userId}")]

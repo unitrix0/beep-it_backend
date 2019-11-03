@@ -127,8 +127,7 @@ namespace BeepBackend.Migrations
 
                     b.Property<DateTime>("IssuedAt");
 
-                    b.Property<string>("Serial")
-                        .IsRequired();
+                    b.Property<string>("Serial");
 
                     b.HasKey("InviteeId", "EnvironmentId");
 
