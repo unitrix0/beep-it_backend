@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace BeepBackend.Data
 {
-    public class BeepRepository : IBeepRepository
+    public class UserRepository : IUserRepository
     {
         private readonly DataContext _context;
         private readonly UserManager<User> _userMgr;
 
-        public BeepRepository(DataContext context, UserManager<User> userMgr)
+        public UserRepository(DataContext context, UserManager<User> userMgr)
         {
             _context = context;
             _userMgr = userMgr;
@@ -27,7 +27,7 @@ namespace BeepBackend.Data
 
         public async Task<User> GetUser(int id)
         {
-            var user = await _context.Users
+            User user = await _context.Users
                 .Include(u => u.Environments)
                 .ThenInclude(e => e.Permissions)
                 .ThenInclude(p => p.User)
@@ -38,7 +38,7 @@ namespace BeepBackend.Data
 
         public async Task<Permission> GetUserPermission(int environmentId, int userId)
         {
-            var permission = await _context.Permissions
+            Permission permission = await _context.Permissions
                 .Include(p => p.Environment)
                 .Include(p => p.User)
                 .FirstOrDefaultAsync(p => p.User.Id == userId && p.Environment.Id == environmentId);
@@ -48,14 +48,14 @@ namespace BeepBackend.Data
 
         public async Task<int> GetEnvironmentOwnerId(int environmentId)
         {
-            var ownerId = await _context.Environments.FirstOrDefaultAsync(e => e.Id == environmentId);
+            BeepEnvironment ownerId = await _context.Environments.FirstOrDefaultAsync(e => e.Id == environmentId);
 
             return ownerId?.UserId ?? 0;
         }
 
         public async Task<BeepEnvironment> AddEnvironment(int userId)
         {
-            var owner = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            User owner = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
 
             var newEnv = new BeepEnvironment() { Name = "Neue Umgebung", User = owner };
             var permission = new Permission() { IsOwner = true, Environment = newEnv, User = owner, Serial = SerialGenerator.Generate() };
@@ -122,7 +122,7 @@ namespace BeepBackend.Data
                 IdentityResult roleResult = await _userMgr.AddToRoleAsync(invitee, RoleNames.Dummy);
                 if (!result.Succeeded || !roleResult.Succeeded) return null;
             }
-            
+
             var invitation = new Invitation()
             {
                 Invitee = invitee,
@@ -213,7 +213,7 @@ namespace BeepBackend.Data
             return invitations;
         }
 
-        public async Task<List<Invitation>> GetSentInvitationsForUserAsync(int userId)
+        public async Task<List<Invitation>> GetSentInvitationsForUser(int userId)
         {
             List<Invitation> invitations = await _context.Invitations
                 .Include(i => i.Environment).ThenInclude(e => e.User)
@@ -233,6 +233,22 @@ namespace BeepBackend.Data
                                           i.InviteeId == inviteeId);
 
             return invitation?.Environment.UserId ?? 0;
+        }
+
+        public async Task<bool> RemoveUserFromEnvironmentAsync(int environmentId, int userId)
+        {
+            Permission permission = await _context.Permissions
+                .FirstOrDefaultAsync(p => p.UserId == userId &&
+                                          p.EnvironmentId == environmentId);
+
+            Invitation invitation = await _context.Invitations
+                .FirstOrDefaultAsync(i => i.InviteeId == userId &&
+                                          i.EnvironmentId == environmentId);
+
+            _context.Permissions.Remove(permission);
+            if (invitation != null) _context.Invitations.Remove(invitation);
+
+            return await _context.SaveChangesAsync() > 0;
         }
     }
 }

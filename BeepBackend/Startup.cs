@@ -55,7 +55,7 @@ namespace BeepBackend
             services.AddCors();
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-            services.AddScoped<IBeepRepository, BeepRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAuthRepository, AuthRepository>();
             services.AddTransient<IAuthorizationHandler, HasEnvironmentPermissionHandler>();
             services.AddTransient<BeepBearerEvents>();

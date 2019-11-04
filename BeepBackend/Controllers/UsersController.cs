@@ -17,11 +17,11 @@ namespace BeepBackend.Controllers
     [Authorize]
     public class UsersController : ControllerBase
     {
-        private readonly IBeepRepository _repo;
+        private readonly IUserRepository _repo;
         private readonly IMapper _mapper;
         private readonly IPermissionsCache _permissionsCache;
 
-        public UsersController(IBeepRepository repo, IMapper mapper, IPermissionsCache permissionsCache)
+        public UsersController(IUserRepository repo, IMapper mapper, IPermissionsCache permissionsCache)
         {
             _repo = repo;
             _mapper = mapper;
@@ -165,10 +165,20 @@ namespace BeepBackend.Controllers
             List<Invitation> invitationsReceived = await _repo.GetReceivedInvitationsForUser(userId);
             invitations.ReceivedInvitations = _mapper.Map<IEnumerable<InvitationListItemDto>>(invitationsReceived);
 
-            List<Invitation> invitationsSent = await _repo.GetSentInvitationsForUserAsync(userId);
+            List<Invitation> invitationsSent = await _repo.GetSentInvitationsForUser(userId);
             invitations.SentInvitations = _mapper.Map<IEnumerable<InvitationListItemDto>>(invitationsSent);
 
             return Ok(invitations);
+        }
+
+        [HttpDelete("RemoveUser/{userId}")]
+        public async Task<IActionResult> RemoveUser(int userId, int environmentId, int removeUserId)
+        {
+            if (!this.VerifyUser(await _repo.GetEnvironmentOwnerId(environmentId))) return Unauthorized();
+
+            if (await _repo.RemoveUserFromEnvironmentAsync(environmentId, removeUserId)) return Ok();
+
+            throw new Exception("Error removing user");
         }
 
     }

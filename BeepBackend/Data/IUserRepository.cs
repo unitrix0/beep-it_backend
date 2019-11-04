@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace BeepBackend.Data
 {
-    public interface IBeepRepository
+    public interface IUserRepository
     {
         Task<User> GetUser(int id);
         Task<Permission> GetUserPermission(int environmentId, int userId);
@@ -18,10 +18,11 @@ namespace BeepBackend.Data
         Task<int> GetInviteeId(int userId, int environmentId);
         Task<bool> JoinEnvironment(int userId, int environmentId);
         Task<List<Invitation>> GetReceivedInvitationsForUser(int userId);
-        Task<List<Invitation>> GetSentInvitationsForUserAsync(int userId);
+        Task<List<Invitation>> GetSentInvitationsForUser(int userId);
         Task<bool> DeleteInvitation(int userId, int environmentId);
         Task<bool> DeleteAnsweredInvitations(int userId);
         Task<int> GetInviterId(int environmentId, int inviteeId);
         Task<Invitation> InviteMemberByMail(string email, int envitonmentId);
+        Task<bool> RemoveUserFromEnvironmentAsync(int environmentId, int userId);
     }
 }
