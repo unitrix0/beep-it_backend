@@ -43,7 +43,7 @@ namespace BeepBackend
             builder.AddSignInManager<SignInManager<User>>();
 
             services.AddMvc(ConfigureMvc)
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -89,7 +89,8 @@ namespace BeepBackend
 
             //app.UseHttpsRedirection();
             app.UseAuthentication();
-            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders("location"));
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders("location")
+                .AllowCredentials());
             app.UseMvc();
         }
 
