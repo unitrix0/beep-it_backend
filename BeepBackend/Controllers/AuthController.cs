@@ -84,10 +84,11 @@ namespace BeepBackend.Controllers
         }
 
         [HttpPost("updatepermissions/{userId}")]
-        public async Task<IActionResult> UpdatePermissions(int userId, string token, int environmentId)
+        public async Task<IActionResult> UpdatePermissions(int userId, int environmentId)
         {
-            ClaimsPrincipal principal = GetPrincipalFromToken(token);
-            List<Claim> newClaims = principal.Claims.Where(c => c.Type != BeepClaimTypes.Permissions && 
+            if (!this.VerifyUser(userId)) return Unauthorized();
+
+            List<Claim> newClaims = User.Claims.Where(c => c.Type != BeepClaimTypes.Permissions && 
                                                         c.Type != BeepClaimTypes.PermissionsSerial &&
                                                         c.Type != BeepClaimTypes.EnvironmentId).ToList();
 
@@ -114,23 +115,5 @@ namespace BeepBackend.Controllers
             return Ok(exists);
         }
 
-        private ClaimsPrincipal GetPrincipalFromToken(string token)
-        {
-            var tokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateAudience = false,
-                ValidateIssuer = false,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_tokenSecretKey)),
-            };
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-            ClaimsPrincipal principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out SecurityToken securityToken);
-            var jwtSecurityToken = securityToken as JwtSecurityToken;
-            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha512, StringComparison.InvariantCultureIgnoreCase))
-                throw new SecurityTokenException("Invalid token");
-
-            return principal;
-        }
     }
 }

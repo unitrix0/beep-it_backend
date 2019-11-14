@@ -181,5 +181,15 @@ namespace BeepBackend.Controllers
             throw new Exception("Error removing user");
         }
 
+        [HttpGet("GetEnvironments/{userId}")]
+        public async Task<IActionResult> GetEnvironments(int userId)
+        {
+            if (!this.VerifyUser(userId)) return Unauthorized();
+
+            IEnumerable<BeepEnvironment> environments = await _repo.GetEnvironments(userId);
+            var result = _mapper.Map<IEnumerable<EnvironmentDto>>(environments);
+
+            return Ok(result);
+        }
     }
 }

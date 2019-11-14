@@ -68,9 +68,10 @@ namespace BeepBackend.Data
 
         public async Task<IEnumerable<BeepEnvironment>> GetEnvironments(int userId)
         {
-            return await _context.Environments
-                .Include(e => e.Permissions)
-                .Where(e => e.UserId == userId)
+            return await _context.Permissions
+                .Include(p => p.Environment)
+                .Where(p => p.UserId == userId)
+                .Select(p => p.Environment)
                 .ToListAsync();
         }
 
