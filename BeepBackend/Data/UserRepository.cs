@@ -27,10 +27,17 @@ namespace BeepBackend.Data
 
         public async Task<User> GetUser(int id)
         {
+            //User user = await _context.Users
+            //    .Include(u => u.Environments)
+            //    .ThenInclude(e => e.Permissions)
+            //    .ThenInclude(p => p.User)
+            //    .FirstOrDefaultAsync(u => u.Id == id);
+
             User user = await _context.Users
-                .Include(u => u.Environments)
-                .ThenInclude(e => e.Permissions)
-                .ThenInclude(p => p.User)
+                .Include(u => u.Permissions)
+                .ThenInclude(p => p.Environment)
+                .ThenInclude(e => e.User)
+                .ThenInclude(u => u.Permissions)
                 .FirstOrDefaultAsync(u => u.Id == id);
 
             return user;
