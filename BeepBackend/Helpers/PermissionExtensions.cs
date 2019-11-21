@@ -9,15 +9,13 @@ namespace BeepBackend.Helpers
     {
         public static string ToBits(this Permission permission)
         {
-            List<short> values = typeof(Permission).GetProperties()
-                .Where(p => p.PropertyType == typeof(bool))
-                .Select(pi => Convert.ToInt16(pi.GetValue(permission)))
-                .ToList();
-
-            while (values.Count % 8 != 0)
+            var values = new List<short>()
             {
-                values.Insert(0, 0);
-            }
+                Convert.ToInt16(permission.IsOwner),
+                Convert.ToInt16(permission.CanScan),
+                Convert.ToInt16(permission.EditArticleSettings),
+                Convert.ToInt16(permission.ManageUsers)
+            };
 
             return string.Join("", values);
         }

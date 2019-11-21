@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Security.Claims;
 using BeepBackend.Models;
 using System.Threading.Tasks;
 
@@ -24,5 +25,7 @@ namespace BeepBackend.Data
         Task<int> GetInviterId(int environmentId, int inviteeId);
         Task<Invitation> InviteMemberByMail(string email, int envitonmentId);
         Task<bool> RemoveUserFromEnvironmentAsync(int environmentId, int userId);
+        Task<IEnumerable<Permission>> GetEnvironmentPermissions(int environmentId, int userId);
+        Task<bool> HasMangeUsersPermission(int userId, int environmentId);
     }
 }

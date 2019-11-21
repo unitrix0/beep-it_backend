@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20191120091507_RemoveObsoletePermissionFlags")]
+    partial class RemoveObsoletePermissionFlags
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -142,15 +144,9 @@ namespace BeepBackend.Migrations
 
                     b.Property<int>("EnvironmentId");
 
-                    b.Property<bool>("CanScan");
-
                     b.Property<bool>("EditArticleSettings");
 
                     b.Property<bool>("IsOwner");
-
-                    b.Property<bool>("ManageEnvironments");
-
-                    b.Property<bool>("ManageUsers");
 
                     b.Property<string>("Serial")
                         .IsRequired();

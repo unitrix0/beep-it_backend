@@ -59,6 +59,8 @@
     <Compile Remove="Migrations\20191023151218_AddInvitations.Designer.cs" />
     <Compile Remove="Migrations\20191026174141_AddInvitations.cs" />
     <Compile Remove="Migrations\20191026174141_AddInvitations.Designer.cs" />
+    <Compile Remove="Migrations\20191120090756_ChangePermissions.cs" />
+    <Compile Remove="Migrations\20191120090756_ChangePermissions.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -70,6 +72,7 @@
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.4" />
+    <PackageReference Include="xunit" Version="2.4.1" />
   </ItemGroup>
 
   <ItemGroup>

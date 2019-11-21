@@ -9,18 +9,20 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Utrix.WebLib.Authentication;
+using Utrix.WebLib.Helpers;
 
 namespace BeepBackend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AuthController : AuthControllerBase
+    public class AuthController : ControllerBase
     {
         private readonly IAuthRepository _authRepo;
         private readonly IMapper _mapper;
@@ -55,6 +57,7 @@ namespace BeepBackend.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(UserForLoginDto user)
         {
+            Console.WriteLine($"New Login from: " + user);
             User userFromRepo = await _authRepo.Login(user.Username.ToLower(), user.Password);
             if (userFromRepo == null) return Unauthorized();
 
@@ -78,7 +81,7 @@ namespace BeepBackend.Controllers
 
             return Ok(new
             {
-                token = CreateToken(claims.ToArray(), _tokenSecretKey, _tokenLifeTime),
+                token = JwtHelper.CreateToken(claims.ToArray(), _tokenSecretKey, _tokenLifeTime),
                 mappedUser
             });
         }
@@ -98,7 +101,7 @@ namespace BeepBackend.Controllers
             newClaims.Add(new Claim(BeepClaimTypes.EnvironmentId, permissions.Environment.Id.ToString()));
 
             var mappedUser = _mapper.Map<UserForTokenDto>(permissions.User);
-            string newJwtToken = CreateToken(newClaims.ToArray(), _tokenSecretKey, _tokenLifeTime);
+            string newJwtToken = JwtHelper.CreateToken(newClaims.ToArray(), _tokenSecretKey, _tokenLifeTime);
             return new ObjectResult(new
             {
                 token = newJwtToken,

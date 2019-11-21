@@ -27,7 +27,6 @@ namespace BeepBackend
                 try
                 {
                     var context = services.GetRequiredService<DataContext>();
-                    var usrMgr = services.GetRequiredService<UserManager<User>>();
                     var roleMgr = services.GetRequiredService<RoleManager<Role>>();
 
                     context.Database.Migrate();

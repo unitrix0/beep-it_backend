@@ -7,8 +7,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
-using Utrix.WebLib.Authentication;
+using Utrix.WebLib.Helpers;
 
 namespace BeepBackend.Controllers
 {
@@ -44,14 +45,19 @@ namespace BeepBackend.Controllers
         [HttpPut("updatepermission")]
         public async Task<IActionResult> UpdatePermission([FromBody]PermissionsDto newPermission)
         {
-            int environmentOwnerId = await _repo.GetEnvironmentOwnerId(newPermission.EnvironmentId);
-            if (!this.VerifyUser(environmentOwnerId)) return Unauthorized();
+            int envOwnerId = await _repo.GetEnvironmentOwnerId(newPermission.EnvironmentId);
+            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+
+            if (!await _repo.HasMangeUsersPermission(userId, newPermission.EnvironmentId) ||
+                userId == newPermission.UserId && userId != envOwnerId)
+                return Unauthorized();
 
             Permission currentPermission = await _repo.GetUserPermission(newPermission.EnvironmentId, newPermission.UserId);
             _mapper.Map(newPermission, currentPermission);
             currentPermission.Serial = SerialGenerator.Generate();
             _permissionsCache.Update(currentPermission.User.UserName, currentPermission.Environment.Id,
                 currentPermission.Serial);
+
             if (await _repo.SaveAll())
                 return NoContent();
 
@@ -188,6 +194,17 @@ namespace BeepBackend.Controllers
 
             IEnumerable<BeepEnvironment> environments = await _repo.GetEnvironments(userId);
             var result = _mapper.Map<IEnumerable<EnvironmentDto>>(environments);
+
+            return Ok(result);
+        }
+
+        [HttpGet("GetEnvironmentPermissions/{userId}")]
+        public async Task<IActionResult> GetEnvironmentPermissions(int userId, int environmentId)
+        {
+            if (!this.VerifyUser(userId)) return Unauthorized();
+
+            IEnumerable<Permission> permissions = await _repo.GetEnvironmentPermissions(environmentId, userId);
+            var result = _mapper.Map<IEnumerable<PermissionsDto>>(permissions);
 
             return Ok(result);
         }

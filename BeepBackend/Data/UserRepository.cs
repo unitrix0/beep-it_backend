@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace BeepBackend.Data
@@ -27,17 +28,9 @@ namespace BeepBackend.Data
 
         public async Task<User> GetUser(int id)
         {
-            //User user = await _context.Users
-            //    .Include(u => u.Environments)
-            //    .ThenInclude(e => e.Permissions)
-            //    .ThenInclude(p => p.User)
-            //    .FirstOrDefaultAsync(u => u.Id == id);
-
             User user = await _context.Users
-                .Include(u => u.Permissions)
-                .ThenInclude(p => p.Environment)
-                .ThenInclude(e => e.User)
-                .ThenInclude(u => u.Permissions)
+                .Include(u => u.Environments)
+                .Include(u => u.Permissions).ThenInclude(p => p.Environment)
                 .FirstOrDefaultAsync(u => u.Id == id);
 
             return user;
@@ -79,6 +72,25 @@ namespace BeepBackend.Data
                 .Include(p => p.Environment)
                 .Where(p => p.UserId == userId)
                 .Select(p => p.Environment)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Permission>> GetEnvironmentPermissions(int environmentId, int userId)
+        {
+            bool isOwner = await _context.Permissions
+                .AnyAsync(p => p.EnvironmentId == environmentId &&
+                               p.UserId == userId && p.IsOwner);
+
+            Expression<Func<Permission, bool>> condition = isOwner
+                ? (Expression<Func<Permission, bool>>) (p => p.EnvironmentId == environmentId)
+                : p => p.EnvironmentId == environmentId &&
+                       p.UserId != userId &&
+                       !p.IsOwner;
+
+            return await _context.Permissions
+                .Include(p => p.User)
+                .Where(condition)
+                .OrderByDescending(p => p.IsOwner).ThenBy(p => p.User.UserName)
                 .ToListAsync();
         }
 
@@ -164,8 +176,7 @@ namespace BeepBackend.Data
             {
                 UserId = userId,
                 EnvironmentId = environmentId,
-                Serial = SerialGenerator.Generate(),
-                CanView = true
+                Serial = SerialGenerator.Generate()
             };
             await _context.Permissions.AddAsync(permission);
 
@@ -257,6 +268,14 @@ namespace BeepBackend.Data
             if (invitation != null) _context.Invitations.Remove(invitation);
 
             return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> HasMangeUsersPermission(int userId, int environmentId)
+        {
+            Permission permission = await _context.Permissions
+                .FirstOrDefaultAsync(p => p.UserId == userId && p.EnvironmentId == environmentId);
+
+            return permission?.ManageUsers ?? false;
         }
     }
 }

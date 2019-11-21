@@ -2,6 +2,7 @@
 using BeepBackend.DTOs;
 using BeepBackend.Models;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace BeepBackend.Helpers
@@ -11,26 +12,25 @@ namespace BeepBackend.Helpers
         public AutomapperProfiles()
         {
             CreateMap<UserForRegistrationDto, User>();
-            CreateMap<BeepEnvironment, EnvironmentDto>()
-                .ForMember(be => be.Permissions,
-                    opt =>
-                    {
-                        opt.MapFrom(src => src.User.Permissions
-                            .OrderByDescending(p => p.IsOwner)
-                            .ThenBy(p => p.User.UserName));
-                    });
+            CreateMap<BeepEnvironment, EnvironmentDto>();
 
             CreateMap<Permission, PermissionsDto>()
-                .ForMember(p => p.Username, opt => { opt.MapFrom(src => src.User.UserName); })
-                .ForMember(p => p.UserId, opt => { opt.MapFrom(src => src.User.Id); })
-                .ForMember(p => p.EnvironmentId, opt => { opt.MapFrom(src => src.Environment.Id); });
+                .ForMember(p => p.Username, opt => { opt.MapFrom(src => src.User.UserName); });
 
             CreateMap<PermissionsDto, Permission>();
 
             CreateMap<User, UserForEditDto>()
-                .ForMember(u => u.Environments, opt => { opt.MapFrom(src => src.Permissions
-                    .Where(p => p.Invite || p.RemoveMember || p.IsOwner)
-                    .Select(p => p.Environment)); });
+                .ForMember(u => u.Environments, opt =>
+                {
+                    opt.MapFrom(delegate(User user, UserForEditDto dto)
+                    {
+                        List<BeepEnvironment> envs = user.Environments.ToList();
+                        envs.AddRange(user.Permissions
+                            .Where(p => p.ManageUsers)
+                            .Select(p => p.Environment));
+                        return envs;
+                    });
+                });
 
             CreateMap<User, UserForTokenDto>();
 
