@@ -26,7 +26,7 @@ namespace BeepBackend
                 IServiceProvider services = scope.ServiceProvider;
                 try
                 {
-                    var context = services.GetRequiredService<DataContext>();
+                    var context = services.GetRequiredService<BeepDbContext>();
                     var roleMgr = services.GetRequiredService<RoleManager<Role>>();
 
                     context.Database.Migrate();

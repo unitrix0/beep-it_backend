@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BeepBackend.Data
 {
-    public class DataContext : IdentityDbContext<User, Role, int, IdentityUserClaim<int>, UserRole,
+    public class BeepDbContext : IdentityDbContext<User, Role, int, IdentityUserClaim<int>, UserRole,
         IdentityUserLogin<int>, IdentityRoleClaim<int>, IdentityUserToken<int>>
     {
-        public DataContext(DbContextOptions<DataContext> options) : base(options)
+        public BeepDbContext(DbContextOptions<BeepDbContext> options) : base(options)
         {
         }
 

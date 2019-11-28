@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
-    [DbContext(typeof(DataContext))]
+    [DbContext(typeof(BeepDbContext))]
     [Migration("20191120091507_RemoveObsoletePermissionFlags")]
     partial class RemoveObsoletePermissionFlags
     {

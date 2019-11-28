@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
-    [DbContext(typeof(DataContext))]
+    [DbContext(typeof(BeepDbContext))]
     [Migration("20190522114236_AddArticleStores")]
     partial class AddArticleStores
     {

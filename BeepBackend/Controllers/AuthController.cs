@@ -6,16 +6,11 @@ using BeepBackend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
-using Utrix.WebLib.Authentication;
 using Utrix.WebLib.Helpers;
 
 namespace BeepBackend.Controllers
@@ -27,17 +22,16 @@ namespace BeepBackend.Controllers
         private readonly IAuthRepository _authRepo;
         private readonly IMapper _mapper;
         private readonly IPermissionsCache _permissionsCache;
-        private readonly DateTime _tokenLifeTime;
         private readonly string _tokenSecretKey;
+        private readonly int _tokenLifeTimeSeconds;
 
         public AuthController(IAuthRepository authRepo, IMapper mapper, IConfiguration config, IPermissionsCache permissionsCache)
         {
             _authRepo = authRepo;
             _mapper = mapper;
-            IConfiguration config1 = config;
             _permissionsCache = permissionsCache;
-            _tokenLifeTime = DateTime.Now.AddSeconds(Convert.ToInt32(config1.GetSection("AppSettings:TokenLifeTime").Value));
-            _tokenSecretKey = config1.GetSection("AppSettings:Token").Value;
+            _tokenLifeTimeSeconds = Convert.ToInt32(config.GetSection("AppSettings:TokenLifeTime").Value);
+            _tokenSecretKey = config.GetSection("AppSettings:Token").Value;
         }
 
         [HttpPost("register")]
@@ -77,11 +71,11 @@ namespace BeepBackend.Controllers
             claims.Add(new Claim(BeepClaimTypes.PermissionsSerial, permissions.Serial));
             claims.Add(new Claim(BeepClaimTypes.EnvironmentId, permissions.Environment.Id.ToString()));
 
-            _permissionsCache.AddEntry($"{permissions.UserId},{permissions.Environment.Id}", permissions.Serial, _tokenLifeTime);
+            _permissionsCache.AddEntry(permissions.UserId, permissions.Environment.Id, permissions, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds));
 
             return Ok(new
             {
-                token = JwtHelper.CreateToken(claims.ToArray(), _tokenSecretKey, _tokenLifeTime),
+                token = JwtHelper.CreateToken(claims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
                 mappedUser
             });
         }
@@ -91,7 +85,7 @@ namespace BeepBackend.Controllers
         {
             if (!this.VerifyUser(userId)) return Unauthorized();
 
-            List<Claim> newClaims = User.Claims.Where(c => c.Type != BeepClaimTypes.Permissions && 
+            List<Claim> newClaims = User.Claims.Where(c => c.Type != BeepClaimTypes.Permissions &&
                                                         c.Type != BeepClaimTypes.PermissionsSerial &&
                                                         c.Type != BeepClaimTypes.EnvironmentId).ToList();
 
@@ -101,7 +95,7 @@ namespace BeepBackend.Controllers
             newClaims.Add(new Claim(BeepClaimTypes.EnvironmentId, permissions.Environment.Id.ToString()));
 
             var mappedUser = _mapper.Map<UserForTokenDto>(permissions.User);
-            string newJwtToken = JwtHelper.CreateToken(newClaims.ToArray(), _tokenSecretKey, _tokenLifeTime);
+            string newJwtToken = JwtHelper.CreateToken(newClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds));
             return new ObjectResult(new
             {
                 token = newJwtToken,

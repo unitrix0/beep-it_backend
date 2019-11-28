@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using BeepBackend.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -31,7 +32,7 @@ namespace BeepBackend.Helpers
                 ? Convert.ToInt32(claims[BeepClaimTypes.EnvironmentId])
                 : 0;
 
-            if (_cache.SerialsMatch(context.Principal.Identity.Name, environmentId, serial)) return Task.CompletedTask;
+            if (_cache.SerialsMatch(context.Principal.FindFirst(ClaimTypes.NameIdentifier).Value, environmentId, serial)) return Task.CompletedTask;
 
             context.Response.Headers.Add("PermissionsChanged", "true");
             return Task.CompletedTask;

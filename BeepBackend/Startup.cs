@@ -32,12 +32,12 @@ namespace BeepBackend
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        public virtual void ConfigureServices(IServiceCollection services)
         {
             IdentityBuilder builder = services.AddIdentityCore<User>(opt => { opt.Password.RequiredLength = 6; });
 
             builder = new IdentityBuilder(builder.UserType, typeof(Role), builder.Services);
-            builder.AddEntityFrameworkStores<DataContext>();
+            builder.AddEntityFrameworkStores<BeepDbContext>();
             builder.AddRoleValidator<RoleValidator<Role>>();
             builder.AddRoleManager<RoleManager<Role>>();
             builder.AddSignInManager<SignInManager<User>>();
@@ -50,7 +50,7 @@ namespace BeepBackend
                 .AddJwtBearer(options => ConfigureBearerToken(options, services));
 
 
-            services.AddDbContext<DataContext>(o =>
+            services.AddDbContext<BeepDbContext>(o =>
                 o.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddCors();
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -63,7 +63,7 @@ namespace BeepBackend
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public virtual void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -112,7 +112,6 @@ namespace BeepBackend
         {
             AuthorizationPolicy policy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
-                .AddRequirements(new HasEnvironmentPermissionRequirement())
                 .Build();
 
             options.Filters.Add(new AuthorizeFilter(policy));

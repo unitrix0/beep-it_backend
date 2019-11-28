@@ -12,10 +12,10 @@ namespace BeepBackend.Data
 {
     public class UserRepository : IUserRepository
     {
-        private readonly DataContext _context;
+        private readonly BeepDbContext _context;
         private readonly UserManager<User> _userMgr;
 
-        public UserRepository(DataContext context, UserManager<User> userMgr)
+        public UserRepository(BeepDbContext context, UserManager<User> userMgr)
         {
             _context = context;
             _userMgr = userMgr;
@@ -268,14 +268,6 @@ namespace BeepBackend.Data
             if (invitation != null) _context.Invitations.Remove(invitation);
 
             return await _context.SaveChangesAsync() > 0;
-        }
-
-        public async Task<bool> HasMangeUsersPermission(int userId, int environmentId)
-        {
-            Permission permission = await _context.Permissions
-                .FirstOrDefaultAsync(p => p.UserId == userId && p.EnvironmentId == environmentId);
-
-            return permission?.ManageUsers ?? false;
         }
     }
 }

@@ -9,11 +9,11 @@ namespace BeepBackend.Data
 {
     public class AuthRepository : IAuthRepository
     {
-        private readonly DataContext _context;
+        private readonly BeepDbContext _context;
         private readonly UserManager<User> _userMgr;
         private readonly SignInManager<User> _signInMgr;
 
-        public AuthRepository(DataContext context, UserManager<User> userMgr, SignInManager<User> signInMgr)
+        public AuthRepository(BeepDbContext context, UserManager<User> userMgr, SignInManager<User> signInMgr)
         {
             _context = context;
             _userMgr = userMgr;

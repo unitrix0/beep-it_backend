@@ -21,12 +21,14 @@ namespace BeepBackend.Controllers
         private readonly IUserRepository _repo;
         private readonly IMapper _mapper;
         private readonly IPermissionsCache _permissionsCache;
+        private readonly IAuthorizationService _authService;
 
-        public UsersController(IUserRepository repo, IMapper mapper, IPermissionsCache permissionsCache)
+        public UsersController(IUserRepository repo, IMapper mapper, IPermissionsCache permissionsCache, IAuthorizationService authService)
         {
             _repo = repo;
             _mapper = mapper;
             _permissionsCache = permissionsCache;
+            _authService = authService;
         }
 
         [HttpGet("{id}", Name = nameof(GetUser))]
@@ -45,18 +47,16 @@ namespace BeepBackend.Controllers
         [HttpPut("updatepermission")]
         public async Task<IActionResult> UpdatePermission([FromBody]PermissionsDto newPermission)
         {
-            int envOwnerId = await _repo.GetEnvironmentOwnerId(newPermission.EnvironmentId);
-            int userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
+            AuthorizationResult authorizationResult = await _authService.AuthorizeAsync(User, null,
+                new[] { new HasEnvironmentPermissionRequirement(newPermission.EnvironmentId, 
+                    PermissionFlags.IsOwner | PermissionFlags.ManageUsers) });
 
-            if (!await _repo.HasMangeUsersPermission(userId, newPermission.EnvironmentId) ||
-                userId == newPermission.UserId && userId != envOwnerId)
-                return Unauthorized();
+            if (!authorizationResult.Succeeded) return Unauthorized();
 
             Permission currentPermission = await _repo.GetUserPermission(newPermission.EnvironmentId, newPermission.UserId);
             _mapper.Map(newPermission, currentPermission);
             currentPermission.Serial = SerialGenerator.Generate();
-            _permissionsCache.Update(currentPermission.User.UserName, currentPermission.Environment.Id,
-                currentPermission.Serial);
+            _permissionsCache.Update(currentPermission.UserId, currentPermission.Environment.Id, currentPermission);
 
             if (await _repo.SaveAll())
                 return NoContent();

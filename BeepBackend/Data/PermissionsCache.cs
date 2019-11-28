@@ -2,41 +2,50 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using BeepBackend.Models;
 
 namespace BeepBackend.Data
 {
     public class PermissionsCache : IPermissionsCache
     {
-        private readonly Dictionary<string, Tuple<string, DateTime>> _serialsCache;
+        private readonly Dictionary<string, Tuple<Permission, DateTime>> _serialsCache;
 
         public PermissionsCache()
         {
-            _serialsCache = new Dictionary<string, Tuple<string, DateTime>>();
+            _serialsCache = new Dictionary<string, Tuple<Permission, DateTime>>();
 
             var cleanupTimer = new Timer(Cleanup);
             cleanupTimer.Change(new TimeSpan(), new TimeSpan(1, 0, 0, 0));
         }
 
-        public bool SerialsMatch(string identityName, int environmentId, string serial)
+        public bool SerialsMatch(string userId, int environmentId, string permissionSerial)
         {
-            string key = $"{identityName},{environmentId}";
-            return _serialsCache.ContainsKey(key) && _serialsCache[key].Item1 == serial;
+            string key = $"{userId},{environmentId}";
+            return _serialsCache.ContainsKey(key) && _serialsCache[key].Item1.Serial == permissionSerial;
         }
 
-        public void AddEntry(string key, string serial, DateTime lifetime)
+        public void AddEntry(int userId, int environmentId, Permission permission, DateTime lifetime)
         {
+            string key = $"{userId},{environmentId}";
+
             if (_serialsCache.ContainsKey(key)) _serialsCache.Remove(key);
-            _serialsCache.Add(key, new Tuple<string, DateTime>(serial, lifetime));
+            _serialsCache.Add(key, new Tuple<Permission, DateTime>(permission, lifetime));
         }
 
-        public void Update(string userUserName, int environmentId, string serial)
+        public void Update(int userId, int environmentId, Permission permission)
         {
-            string key = $"{userUserName},{environmentId}";
+            string key = $"{userId},{environmentId}";
             if (!_serialsCache.ContainsKey(key)) return;
 
-            Tuple<string, DateTime> current = _serialsCache[key];
+            Tuple<Permission, DateTime> current = _serialsCache[key];
             _serialsCache.Remove(key);
-            _serialsCache.Add(key, new Tuple<string, DateTime>(serial, current.Item2));
+            _serialsCache.Add(key, new Tuple<Permission, DateTime>(permission, current.Item2));
+        }
+
+        public Permission GetUserPermission(int userId, int environmentId)
+        {
+            string key = $"{userId},{environmentId}";
+            return _serialsCache.ContainsKey(key) ? _serialsCache[key].Item1 : new Permission();
         }
 
         private void Cleanup(object state)
