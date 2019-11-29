@@ -22,7 +22,11 @@ namespace BeepBackend.Helpers
             Permission userPermission = _permissionsCache.GetUserPermission(userId, requirement.EnvironmentId);
             var userFlags = (PermissionFlags)Convert.ToInt32(userPermission.ToBits(), 2);
 
-            if (userFlags.HasFlag(requirement.Permission)) context.Succeed(requirement);
+            if(requirement.PermissionsUserId == requirement.EnvironmentOwnerId && 
+               userId != requirement.EnvironmentOwnerId) return Task.CompletedTask;
+
+            if ((requirement.Permission & userFlags) > 0) context.Succeed(requirement);
+
             return Task.CompletedTask;
         }
     }

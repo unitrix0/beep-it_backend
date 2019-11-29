@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Utrix.WebLib.Helpers;
 
@@ -47,19 +46,22 @@ namespace BeepBackend.Controllers
         [HttpPut("updatepermission")]
         public async Task<IActionResult> UpdatePermission([FromBody]PermissionsDto newPermission)
         {
-            AuthorizationResult authorizationResult = await _authService.AuthorizeAsync(User, null,
-                new[] { new HasEnvironmentPermissionRequirement(newPermission.EnvironmentId, 
-                    PermissionFlags.IsOwner | PermissionFlags.ManageUsers) });
+            int environmentOwnerId = await _repo.GetEnvironmentOwnerId(newPermission.EnvironmentId);
+            AuthorizationResult authorization = await _authService.AuthorizeAsync(User, null,
+                new[]
+                {
+                    new HasEnvironmentPermissionRequirement(newPermission.EnvironmentId, environmentOwnerId,newPermission.UserId,
+                        PermissionFlags.IsOwner | PermissionFlags.ManageUsers)
+                });
 
-            if (!authorizationResult.Succeeded) return Unauthorized();
+            if (!authorization.Succeeded) return Unauthorized();
 
             Permission currentPermission = await _repo.GetUserPermission(newPermission.EnvironmentId, newPermission.UserId);
             _mapper.Map(newPermission, currentPermission);
             currentPermission.Serial = SerialGenerator.Generate();
             _permissionsCache.Update(currentPermission.UserId, currentPermission.Environment.Id, currentPermission);
 
-            if (await _repo.SaveAll())
-                return NoContent();
+            if (await _repo.SaveAll()) return NoContent();
 
             throw new Exception($"Error saving permissions user:{newPermission.UserId} env:{newPermission.EnvironmentId}");
         }

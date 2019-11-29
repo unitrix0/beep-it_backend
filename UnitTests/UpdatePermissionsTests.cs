@@ -16,20 +16,24 @@ namespace UnitTests
             JoinEnvironment("Sepp", "Zu Hause von Tom", new Permission() { CanScan = true, ManageUsers = true });
         }
 
-        [Fact]
-        public void ManagerCanChangeMember()
+        [Theory]
+        [InlineData(3, 2, true, "CanChangeMember")]
+        [InlineData(1, 2, false, "CanNotChangeOwnPermissions")]
+        [InlineData(2, 2, false, "CanNotChangeOwnerPermissons")]
+        public void ManagerPermissionChange(int userId, int environmentId, bool expectedResult, string comment)
         {
+            OutputWriter.WriteLine(comment);
             UserForTokenDto mappedUser = WebClient.Login("sepp", "P@ssw0rd");
             if (mappedUser == null) Assert.False(true);
 
-            HttpResponseMessage result = WebClient.PutAsJsonAsync($"users/Updatepermission", new PermissionsDto()
+            HttpResponseMessage result = WebClient.PutAsJsonAsync("users/Updatepermission", new PermissionsDto()
             {
-                UserId = 3,
-                EnvironmentId = 2,
+                UserId = userId,
+                EnvironmentId = environmentId,
                 EditArticleSettings = true
             }).Result;
-            
-            Assert.True(result.IsSuccessStatusCode);
+
+            Assert.Equal(expectedResult, result.IsSuccessStatusCode);
         }
     }
 }

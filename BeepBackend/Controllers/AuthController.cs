@@ -66,12 +66,12 @@ namespace BeepBackend.Controllers
             IList<string> roles = await _authRepo.GetUserRoles(userFromRepo);
             claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
-            Permission permissions = await _authRepo.GetDefaultPermissions(userFromRepo.Id);
-            claims.Add(new Claim(BeepClaimTypes.Permissions, permissions.ToBits()));
-            claims.Add(new Claim(BeepClaimTypes.PermissionsSerial, permissions.Serial));
-            claims.Add(new Claim(BeepClaimTypes.EnvironmentId, permissions.Environment.Id.ToString()));
+            Permission defaultPermission = await _authRepo.GetDefaultPermissions(userFromRepo.Id);
+            claims.Add(new Claim(BeepClaimTypes.Permissions, defaultPermission.ToBits()));
+            claims.Add(new Claim(BeepClaimTypes.PermissionsSerial, defaultPermission.Serial));
+            claims.Add(new Claim(BeepClaimTypes.EnvironmentId, defaultPermission.Environment.Id.ToString()));
 
-            _permissionsCache.AddEntry(permissions.UserId, permissions.Environment.Id, permissions, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds));
+            await _permissionsCache.AddEntriesForUser(defaultPermission.UserId, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds));
 
             return Ok(new
             {

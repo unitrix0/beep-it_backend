@@ -2,16 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using BeepBackend.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace BeepBackend.Data
 {
     public class PermissionsCache : IPermissionsCache
     {
+        private readonly BeepDbContext _context;
         private readonly Dictionary<string, Tuple<Permission, DateTime>> _serialsCache;
 
-        public PermissionsCache()
+        public PermissionsCache(BeepDbContext context)
         {
+            _context = context;
             _serialsCache = new Dictionary<string, Tuple<Permission, DateTime>>();
 
             var cleanupTimer = new Timer(Cleanup);
@@ -24,12 +28,16 @@ namespace BeepBackend.Data
             return _serialsCache.ContainsKey(key) && _serialsCache[key].Item1.Serial == permissionSerial;
         }
 
-        public void AddEntry(int userId, int environmentId, Permission permission, DateTime lifetime)
+        public async Task AddEntriesForUser(int userId, DateTime lifetime)
         {
-            string key = $"{userId},{environmentId}";
+            List<Permission> permissions = await _context.Permissions.Where(p => p.UserId == userId).ToListAsync();
+            foreach (Permission p in permissions)
+            {
+                string key = $"{userId},{p.EnvironmentId}";
 
-            if (_serialsCache.ContainsKey(key)) _serialsCache.Remove(key);
-            _serialsCache.Add(key, new Tuple<Permission, DateTime>(permission, lifetime));
+                if (_serialsCache.ContainsKey(key)) _serialsCache.Remove(key);
+                _serialsCache.Add(key, new Tuple<Permission, DateTime>(p, lifetime));
+            }
         }
 
         public void Update(int userId, int environmentId, Permission permission)

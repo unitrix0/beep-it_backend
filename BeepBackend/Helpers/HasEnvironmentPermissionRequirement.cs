@@ -10,13 +10,23 @@ namespace BeepBackend.Helpers
         /// </summary>
         public int EnvironmentId { get; set; }
         /// <summary>
+        /// Id des Besitzers des <see cref="BeepEnvironment"/>s
+        /// </summary>
+        public int EnvironmentOwnerId { get; set; }
+        /// <summary>
+        /// Id des Benutzer dessen Berechtigung angepasst werden soll
+        /// </summary>
+        public int PermissionsUserId { get; set; }
+        /// <summary>
         /// Berechtigung(en) die der Benutzer benötigt
         /// </summary>
         public PermissionFlags Permission { get; set; }
 
-        public HasEnvironmentPermissionRequirement(int environmentId, PermissionFlags permission)
+        public HasEnvironmentPermissionRequirement(int environmentId, int environmentOwnerId, int permissionsUserId, PermissionFlags permission)
         {
             EnvironmentId = environmentId;
+            EnvironmentOwnerId = environmentOwnerId;
+            PermissionsUserId = permissionsUserId;
             Permission = permission;
         }
     }

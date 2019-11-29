@@ -101,6 +101,7 @@ namespace UnitTests
 
         protected void ResetDb()
         {
+            OutputWriter.WriteLine("Resetting DB...");
             DbContext.Database.EnsureDeleted();
             DbContext.Database.Migrate();
 
