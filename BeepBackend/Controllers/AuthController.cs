@@ -80,8 +80,8 @@ namespace BeepBackend.Controllers
             });
         }
 
-        [HttpPost("updatepermissions/{userId}")]
-        public async Task<IActionResult> UpdatePermissions(int userId, int environmentId)
+        [HttpPost("UpdatePermissionClaims/{userId}")]
+        public async Task<IActionResult> UpdatePermissionClaims(int userId, int environmentId)
         {
             if (!this.VerifyUser(userId)) return Unauthorized();
 
@@ -91,7 +91,7 @@ namespace BeepBackend.Controllers
 
             Permission permissions = await _authRepo.GetUserPermissions(userId, environmentId);
             newClaims.Add(new Claim(BeepClaimTypes.Permissions, permissions.ToBits()));
-            newClaims.Add(new Claim(BeepClaimTypes.PermissionsSerial, SerialGenerator.Generate()));
+            newClaims.Add(new Claim(BeepClaimTypes.PermissionsSerial, permissions.Serial));
             newClaims.Add(new Claim(BeepClaimTypes.EnvironmentId, permissions.Environment.Id.ToString()));
 
             var mappedUser = _mapper.Map<UserForTokenDto>(permissions.User);

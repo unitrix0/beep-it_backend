@@ -43,8 +43,8 @@ namespace BeepBackend.Controllers
         }
 
 
-        [HttpPut("updatepermission")]
-        public async Task<IActionResult> UpdatePermission([FromBody]PermissionsDto newPermission)
+        [HttpPut("SetPermission")]
+        public async Task<IActionResult> SetPermission([FromBody]PermissionsDto newPermission)
         {
             int environmentOwnerId = await _repo.GetEnvironmentOwnerId(newPermission.EnvironmentId);
             AuthorizationResult authorization = await _authService.AuthorizeAsync(User, null,

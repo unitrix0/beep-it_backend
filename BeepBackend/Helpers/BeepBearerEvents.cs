@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -19,7 +20,7 @@ namespace BeepBackend.Helpers
 
         public override Task TokenValidated(TokenValidatedContext context)
         {
-            var claims = context.Principal.Claims.Where(c =>
+            Dictionary<string, string> claims = context.Principal.Claims.Where(c =>
                     c.Type == BeepClaimTypes.PermissionsSerial ||
                     c.Type == BeepClaimTypes.EnvironmentId)
                 .ToDictionary(c => c.Type, c => c.Value);
@@ -32,7 +33,8 @@ namespace BeepBackend.Helpers
                 ? Convert.ToInt32(claims[BeepClaimTypes.EnvironmentId])
                 : 0;
 
-            if (_cache.SerialsMatch(context.Principal.FindFirst(ClaimTypes.NameIdentifier).Value, environmentId, serial)) return Task.CompletedTask;
+            string userId = context.Principal.FindFirst(ClaimTypes.NameIdentifier).Value;
+            if (_cache.SerialsMatch(userId, environmentId, serial)) return Task.CompletedTask;
 
             context.Response.Headers.Add("PermissionsChanged", "true");
             return Task.CompletedTask;

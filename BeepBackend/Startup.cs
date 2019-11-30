@@ -105,7 +105,7 @@ namespace BeepBackend
                 ValidateIssuer = false,
                 ValidateAudience = false
             };
-            options.Events = services.BuildServiceProvider().GetService<BeepBearerEvents>();
+            options.EventsType = typeof(BeepBearerEvents);
         }
 
         private static void ConfigureMvc(MvcOptions options)
