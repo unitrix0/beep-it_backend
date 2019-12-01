@@ -12,12 +12,14 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using BeepBackend.Permissions;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace UnitTests
 {
-    public class TestsBase : IClassFixture<CustomWebApplicationFactory>
+    [Collection("DB Test")]
+    public class DbTestBase : IClassFixture<CustomWebApplicationFactory>
     {
         protected ITestOutputHelper OutputWriter;
         protected HttpClient WebClient;
@@ -25,7 +27,7 @@ namespace UnitTests
         protected BeepDbContext DbContext;
         private readonly RoleManager<Role> _roleMgr;
 
-        public TestsBase(ITestOutputHelper output, WebApplicationFactory<TestStartup> factory)
+        public DbTestBase(ITestOutputHelper output, WebApplicationFactory<TestStartup> factory)
         {
             OutputWriter = output;
             string cfgPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");

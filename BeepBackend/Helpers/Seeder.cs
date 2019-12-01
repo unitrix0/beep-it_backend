@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using System.Collections.Generic;
 using System.Linq;
 using BeepBackend.Data;
+using BeepBackend.Permissions;
 
 namespace BeepBackend.Helpers
 {

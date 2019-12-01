@@ -1,10 +1,8 @@
-﻿using BeepBackend.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using Microsoft.AspNetCore.Authorization;
+using BeepBackend.Models;
 
-namespace BeepBackend.Helpers
+namespace BeepBackend.Permissions
 {
     public static class PermissionExtensions
     {

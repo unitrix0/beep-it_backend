@@ -6,11 +6,11 @@ using Xunit.Abstractions;
 
 namespace UnitTests
 {
-    public class UpdatePermissionsTests : TestsBase
+    public class UpdatePermissionsDbTest : DbTestBase
     {
         private readonly PermissionConversionTests _permissionConversionTests;
 
-        public UpdatePermissionsTests(ITestOutputHelper output, CustomWebApplicationFactory factory) : base(output, factory)
+        public UpdatePermissionsDbTest(ITestOutputHelper output, CustomWebApplicationFactory factory) : base(output, factory)
         {
             SeedAdditionalUser("Markus");
 

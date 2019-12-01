@@ -18,6 +18,7 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Net;
 using System.Text;
+using BeepBackend.Permissions;
 using Utrix.WebLib;
 
 namespace BeepBackend
@@ -57,7 +58,8 @@ namespace BeepBackend
 
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAuthRepository, AuthRepository>();
-            services.AddTransient<IAuthorizationHandler, HasEnvironmentPermissionHandler>();
+            services.AddTransient<IAuthorizationHandler, HasChangePermissionRequirementHandler>();
+            services.AddTransient<IAuthorizationHandler, HasEnvironmentPermissionRequirementHandler>();
             services.AddTransient<BeepBearerEvents>();
             services.AddSingleton<IPermissionsCache, PermissionsCache>();
         }

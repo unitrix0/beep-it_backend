@@ -1,6 +1,7 @@
 ﻿using BeepBackend.Helpers;
 using BeepBackend.Models;
 using System;
+using BeepBackend.Permissions;
 using Xunit;
 
 namespace UnitTests

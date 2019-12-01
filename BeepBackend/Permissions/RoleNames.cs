@@ -1,4 +1,4 @@
-﻿namespace BeepBackend.Helpers
+﻿namespace BeepBackend.Permissions
 {
     public static class RoleNames
     {

@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace BeepBackend.Helpers
+namespace BeepBackend.Permissions
 {
     [Flags]
     public enum PermissionFlags

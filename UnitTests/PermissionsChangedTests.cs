@@ -12,9 +12,9 @@ using Xunit.Abstractions;
 
 namespace UnitTests
 {
-    public class PermissionsChangedTests : TestsBase
+    public class PermissionsChangedDbTest : DbTestBase
     {
-        public PermissionsChangedTests(ITestOutputHelper output, CustomWebApplicationFactory factory)
+        public PermissionsChangedDbTest(ITestOutputHelper output, CustomWebApplicationFactory factory)
             : base(output, factory)
         {
         }

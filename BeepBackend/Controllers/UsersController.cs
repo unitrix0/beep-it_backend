@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using BeepBackend.Permissions;
 using Utrix.WebLib.Helpers;
 
 namespace BeepBackend.Controllers
@@ -50,7 +51,7 @@ namespace BeepBackend.Controllers
             AuthorizationResult authorization = await _authService.AuthorizeAsync(User, null,
                 new[]
                 {
-                    new HasEnvironmentPermissionRequirement(newPermission.EnvironmentId, environmentOwnerId,newPermission.UserId,
+                    new ChangePermissionRequirement(newPermission.EnvironmentId, environmentOwnerId,newPermission.UserId,
                         PermissionFlags.IsOwner | PermissionFlags.ManageUsers)
                 });
 

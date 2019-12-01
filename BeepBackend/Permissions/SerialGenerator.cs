@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 
-namespace BeepBackend.Helpers
+namespace BeepBackend.Permissions
 {
     public class SerialGenerator
     {
