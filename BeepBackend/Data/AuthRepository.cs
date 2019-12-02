@@ -3,6 +3,7 @@ using BeepBackend.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using BeepBackend.Permissions;
 
@@ -66,12 +67,20 @@ namespace BeepBackend.Data
             return permission;
         }
 
-        public async Task<Permission> GetUserPermissions(int userId, int environmentId)
+        public async Task<Permission> GetUserPermissionForEnvironment(int userId, int environmentId)
         {
             Permission permissions = await _context.Permissions
                 .Include(p => p.User)
                 .Include(p => p.Environment)
                 .FirstOrDefaultAsync(p => p.UserId == userId && p.Environment.Id == environmentId);
+
+            return permissions;
+        }
+
+        public async Task<IEnumerable<Permission>> GetAllUserPermissions(int userId)
+        {
+            List<Permission> permissions = await _context.Permissions.Where(p => p.UserId == userId)
+                .ToListAsync();
 
             return permissions;
         }

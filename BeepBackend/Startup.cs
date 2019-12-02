@@ -45,14 +45,13 @@ namespace BeepBackend
 
             services.AddMvc(ConfigureMvc)
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-
-
+            
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options => ConfigureBearerToken(options, services));
 
-
             services.AddDbContext<BeepDbContext>(o =>
                 o.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            
             services.AddCors();
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
@@ -60,8 +59,8 @@ namespace BeepBackend
             services.AddScoped<IAuthRepository, AuthRepository>();
             services.AddTransient<IAuthorizationHandler, HasChangePermissionRequirementHandler>();
             services.AddTransient<IAuthorizationHandler, HasEnvironmentPermissionRequirementHandler>();
-            services.AddTransient<BeepBearerEvents>();
             services.AddSingleton<IPermissionsCache, PermissionsCache>();
+            services.AddTransient<BeepBearerEvents>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

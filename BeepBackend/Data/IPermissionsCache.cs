@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using BeepBackend.Models;
 
@@ -9,6 +10,6 @@ namespace BeepBackend.Data
         bool SerialsMatch(string userName, int environmentId, string permissionSerial);
         void Update(int userId, int environmentId, Permission permission);
         Permission GetUserPermission(int userId, int environmentId);
-        Task AddEntriesForUser(int userId, DateTime lifetime);
+        void AddEntriesForUser(int userId, DateTime lifetime, IEnumerable<Permission> permissions);
     }
 }

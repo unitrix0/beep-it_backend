@@ -11,6 +11,7 @@ namespace BeepBackend.Data
         Task<User> Login(string username, string password);
         Task<IList<string>> GetUserRoles(User userName);
         Task<Permission> GetDefaultPermissions(int userId);
-        Task<Permission> GetUserPermissions(int userId, int environmentId);
+        Task<Permission> GetUserPermissionForEnvironment(int userId, int environmentId);
+        Task<IEnumerable<Permission>> GetAllUserPermissions(int userId);
     }
 }

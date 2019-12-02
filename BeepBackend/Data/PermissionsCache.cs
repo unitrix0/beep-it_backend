@@ -10,12 +10,10 @@ namespace BeepBackend.Data
 {
     public class PermissionsCache : IPermissionsCache
     {
-        private readonly BeepDbContext _context;
         private readonly Dictionary<string, Tuple<Permission, DateTime>> _serialsCache;
 
-        public PermissionsCache(BeepDbContext context)
+        public PermissionsCache()
         {
-            _context = context;
             _serialsCache = new Dictionary<string, Tuple<Permission, DateTime>>();
 
             var cleanupTimer = new Timer(Cleanup);
@@ -28,9 +26,8 @@ namespace BeepBackend.Data
             return _serialsCache.ContainsKey(key) && _serialsCache[key].Item1.Serial == permissionSerial;
         }
 
-        public async Task AddEntriesForUser(int userId, DateTime lifetime)
+        public void AddEntriesForUser(int userId, DateTime lifetime, IEnumerable<Permission> permissions)
         {
-            List<Permission> permissions = await _context.Permissions.Where(p => p.UserId == userId).ToListAsync();
             foreach (Permission p in permissions)
             {
                 string key = $"{userId},{p.EnvironmentId}";

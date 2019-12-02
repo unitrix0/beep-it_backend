@@ -72,7 +72,8 @@ namespace BeepBackend.Controllers
             claims.Add(new Claim(BeepClaimTypes.PermissionsSerial, defaultPermission.Serial));
             claims.Add(new Claim(BeepClaimTypes.EnvironmentId, defaultPermission.Environment.Id.ToString()));
 
-            await _permissionsCache.AddEntriesForUser(defaultPermission.UserId, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds));
+            _permissionsCache.AddEntriesForUser(defaultPermission.UserId, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds),
+                await _authRepo.GetAllUserPermissions(userFromRepo.Id));
 
             return Ok(new
             {
@@ -90,7 +91,7 @@ namespace BeepBackend.Controllers
                                                         c.Type != BeepClaimTypes.PermissionsSerial &&
                                                         c.Type != BeepClaimTypes.EnvironmentId).ToList();
 
-            Permission permissions = await _authRepo.GetUserPermissions(userId, environmentId);
+            Permission permissions = await _authRepo.GetUserPermissionForEnvironment(userId, environmentId);
             newClaims.Add(new Claim(BeepClaimTypes.Permissions, permissions.ToBits()));
             newClaims.Add(new Claim(BeepClaimTypes.PermissionsSerial, permissions.Serial));
             newClaims.Add(new Claim(BeepClaimTypes.EnvironmentId, permissions.Environment.Id.ToString()));
