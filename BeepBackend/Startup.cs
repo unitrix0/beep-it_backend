@@ -57,6 +57,7 @@ namespace BeepBackend
 
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAuthRepository, AuthRepository>();
+            services.AddScoped<IArticleRepository, ArticleRepository>();
             services.AddTransient<IAuthorizationHandler, HasChangePermissionRequirementHandler>();
             services.AddTransient<IAuthorizationHandler, HasEnvironmentPermissionRequirementHandler>();
             services.AddSingleton<IPermissionsCache, PermissionsCache>();

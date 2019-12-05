@@ -20,6 +20,9 @@ namespace BeepBackend.Data
         public DbSet<BeepEnvironment> Environments { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<Invitation> Invitations { get; set; }
+        public DbSet<StockEntry> StockEntries { get; set; }
+        public DbSet<ArticleUnit> ArticleUnits { get; set; }
+        public DbSet<ArticleStore> ArticleStores { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -124,6 +127,47 @@ namespace BeepBackend.Data
                     .IsRequired()
                     .OnDelete(DeleteBehavior.Restrict);
             });
+
+            modelBuilder.Entity<StockEntry>(stockEntry =>
+            {
+                stockEntry.HasKey(se => new { se.EnvironmentId, se.ArticleId });
+
+                stockEntry.HasOne(se => se.Article)
+                    .WithMany(a => a.StockEntries)
+                    .HasForeignKey(se => se.ArticleId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                stockEntry.HasOne(se => se.Environment)
+                    .WithMany(be => be.StockEntries)
+                    .HasForeignKey(se => se.EnvironmentId)
+                    .IsRequired();
+            });
+
+            modelBuilder.Entity<ArticleUnit>(unit =>
+            {
+                unit.HasKey(u => u.Id);
+
+                unit.HasMany(u => u.Articles)
+                    .WithOne(a => a.Unit)
+                    .HasForeignKey(a => a.UnitId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                unit.HasMany(u => u.ArticleUserSettings)
+                    .WithOne(aus => aus.Unit)
+                    .HasForeignKey(aus => aus.UnitId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                unit.HasData(
+                    new ArticleUnit() { Id = 1, Abbreviation = "Stk.", Name = "Stück" },
+                    new ArticleUnit() { Id = 2, Abbreviation = "l", Name = "Liter" },
+                    new ArticleUnit() { Id = 3, Abbreviation = "dl", Name = "Deziliter" },
+                    new ArticleUnit() { Id = 4, Abbreviation = "cl", Name = "Centiliter" },
+                    new ArticleUnit() { Id = 5, Abbreviation = "g", Name = "Gramm" },
+                    new ArticleUnit() { Id = 6, Abbreviation = "kg", Name = "Kilogramm" }
+                    );
+            });
+
         }
     }
 }

@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(BeepDbContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20191204153347_AddArticleImageUrl")]
+    partial class AddArticleImageUrl
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -137,8 +139,6 @@ namespace BeepBackend.Migrations
 
                     b.Property<int>("EnvironmentId");
 
-                    b.Property<int>("KeepStockAmount");
-
                     b.Property<int>("KeppStockMode");
 
                     b.Property<int>("UnitId");
@@ -257,6 +257,8 @@ namespace BeepBackend.Migrations
                     b.Property<bool>("IsOpened");
 
                     b.Property<DateTime>("OpenedOn");
+
+                    b.Property<int>("StockAmount");
 
                     b.HasKey("EnvironmentId", "ArticleId");
 

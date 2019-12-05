@@ -22,7 +22,7 @@ namespace BeepBackend.Helpers
             CreateMap<User, UserForEditDto>()
                 .ForMember(u => u.Environments, opt =>
                 {
-                    opt.MapFrom(delegate(User user, UserForEditDto dto)
+                    opt.MapFrom(delegate (User user, UserForEditDto dto)
                     {
                         List<BeepEnvironment> envs = user.Environments.ToList();
                         envs.AddRange(user.Permissions
@@ -40,6 +40,9 @@ namespace BeepBackend.Helpers
                 .ForMember(i => i.Inviter, opt => opt.MapFrom(src => src.Environment.User.DisplayName))
                 .ForMember(i => i.Invitee, opt => opt.MapFrom(src => src.Invitee.DisplayName))
                 .ForMember(i => i.IsAnswered, opt => opt.MapFrom(src => src.AnsweredOn != DateTime.MinValue));
+
+            CreateMap<Article, ArticleDto>()
+                .ForMember(a => a.GroupId, opt => { opt.MapFrom(src => src.ArticleGroupFk); });
         }
     }
 }
