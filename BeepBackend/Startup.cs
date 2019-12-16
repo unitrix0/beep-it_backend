@@ -43,16 +43,16 @@ namespace BeepBackend
             builder.AddRoleManager<RoleManager<Role>>();
             builder.AddSignInManager<SignInManager<User>>();
 
+            services.AddCors();
             services.AddMvc(ConfigureMvc)
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            
+
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options => ConfigureBearerToken(options, services));
 
             services.AddDbContext<BeepDbContext>(o =>
                 o.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
-            
-            services.AddCors();
+
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             services.AddScoped<IUserRepository, UserRepository>();
@@ -91,7 +91,7 @@ namespace BeepBackend
 
             //app.UseHttpsRedirection();
             app.UseAuthentication();
-            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader().WithExposedHeaders("location")
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()
                 .AllowCredentials());
             app.UseMvc();
         }

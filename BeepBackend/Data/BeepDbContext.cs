@@ -23,6 +23,7 @@ namespace BeepBackend.Data
         public DbSet<StockEntry> StockEntries { get; set; }
         public DbSet<ArticleUnit> ArticleUnits { get; set; }
         public DbSet<ArticleStore> ArticleStores { get; set; }
+        public DbSet<StockEntryValue> StockEntryValues { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -43,6 +44,8 @@ namespace BeepBackend.Data
                 artGrp.HasMany(ag => ag.Articles)
                     .WithOne(a => a.ArticleGroup)
                     .HasForeignKey(a => a.ArticleGroupFk);
+
+                artGrp.HasData(new ArticleGroup() { Id = 1, Name = "keine" });
             });
 
             modelBuilder.Entity<ArticleStore>(artStore =>
@@ -166,6 +169,16 @@ namespace BeepBackend.Data
                     new ArticleUnit() { Id = 5, Abbreviation = "g", Name = "Gramm" },
                     new ArticleUnit() { Id = 6, Abbreviation = "kg", Name = "Kilogramm" }
                     );
+            });
+
+            modelBuilder.Entity<StockEntryValue>(values =>
+            {
+                values.HasKey(v => v.Id);
+
+                values.HasOne(v => v.StockEntry)
+                    .WithMany(se => se.StockEntryValues)
+                    .HasForeignKey(v => new { v.EnvironmentId, v.ArticleId })
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
         }

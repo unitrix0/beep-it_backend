@@ -30,7 +30,7 @@ namespace BeepBackend
                     var roleMgr = services.GetRequiredService<RoleManager<Role>>();
 
                     context.Database.Migrate();
-                    Seeder.Seed(roleMgr);
+                    Seeder.Seed(roleMgr, context);
                 }
                 catch (Exception ex)
                 {

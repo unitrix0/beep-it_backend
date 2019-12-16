@@ -1,16 +1,8 @@
-﻿using BeepBackend.Data;
-using BeepBackend.Models;
+﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using System.Linq;
-using System.Net.Http;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.TestHost;
 
-namespace UnitTests
+namespace UnitTests.BaseClasses
 {
     public class CustomWebApplicationFactory : WebApplicationFactory<TestStartup>
     {

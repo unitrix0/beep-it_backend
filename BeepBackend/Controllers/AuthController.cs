@@ -12,7 +12,9 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using BeepBackend.Permissions;
+using Utrix.WebLib;
 using Utrix.WebLib.Helpers;
+using Utrix.WebLib.Pagination;
 
 namespace BeepBackend.Controllers
 {
@@ -45,6 +47,7 @@ namespace BeepBackend.Controllers
             User createdUser = await _authRepo.Register(userToCreate, newUser.Password);
 
             var userToReturn = _mapper.Map<UserForEditDto>(createdUser);
+            Response.ExposeHeader("location");
             return CreatedAtRoute(nameof(UsersController.GetUser), new { controller = "Users", id = userToReturn.Id }, userToReturn);
         }
 

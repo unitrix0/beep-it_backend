@@ -39,15 +39,15 @@ namespace BeepBackend.Data
 
             if (filter.IsOpened)
             {
-                var articlesOpened = await _context.StockEntries
-                    .Where(se => se.IsOpened && se.EnvironmentId == environmentId)
-                    .Select(se => se.ArticleId)
+                var articlesOpened = await _context.StockEntryValues
+                    .Where(sev => sev.IsOpened && sev.EnvironmentId == environmentId)
+                    .Select(sev => sev.ArticleId)
                     .ToListAsync();
 
                 articles = articles.Where(a => articlesOpened.Contains(a.Id));
             }
 
-            if (filter.KeepStock)
+            if (filter.KeepOnStock)
             {
                 var keepStockArticles = await _context.ArticleUserSettings
                     .Where(aus => aus.KeepStockAmount > 0 && aus.EnvironmentId == environmentId)
@@ -56,14 +56,14 @@ namespace BeepBackend.Data
                 articles = articles.Where(a => keepStockArticles.Contains(a.Id));
             }
 
-            if (!string.IsNullOrEmpty(filter.NameEan))
+            if (!string.IsNullOrEmpty(filter.NameOrEan))
             {
                 var envArticles = await _context.ArticleUserSettings
                     .Where(aus => aus.EnvironmentId == environmentId)
                     .Select(aus => aus.ArticleFk).ToListAsync();
 
                 articles = articles
-                    .Where(a => a.Barcode.Contains(filter.NameEan) || a.Name.Contains(filter.NameEan) &&
+                    .Where(a => a.Barcode.Contains(filter.NameOrEan) || a.Name.Contains(filter.NameOrEan) &&
                                 envArticles.Contains(a.Id));
             }
 
@@ -78,6 +78,30 @@ namespace BeepBackend.Data
             
 
             return await PagedList<Article>.CreateAsync(articles, filter.PageNumber, filter.PageSize);
+        }
+
+        public async Task<IEnumerable<ArticleUnit>> GetUnits()
+        {
+            return await _context.ArticleUnits.ToListAsync();
+        }
+
+        public async Task<IEnumerable<ArticleGroup>> GetArticleGroups()
+        {
+            return await _context.ArticleGroups.ToListAsync();
+        }
+
+        public async Task<StockEntry> GetStockEntryForArticle(string barcode, int environmentId)
+        {
+            Article article = await _context.Articles.FirstOrDefaultAsync(a => a.Barcode == barcode);
+            if (article == null) return null;
+
+            StockEntry x = await _context.StockEntries
+                .Include(se => se.StockEntryValues)
+                .Include(se => se.Article)
+                .FirstOrDefaultAsync(se => se.EnvironmentId == environmentId &&
+                                           se.ArticleId == article.Id);
+
+            return x;
         }
     }
 }

@@ -1,13 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using BeepBackend.DTOs;
+﻿using BeepBackend.DTOs;
+using Microsoft.AspNetCore.Http.Extensions;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using BeepBackend.Models;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Threading.Tasks;
+using UnitTests.DTOs;
 
-namespace UnitTests
+namespace UnitTests.Helper
 {
     internal static class Extensions
     {
@@ -31,6 +33,17 @@ namespace UnitTests
         {
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             return client;
+        }
+
+        public static async Task<string> GetByQuery(this HttpClient client, string requestUri, object valueObj)
+        {
+            Dictionary<string, string> valuePairs = valueObj.GetType().GetProperties()
+                .Select(p => new { p.Name, value = p.GetValue(valueObj).ToString() })
+                .ToDictionary(x => x.Name, x => x.value);
+
+            var qry = new QueryBuilder(valuePairs);
+
+            return await client.GetStringAsync(requestUri + qry);
         }
 
         public static string ToBits(this PermissionsDto permission)

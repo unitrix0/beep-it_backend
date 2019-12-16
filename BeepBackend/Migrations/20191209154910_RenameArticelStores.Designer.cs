@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(BeepDbContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20191209154910_RenameArticelStores")]
+    partial class RenameArticelStores
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -59,13 +61,6 @@ namespace BeepBackend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("ArticleGroups");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "keine"
-                        });
                 });
 
             modelBuilder.Entity("BeepBackend.Models.ArticleStore", b =>
@@ -255,26 +250,9 @@ namespace BeepBackend.Migrations
 
                     b.Property<int>("ArticleId");
 
-                    b.HasKey("EnvironmentId", "ArticleId");
-
-                    b.HasIndex("ArticleId");
-
-                    b.ToTable("StockEntries");
-                });
-
-            modelBuilder.Entity("BeepBackend.Models.StockEntryValue", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
                     b.Property<int>("AmountOnStock");
 
                     b.Property<float>("AmountRemaining");
-
-                    b.Property<int>("ArticleId");
-
-                    b.Property<int>("EnvironmentId");
 
                     b.Property<DateTime>("ExpireDate");
 
@@ -282,11 +260,11 @@ namespace BeepBackend.Migrations
 
                     b.Property<DateTime>("OpenedOn");
 
-                    b.HasKey("Id");
+                    b.HasKey("EnvironmentId", "ArticleId");
 
-                    b.HasIndex("EnvironmentId", "ArticleId");
+                    b.HasIndex("ArticleId");
 
-                    b.ToTable("StockEntryValues");
+                    b.ToTable("StockEntries");
                 });
 
             modelBuilder.Entity("BeepBackend.Models.Store", b =>
@@ -540,14 +518,6 @@ namespace BeepBackend.Migrations
                     b.HasOne("BeepBackend.Models.BeepEnvironment", "Environment")
                         .WithMany("StockEntries")
                         .HasForeignKey("EnvironmentId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("BeepBackend.Models.StockEntryValue", b =>
-                {
-                    b.HasOne("BeepBackend.Models.StockEntry", "StockEntry")
-                        .WithMany("StockEntryValues")
-                        .HasForeignKey("EnvironmentId", "ArticleId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

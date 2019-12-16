@@ -1,6 +1,6 @@
 ﻿using BeepBackend.DTOs;
 
-namespace UnitTests
+namespace UnitTests.DTOs
 {
     internal class LoginResponseObject
     {

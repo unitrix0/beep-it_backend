@@ -6,6 +6,9 @@ using System.Linq;
 using System.Net.Http;
 using BeepBackend.Helpers;
 using Newtonsoft.Json.Linq;
+using UnitTests.BaseClasses;
+using UnitTests.DTOs;
+using UnitTests.Helper;
 using Utrix.WebLib.Helpers;
 using Xunit;
 using Xunit.Abstractions;
@@ -31,6 +34,7 @@ namespace UnitTests
              * 7. Verify new Permissions
              * 8. Verify Header*/
 
+            ResetDb();
             var initialPermissions = new Permission() { CanScan = true, EditArticleSettings = true };
             JoinEnvironment("sepp", "Zu Hause von Tom", initialPermissions);
 
@@ -77,6 +81,13 @@ namespace UnitTests
             Assert.NotNull(invitationsCountResult.Headers.FirstOrDefault(h => h.Key == "PermissionsChanged").Value);
             Assert.Equal(newPermission.ToBits(), updatedPermissions);
             Assert.Null(noPermissionsChangedHeader.Headers.FirstOrDefault(h => h.Key == "PermissionsChanged").Value);
+        }
+
+        protected override void ResetDb()
+        {
+            base.ResetDb();
+            SeedAdditionalUser("Sepp");
+            SeedAdditionalUser("Tom");
         }
     }
 }
