@@ -3,6 +3,7 @@ using BeepBackend.Data;
 using BeepBackend.DTOs;
 using BeepBackend.Helpers;
 using BeepBackend.Models;
+using BeepBackend.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -11,10 +12,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using BeepBackend.Permissions;
 using Utrix.WebLib;
 using Utrix.WebLib.Helpers;
-using Utrix.WebLib.Pagination;
 
 namespace BeepBackend.Controllers
 {
@@ -55,7 +54,7 @@ namespace BeepBackend.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(UserForLoginDto user)
         {
-            Console.WriteLine($"New Login from: " + user);
+            Console.WriteLine($"New Login from: {user.Username}");
             User userFromRepo = await _authRepo.Login(user.Username.ToLower(), user.Password);
             if (userFromRepo == null) return Unauthorized();
 

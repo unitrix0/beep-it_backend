@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(BeepDbContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20191218081151_RemoveUnitOnArticle")]
+    partial class RemoveUnitOnArticle
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -27,6 +29,8 @@ namespace BeepBackend.Migrations
 
                     b.Property<int>("ArticleGroupFk");
 
+                    b.Property<int?>("ArticleUnitId");
+
                     b.Property<string>("Barcode");
 
                     b.Property<bool>("HasLifetime");
@@ -35,9 +39,13 @@ namespace BeepBackend.Migrations
 
                     b.Property<string>("Name");
 
+                    b.Property<int>("TypicalLifetime");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ArticleGroupFk");
+
+                    b.HasIndex("ArticleUnitId");
 
                     b.ToTable("Articles");
                 });
@@ -140,11 +148,9 @@ namespace BeepBackend.Migrations
 
                     b.Property<int>("KeepStockAmount");
 
-                    b.Property<int>("KeepStockMode");
+                    b.Property<int>("KeppStockMode");
 
                     b.Property<int>("UnitId");
-
-                    b.Property<int>("UsualLifetime");
 
                     b.HasKey("Id");
 
@@ -456,6 +462,10 @@ namespace BeepBackend.Migrations
                         .WithMany("Articles")
                         .HasForeignKey("ArticleGroupFk")
                         .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("BeepBackend.Models.ArticleUnit")
+                        .WithMany("Articles")
+                        .HasForeignKey("ArticleUnitId");
                 });
 
             modelBuilder.Entity("BeepBackend.Models.ArticleStore", b =>

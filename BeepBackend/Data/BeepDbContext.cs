@@ -151,11 +151,6 @@ namespace BeepBackend.Data
             {
                 unit.HasKey(u => u.Id);
 
-                unit.HasMany(u => u.Articles)
-                    .WithOne(a => a.Unit)
-                    .HasForeignKey(a => a.UnitId)
-                    .OnDelete(DeleteBehavior.Restrict);
-
                 unit.HasMany(u => u.ArticleUserSettings)
                     .WithOne(aus => aus.Unit)
                     .HasForeignKey(aus => aus.UnitId)

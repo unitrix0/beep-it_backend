@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(BeepDbContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20191218081642_RemoveUnitOnArticle2")]
+    partial class RemoveUnitOnArticle2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,6 +36,8 @@ namespace BeepBackend.Migrations
                     b.Property<string>("ImageUrl");
 
                     b.Property<string>("Name");
+
+                    b.Property<int>("TypicalLifetime");
 
                     b.HasKey("Id");
 
@@ -140,11 +144,9 @@ namespace BeepBackend.Migrations
 
                     b.Property<int>("KeepStockAmount");
 
-                    b.Property<int>("KeepStockMode");
+                    b.Property<int>("KeppStockMode");
 
                     b.Property<int>("UnitId");
-
-                    b.Property<int>("UsualLifetime");
 
                     b.HasKey("Id");
 

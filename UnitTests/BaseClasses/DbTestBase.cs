@@ -115,7 +115,6 @@ namespace UnitTests.BaseClasses
 
         protected Article SeedNewArticle(string barcode, string name, string articleGroupName, string unitAbbreviation, string storeName)
         {
-            ArticleUnit unit = DbContext.ArticleUnits.FirstOrDefault(u => u.Abbreviation == unitAbbreviation);
             ArticleGroup articleGroup = DbContext.ArticleGroups.FirstOrDefault(g => g.Name == articleGroupName);
             Store store = DbContext.Stores.FirstOrDefault(s => s.Name == storeName);
 
@@ -124,7 +123,6 @@ namespace UnitTests.BaseClasses
                 Name = name,
                 Barcode = barcode,
                 ArticleGroup = articleGroup,
-                Unit = unit
             };
 
             DbContext.Articles.Add(article);
@@ -200,8 +198,8 @@ namespace UnitTests.BaseClasses
                 Article = article,
                 Environment = env,
                 KeepStockAmount = keepStockAmount,
-                KeppStockMode = keepStockMode,
-                Unit = article?.Unit
+                KeepStockMode = keepStockMode,
+                UnitId = 1
             });
 
             DbContext.SaveChanges();

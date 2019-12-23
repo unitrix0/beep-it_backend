@@ -10,12 +10,9 @@ namespace BeepBackend.Models
         public int Id { get; set; }
         public string Name{ get; set; }
         public string Barcode { get; set; }
-        public int TypicalLifetime { get; set; }
         public bool HasLifetime { get; set; }
         public string ImageUrl { get; set; }
 
-        public int UnitId { get; set; }
-        public ArticleUnit Unit { get; set; }
         public int ArticleGroupFk { get; set; }
         public ArticleGroup ArticleGroup { get; set; }
 

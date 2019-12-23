@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(BeepDbContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20191227190355_MovedTypicalLifetime")]
+    partial class MovedTypicalLifetime
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -142,9 +144,9 @@ namespace BeepBackend.Migrations
 
                     b.Property<int>("KeepStockMode");
 
-                    b.Property<int>("UnitId");
+                    b.Property<int>("TypicalLifetime");
 
-                    b.Property<int>("UsualLifetime");
+                    b.Property<int>("UnitId");
 
                     b.HasKey("Id");
 
