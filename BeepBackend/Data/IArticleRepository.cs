@@ -16,5 +16,6 @@ namespace BeepBackend.Data
         Task<ArticleUserSetting> LookupArticleUserSettings(string barcode, int environmentId);
         Task<Article> SaveArticle(Article article, ArticleUserSetting userSettings);
         Task<StockEntryValue> AddStockEntry(StockEntryValue entryValues, int usualLifetime);
+        Task<PagedList<StockEntryValue>> GetStockEntries(int articleId, int environmentId, int page, int itemsPerPage);
     }
 }

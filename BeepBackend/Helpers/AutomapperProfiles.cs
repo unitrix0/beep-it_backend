@@ -42,7 +42,8 @@ namespace BeepBackend.Helpers
                 .ForMember(i => i.IsAnswered, opt => opt.MapFrom(src => src.AnsweredOn != DateTime.MinValue));
 
             CreateMap<Article, EditArticleDto>()
-                .ForMember(a => a.ArticleUserSettings, opt => opt.MapFrom(src => src.ArticleUserSettings.FirstOrDefault()));
+                .ForMember(a => a.ArticleUserSettings, opt => opt.MapFrom(src => src.ArticleUserSettings.FirstOrDefault()))
+                .ForMember(a => a.GroupId, opt => opt.MapFrom(src => src.ArticleGroupFk));
             CreateMap<ArticleUserSetting, ArticleUserSettingDto>();
 
             CreateMap<EditArticleDto, Article>()
@@ -53,6 +54,8 @@ namespace BeepBackend.Helpers
 
             CreateMap<CheckInDto, StockEntryValue>();
             CreateMap<StockEntryValue, CheckInDto>();
+
+            CreateMap<StockEntryValue, StockEntryValueDto>();
         }
     }
 }

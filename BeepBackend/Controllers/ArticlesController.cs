@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Collections;
+using AutoMapper;
 using BeepBackend.Data;
 using BeepBackend.DTOs;
 using BeepBackend.Helpers;
@@ -6,6 +7,7 @@ using BeepBackend.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Utrix.WebLib;
 using Utrix.WebLib.Pagination;
 
 namespace BeepBackend.Controllers
@@ -91,6 +93,19 @@ namespace BeepBackend.Controllers
         {
             ArticleUserSetting userSettings = await _repo.LookupArticleUserSettings(barcode, environmentId);
             return Ok(userSettings.UsualLifetime);
+        }
+
+        [HttpGet("GetArticleStock")]
+        public async Task<IActionResult> GetArticleStock(int articleId, int environmentId, int pageNumber, int itemsPerPage)
+        {
+            PagedList<StockEntryValue> stockEntries =
+                await _repo.GetStockEntries(articleId, environmentId, pageNumber, itemsPerPage);
+
+            IEnumerable<StockEntryValueDto>
+                stockEntriesDto = _mapper.Map<IEnumerable<StockEntryValueDto>>(stockEntries);
+            Response.AddPagination(stockEntries.CurrentPage, stockEntries.PageSize, stockEntries.TotalCount, stockEntries.TotalPages);
+            
+            return Ok(stockEntriesDto);
         }
     }
 }

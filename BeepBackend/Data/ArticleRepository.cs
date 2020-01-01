@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Utrix.WebLib.Pagination;
+using StockEntryValue = BeepBackend.Models.StockEntryValue;
 
 namespace BeepBackend.Data
 {
@@ -150,6 +151,15 @@ namespace BeepBackend.Data
             await _context.SaveChangesAsync();
 
             return entryValues;
+        }
+
+        public async Task<PagedList<StockEntryValue>> GetStockEntries(int articleId, int environmentId, int page, int itemsPerPage)
+        {
+            IQueryable<StockEntryValue> qry = _context.StockEntryValues
+                .Where(se => se.EnvironmentId == environmentId && se.ArticleId == articleId)
+                .OrderBy(se => se.ExpireDate).ThenByDescending(se => se.IsOpened);
+
+            return await PagedList<StockEntryValue>.CreateAsync(qry, page, itemsPerPage);
         }
     }
 }
