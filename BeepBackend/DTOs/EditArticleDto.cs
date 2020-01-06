@@ -15,6 +15,7 @@ namespace BeepBackend.DTOs
         public DateTime NextExpireDate { get; set; }
         public string ImageUrl { get; set; }
         public ArticleUserSettingDto ArticleUserSettings { get; set; }
+        public int TotalStockAmount { get; set; }
 
         public EditArticleDto()
         {

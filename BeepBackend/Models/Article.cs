@@ -20,5 +20,6 @@ namespace BeepBackend.Models
         public ICollection<ArticleStore> Stores { get; set; }
         public ICollection<UserArticle> UserArticles { get; set; }
         public ICollection<StockEntry> StockEntries { get; set; }
+        public ICollection<StockEntryValue> StockEntryValues { get; set; }
     }
 }

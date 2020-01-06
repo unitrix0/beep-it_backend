@@ -1,6 +1,7 @@
 ﻿using BeepBackend.Helpers;
 using BeepBackend.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,6 +19,16 @@ namespace BeepBackend.Data
             _context = context;
         }
 
+        public void Delete<T>(T entry) where T : class
+        {
+            _context.Remove(entry);
+        }
+
+        public async Task<bool> SaveAll()
+        {
+            return await _context.SaveChangesAsync() > 0;
+        }
+
         public async Task<PagedList<Article>> GetArticles(int environmentId, ArticleFilter filter)
         {
             IQueryable<Article> articles = filter.StoreId > 0
@@ -25,6 +36,11 @@ namespace BeepBackend.Data
                     .Where(ast => ast.StoreId == filter.StoreId)
                     .Select(ast => ast.Article)
                 : _context.Articles.AsQueryable();
+
+            articles = articles
+                .Include(a => a.ArticleUserSettings)
+                .Include(a => a.StockEntryValues)
+                .Where(a => a.ArticleUserSettings.Any(aus => aus.EnvironmentId == environmentId));
 
             if (filter.IsOnStock)
             {
@@ -65,6 +81,7 @@ namespace BeepBackend.Data
                                 envArticles.Contains(a.Id));
             }
 
+            //TODO noch benötigt?
             //if (filter.StoreId > 0)
             //{
             //    var stores = await _context.ArticleStores
@@ -75,7 +92,7 @@ namespace BeepBackend.Data
             //}
 
 
-            return await PagedList<Article>.CreateAsync(articles.Include(a => a.ArticleUserSettings), filter.PageNumber, filter.PageSize);
+            return await PagedList<Article>.CreateAsync(articles, filter.PageNumber, filter.PageSize);
         }
 
         public async Task<IEnumerable<ArticleUnit>> GetUnits()
@@ -105,13 +122,25 @@ namespace BeepBackend.Data
             return userSettings;
         }
 
-        public async Task<ArticleUserSetting> LookupArticleUserSettings(string barcode, int environmentId)
+        public async Task<int> GetArticleLifetime(string barcode, int environmentId)
         {
             ArticleUserSetting userSettings = await _context.ArticleUserSettings
                 .Include(aus => aus.Article)
-                .FirstOrDefaultAsync(aus => aus.Article.Barcode == barcode);
+                .FirstOrDefaultAsync(aus => aus.Article.Barcode == barcode &&
+                                            aus.EnvironmentId == environmentId);
 
-            return userSettings;
+            return userSettings.UsualLifetime;
+        }
+
+        public async Task<DateTime> GetLastExpireDate(string barcode, int environmentId)
+        {
+            StockEntryValue lastExpireDate = await _context.StockEntryValues
+                .Include(sev => sev.Article)
+                .Where(sev => sev.Article.Barcode == barcode &&
+                              sev.EnvironmentId == environmentId)
+                .OrderBy(sev => sev.ExpireDate).FirstOrDefaultAsync();
+
+            return lastExpireDate?.ExpireDate ?? DateTime.Now;
         }
 
         public async Task<Article> SaveArticle(Article article, ArticleUserSetting userSettings)
@@ -133,23 +162,39 @@ namespace BeepBackend.Data
 
             if (stockEntry == null)
             {
-                ArticleUserSetting articleUserSetting = await _context.ArticleUserSettings
-                    .Include(aus => aus.Article)
-                    .FirstOrDefaultAsync(aus => aus.Article.Id == entryValues.ArticleId);
-
-                articleUserSetting.UsualLifetime = usualLifetime;
                 stockEntry = new StockEntry()
                 {
                     EnvironmentId = entryValues.EnvironmentId,
                     ArticleId = entryValues.ArticleId
                 };
                 await _context.StockEntries.AddAsync(stockEntry);
+                await _context.StockEntryValues.AddAsync(entryValues);
+                entryValues.StockEntry = stockEntry;
+            }
+            else
+            {
+                StockEntryValue existingEntryValues = await _context.StockEntryValues
+                    .FirstOrDefaultAsync(sev => sev.ArticleId == entryValues.ArticleId &&
+                                                sev.ExpireDate == entryValues.ExpireDate);
+
+                if (existingEntryValues == null)
+                {
+                    await _context.StockEntryValues.AddAsync(entryValues);
+                    entryValues.StockEntry = stockEntry;
+                }
+                else
+                {
+                    existingEntryValues.AmountOnStock += entryValues.AmountOnStock;
+                }
             }
 
-            entryValues.StockEntry = stockEntry;
-            await _context.StockEntryValues.AddAsync(entryValues);
-            await _context.SaveChangesAsync();
+            ArticleUserSetting articleUserSetting = await _context.ArticleUserSettings
+                .Include(aus => aus.Article)
+                .FirstOrDefaultAsync(aus => aus.Article.Id == entryValues.ArticleId);
 
+            articleUserSetting.UsualLifetime = usualLifetime;
+
+            await _context.SaveChangesAsync();
             return entryValues;
         }
 

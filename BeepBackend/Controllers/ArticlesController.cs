@@ -1,13 +1,12 @@
-﻿using System.Collections;
-using AutoMapper;
+﻿using AutoMapper;
 using BeepBackend.Data;
 using BeepBackend.DTOs;
 using BeepBackend.Helpers;
 using BeepBackend.Models;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Utrix.WebLib;
 using Utrix.WebLib.Pagination;
 
 namespace BeepBackend.Controllers
@@ -80,7 +79,10 @@ namespace BeepBackend.Controllers
         [HttpPost("AddStockEntry")]
         public async Task<IActionResult> AddStockEntry(CheckInDto checkInDto)
         {
+            int offset = Request.GetClientTimzoneOffset();
             var entryValues = _mapper.Map<StockEntryValue>(checkInDto);
+            entryValues.ExpireDate = entryValues.ExpireDate.AddMinutes(offset);
+
             StockEntryValue newEntry = await _repo.AddStockEntry(entryValues, checkInDto.UsualLifetime);
             var ret = _mapper.Map<EditArticleDto>(newEntry.Article);
 
@@ -88,11 +90,12 @@ namespace BeepBackend.Controllers
                 new { controller = "Articles", barcode = checkInDto.Barcode, environmentId = checkInDto.EnvironmentId }, ret);
         }
 
-        [HttpGet("GetUsualLifetime/{barcode}/{environmentId}")]
-        public async Task<IActionResult> GetUsualLifetime(string barcode, int environmentId)
+        [HttpGet("GetArticleDateSuggestions/{barcode}/{environmentId}")]
+        public async Task<IActionResult> GetArticleDateSuggestions(string barcode, int environmentId)
         {
-            ArticleUserSetting userSettings = await _repo.LookupArticleUserSettings(barcode, environmentId);
-            return Ok(userSettings.UsualLifetime);
+            int usualLifetime = await _repo.GetArticleLifetime(barcode, environmentId);
+            DateTime lastExpireDate = await _repo.GetLastExpireDate(barcode, environmentId);
+            return Ok(new { usualLifetime, lastExpireDate });
         }
 
         [HttpGet("GetArticleStock")]
@@ -104,7 +107,7 @@ namespace BeepBackend.Controllers
             IEnumerable<StockEntryValueDto>
                 stockEntriesDto = _mapper.Map<IEnumerable<StockEntryValueDto>>(stockEntries);
             Response.AddPagination(stockEntries.CurrentPage, stockEntries.PageSize, stockEntries.TotalCount, stockEntries.TotalPages);
-            
+
             return Ok(stockEntriesDto);
         }
     }

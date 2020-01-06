@@ -43,7 +43,8 @@ namespace BeepBackend.Helpers
 
             CreateMap<Article, EditArticleDto>()
                 .ForMember(a => a.ArticleUserSettings, opt => opt.MapFrom(src => src.ArticleUserSettings.FirstOrDefault()))
-                .ForMember(a => a.GroupId, opt => opt.MapFrom(src => src.ArticleGroupFk));
+                .ForMember(a => a.GroupId, opt => opt.MapFrom(src => src.ArticleGroupFk))
+                .ForMember(a => a.TotalStockAmount, opt => opt.MapFrom(src => src.StockEntryValues.Sum(sev => sev.AmountOnStock)));
             CreateMap<ArticleUserSetting, ArticleUserSettingDto>();
 
             CreateMap<EditArticleDto, Article>()
