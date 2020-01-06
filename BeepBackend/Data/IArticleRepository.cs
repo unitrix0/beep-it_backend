@@ -19,5 +19,9 @@ namespace BeepBackend.Data
         Task<StockEntryValue> AddStockEntry(StockEntryValue entryValues, int usualLifetime);
         Task<PagedList<StockEntryValue>> GetStockEntries(int articleId, int environmentId, int page, int itemsPerPage);
         Task<DateTime> GetLastExpireDate(string barcode, int environmentId);
+        Task<StockEntryValue> GetOldestStockEntryValue(string barcode, int environmentId);
+        void Delete<T>(T entry) where T : class;
+        Task<bool> SaveAll();
+        Task<StockEntryValue> GetStockEntryValue(int entryId);
     }
 }

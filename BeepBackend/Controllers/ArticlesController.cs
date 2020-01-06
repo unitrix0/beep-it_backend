@@ -110,5 +110,43 @@ namespace BeepBackend.Controllers
 
             return Ok(stockEntriesDto);
         }
+
+        [HttpGet("GetCheckOutArticle")]
+        public async Task<IActionResult> GetCheckOutArticle(int environmentId, string barcode)
+        {
+            StockEntryValue entry = await _repo.GetOldestStockEntryValue(barcode, environmentId);
+            var entryDto = _mapper.Map<StockEntryValueDto>(entry);
+
+            return Ok(entryDto);
+        }
+
+        [HttpDelete("CheckOut")]
+        public async Task<IActionResult> CheckOut(int environmentId, string barcode)
+        {
+            StockEntryValue entry = await _repo.GetOldestStockEntryValue(barcode, environmentId);
+            if (entry.AmountOnStock == 1)
+            {
+                _repo.Delete(entry);
+                return await _repo.SaveAll() ? NoContent(): throw new Exception("Failed to delete the stock entry");
+            }
+
+            entry.AmountOnStock--;
+            return await _repo.SaveAll() ? NoContent() : throw new Exception("Failed to update stock entry");
+
+        }
+
+        [HttpPut("CheckOutById")]
+        public async Task<IActionResult> CheckOutById(int entryId, int amount)
+        {
+            StockEntryValue entry = await _repo.GetStockEntryValue(entryId);
+            if (amount == 0)
+            {
+                _repo.Delete(entry);
+                return await _repo.SaveAll() ? NoContent() : throw new Exception("Failed to delete the stock entry");
+            }
+
+            entry.AmountOnStock -= amount;
+            return await _repo.SaveAll() ? NoContent() : throw new Exception("Failed to update stock entry");
+        }
     }
 }

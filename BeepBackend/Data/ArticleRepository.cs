@@ -206,5 +206,24 @@ namespace BeepBackend.Data
 
             return await PagedList<StockEntryValue>.CreateAsync(qry, page, itemsPerPage);
         }
+
+        public async Task<StockEntryValue> GetOldestStockEntryValue(string barcode, int environmentId)
+        {
+            StockEntryValue entry = await _context.StockEntryValues
+                .Include(sev => sev.Article)
+                .OrderBy(sev => sev.ExpireDate)
+                .FirstOrDefaultAsync(sev => sev.EnvironmentId == environmentId &&
+                                            sev.Article.Barcode == barcode);
+
+            return entry;
+        }
+        
+        public async Task<StockEntryValue> GetStockEntryValue(int entryId)
+        {
+            StockEntryValue entry = await _context.StockEntryValues
+                .FirstOrDefaultAsync(sev => sev.Id == entryId);
+
+            return entry;
+        }
     }
 }
