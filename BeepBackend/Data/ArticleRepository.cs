@@ -122,7 +122,7 @@ namespace BeepBackend.Data
             return userSettings;
         }
 
-        public async Task<int> GetArticleLifetime(string barcode, int environmentId)
+        public async Task<long> GetArticleLifetime(string barcode, int environmentId)
         {
             ArticleUserSetting userSettings = await _context.ArticleUserSettings
                 .Include(aus => aus.Article)
@@ -153,7 +153,7 @@ namespace BeepBackend.Data
             return article;
         }
 
-        public async Task<StockEntryValue> AddStockEntry(StockEntryValue entryValues, int usualLifetime)
+        public async Task<StockEntryValue> AddStockEntry(StockEntryValue entryValues, long usualLifetime)
         {
             StockEntry stockEntry = await _context.StockEntries
                 .Include(se => se.Article).ThenInclude(a => a.ArticleUserSettings)

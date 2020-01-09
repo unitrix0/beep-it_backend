@@ -79,9 +79,8 @@ namespace BeepBackend.Controllers
         [HttpPost("AddStockEntry")]
         public async Task<IActionResult> AddStockEntry(CheckInDto checkInDto)
         {
-            int offset = Request.GetClientTimzoneOffset();
             var entryValues = _mapper.Map<StockEntryValue>(checkInDto);
-            entryValues.ExpireDate = entryValues.ExpireDate.AddMinutes(offset);
+            entryValues.ExpireDate = entryValues.ExpireDate.AddMinutes(checkInDto.ClientTimezoneOffset);
 
             StockEntryValue newEntry = await _repo.AddStockEntry(entryValues, checkInDto.UsualLifetime);
             var ret = _mapper.Map<EditArticleDto>(newEntry.Article);
@@ -93,7 +92,7 @@ namespace BeepBackend.Controllers
         [HttpGet("GetArticleDateSuggestions/{barcode}/{environmentId}")]
         public async Task<IActionResult> GetArticleDateSuggestions(string barcode, int environmentId)
         {
-            int usualLifetime = await _repo.GetArticleLifetime(barcode, environmentId);
+            long usualLifetime = await _repo.GetArticleLifetime(barcode, environmentId);
             DateTime lastExpireDate = await _repo.GetLastExpireDate(barcode, environmentId);
             return Ok(new { usualLifetime, lastExpireDate });
         }
@@ -135,11 +134,11 @@ namespace BeepBackend.Controllers
 
         }
 
-        [HttpPut("CheckOutById")]
+        [HttpDelete("CheckOutById")]
         public async Task<IActionResult> CheckOutById(int entryId, int amount)
         {
             StockEntryValue entry = await _repo.GetStockEntryValue(entryId);
-            if (amount == 0)
+            if (amount == 0 || entry.AmountOnStock == 1 || entry.AmountOnStock == amount)
             {
                 _repo.Delete(entry);
                 return await _repo.SaveAll() ? NoContent() : throw new Exception("Failed to delete the stock entry");

@@ -5,7 +5,7 @@
         public int Id { get; set; }
         public int KeepStockMode { get; set; }
         public int KeepStockAmount { get; set; }
-        public int UsualLifetime { get; set; }
+        public long UsualLifetime { get; set; }
 
         public int ArticleFk { get; set; }
         public Article Article { get; set; }
