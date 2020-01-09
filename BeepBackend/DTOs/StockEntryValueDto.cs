@@ -4,6 +4,7 @@ namespace BeepBackend.DTOs
 {
     public class StockEntryValueDto
     {
+        public int Id { get; set; }
         public bool IsOpened { get; set; }
         public int AmountOnStock { get; set; }
         public DateTime OpenedOn { get; set; }
