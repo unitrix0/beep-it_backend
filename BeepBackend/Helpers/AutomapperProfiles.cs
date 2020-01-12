@@ -53,7 +53,8 @@ namespace BeepBackend.Helpers
 
             CreateMap<ArticleUserSettingDto, ArticleUserSetting>();
 
-            CreateMap<CheckInDto, StockEntryValue>();
+            CreateMap<CheckInDto, StockEntryValue>()
+                .ForMember(sev => sev.ExpireDate, opt => opt.MapFrom(src => src.ExpireDate.Date));
             CreateMap<StockEntryValue, CheckInDto>();
 
             CreateMap<StockEntryValue, StockEntryValueDto>();

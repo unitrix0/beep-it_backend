@@ -79,8 +79,8 @@ namespace BeepBackend.Controllers
         [HttpPost("AddStockEntry")]
         public async Task<IActionResult> AddStockEntry(CheckInDto checkInDto)
         {
+            checkInDto.ExpireDate = checkInDto.ExpireDate.AddMinutes(checkInDto.ClientTimezoneOffset);
             var entryValues = _mapper.Map<StockEntryValue>(checkInDto);
-            entryValues.ExpireDate = entryValues.ExpireDate.AddMinutes(checkInDto.ClientTimezoneOffset);
 
             StockEntryValue newEntry = await _repo.AddStockEntry(entryValues, checkInDto.UsualLifetime);
             var ret = _mapper.Map<EditArticleDto>(newEntry.Article);
