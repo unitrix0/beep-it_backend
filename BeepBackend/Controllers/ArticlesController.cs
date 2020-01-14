@@ -13,7 +13,6 @@ namespace BeepBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    //TODO Check Permissions
     public class ArticlesController : ControllerBase
     {
         private readonly IArticleRepository _repo;
