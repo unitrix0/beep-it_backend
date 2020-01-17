@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(BeepDbContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20200116132945_RemoveRelationUserSettingsUnits")]
+    partial class RemoveRelationUserSettingsUnits
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,23 +31,15 @@ namespace BeepBackend.Migrations
 
                     b.Property<string>("Barcode");
 
-                    b.Property<int>("ContentAmount");
-
                     b.Property<bool>("HasLifetime");
 
                     b.Property<string>("ImageUrl");
 
                     b.Property<string>("Name");
 
-                    b.Property<int>("UnitId")
-                        .ValueGeneratedOnAdd()
-                        .HasDefaultValue(1);
-
                     b.HasKey("Id");
 
                     b.HasIndex("ArticleGroupFk");
-
-                    b.HasIndex("UnitId");
 
                     b.ToTable("Articles");
                 });
@@ -460,11 +454,6 @@ namespace BeepBackend.Migrations
                         .WithMany("Articles")
                         .HasForeignKey("ArticleGroupFk")
                         .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("BeepBackend.Models.ArticleUnit", "Unit")
-                        .WithMany("Articles")
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("BeepBackend.Models.ArticleStore", b =>

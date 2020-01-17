@@ -29,6 +29,8 @@ namespace BeepBackend.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<Article>(artSettings => { artSettings.Property(x => x.UnitId).HasDefaultValue(1); });
+
             modelBuilder.Entity<ArticleUserSetting>(artSettings =>
             {
                 artSettings.HasOne(us => us.Article)
@@ -151,9 +153,9 @@ namespace BeepBackend.Data
             {
                 unit.HasKey(u => u.Id);
 
-                unit.HasMany(u => u.ArticleUserSettings)
-                    .WithOne(aus => aus.Unit)
-                    .HasForeignKey(aus => aus.UnitId)
+                unit.HasMany(u => u.Articles)
+                    .WithOne(a => a.Unit)
+                    .HasForeignKey(a => a.UnitId)
                     .OnDelete(DeleteBehavior.Restrict);
 
                 unit.HasData(

@@ -15,7 +15,7 @@ namespace BeepBackend.Data
         Task<Article> LookupArticle(string barcode);
         Task<ArticleUserSetting> LookupArticleUserSettings(int articleId, int environmentId);
         Task<long> GetArticleLifetime(string barcode, int environmentId);
-        Task<Article> SaveArticle(Article article, ArticleUserSetting userSettings);
+        Task<Article> CreateArticle(Article article, ArticleUserSetting userSettings);
         Task<StockEntryValue> AddStockEntry(StockEntryValue entryValues, long usualLifetime);
         Task<PagedList<StockEntryValue>> GetStockEntries(int articleId, int environmentId, int page, int itemsPerPage);
         Task<DateTime> GetLastExpireDate(string barcode, int environmentId);
@@ -23,5 +23,6 @@ namespace BeepBackend.Data
         void Delete<T>(T entry) where T : class;
         Task<bool> SaveAll();
         Task<StockEntryValue> GetStockEntryValue(int entryId);
+        Task<Article> GetArticle(int articleId);
     }
 }

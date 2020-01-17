@@ -57,13 +57,13 @@ namespace BeepBackend.Controllers
             return Ok(articleDto);
         }
 
-        [HttpPost("SaveArticle")]
-        public async Task<IActionResult> SaveArticle(EditArticleDto newArticleDto)
+        [HttpPost("CreateArticle")]
+        public async Task<IActionResult> CreateArticle(EditArticleDto newArticleDto)
         {
             var article = _mapper.Map<Article>(newArticleDto);
             var userSettings = _mapper.Map<ArticleUserSetting>(newArticleDto.ArticleUserSettings);
 
-            Article createdArticle = await _repo.SaveArticle(article, userSettings);
+            Article createdArticle = await _repo.CreateArticle(article, userSettings);
             var createdArticleDto = _mapper.Map<EditArticleDto>(createdArticle);
 
             return CreatedAtRoute(nameof(LookupArticle),
@@ -73,6 +73,18 @@ namespace BeepBackend.Controllers
                     barcode = createdArticle.Barcode,
                     environmentId = newArticleDto.ArticleUserSettings.EnvironmentId
                 }, createdArticleDto);
+        }
+
+        [HttpPatch("UpdateArticle")]
+        public async Task<IActionResult> UpdateArticle(EditArticleDto articleDto)
+        {
+            Article article = await _repo.GetArticle(articleDto.Id);
+            _mapper.Map(articleDto, article);
+
+            if (await _repo.SaveAll())
+                return NoContent();
+
+            throw new Exception("Failed to update article");
         }
 
         [HttpPost("AddStockEntry")]

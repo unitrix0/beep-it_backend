@@ -95,6 +95,15 @@ namespace BeepBackend.Data
             return await PagedList<Article>.CreateAsync(articles, filter.PageNumber, filter.PageSize);
         }
 
+        public async Task<Article> GetArticle(int articleId)
+        {
+            Article article = await _context.Articles
+                .Include(a => a.ArticleUserSettings)
+                .FirstOrDefaultAsync(a => a.Id == articleId);
+
+            return article;
+        }
+
         public async Task<IEnumerable<ArticleUnit>> GetUnits()
         {
             return await _context.ArticleUnits.ToListAsync();
@@ -143,7 +152,7 @@ namespace BeepBackend.Data
             return lastExpireDate?.ExpireDate ?? DateTime.Now;
         }
 
-        public async Task<Article> SaveArticle(Article article, ArticleUserSetting userSettings)
+        public async Task<Article> CreateArticle(Article article, ArticleUserSetting userSettings)
         {
             userSettings.Article = article;
             await _context.ArticleUserSettings.AddAsync(userSettings);

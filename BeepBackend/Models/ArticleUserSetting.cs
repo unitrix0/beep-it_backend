@@ -10,8 +10,6 @@
         public int ArticleFk { get; set; }
         public Article Article { get; set; }
 
-        public int UnitId { get; set; }
-        public ArticleUnit Unit { get; set; }
         public int EnvironmentId { get; set; }
         public BeepEnvironment Environment { get; set; }
     }

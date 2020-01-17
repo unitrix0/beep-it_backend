@@ -198,8 +198,7 @@ namespace UnitTests.BaseClasses
                 Article = article,
                 Environment = env,
                 KeepStockAmount = keepStockAmount,
-                KeepStockMode = keepStockMode,
-                UnitId = 1
+                KeepStockMode = keepStockMode
             });
 
             DbContext.SaveChanges();

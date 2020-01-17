@@ -69,6 +69,8 @@
     <Compile Remove="Migrations\20191204130603_AddArticleUnits.Designer.cs" />
     <Compile Remove="Migrations\20191204145453_AddArticleGroupId.cs" />
     <Compile Remove="Migrations\20191204145453_AddArticleGroupId.Designer.cs" />
+    <Compile Remove="Migrations\20200115160237_ArticleUnitRelation.cs" />
+    <Compile Remove="Migrations\20200115160237_ArticleUnitRelation.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>
