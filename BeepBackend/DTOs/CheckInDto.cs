@@ -4,6 +4,7 @@ namespace BeepBackend.DTOs
 {
     public class CheckInDto
     {
+        public int AmountRemaining { get; set; }
         public int AmountOnStock { get; set; }
         public DateTime ExpireDate { get; set; }
         public long UsualLifetime { get; set; }

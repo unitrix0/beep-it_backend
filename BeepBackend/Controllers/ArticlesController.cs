@@ -79,7 +79,9 @@ namespace BeepBackend.Controllers
         public async Task<IActionResult> UpdateArticle(EditArticleDto articleDto)
         {
             Article article = await _repo.GetArticle(articleDto.Id);
+            ArticleUserSetting articleSettings = await _repo.GetArticleUserSettings(articleDto.ArticleUserSettings.Id);
             _mapper.Map(articleDto, article);
+            _mapper.Map(articleDto.ArticleUserSettings, articleSettings);
 
             if (await _repo.SaveAll())
                 return NoContent();
@@ -92,6 +94,7 @@ namespace BeepBackend.Controllers
         {
             checkInDto.ExpireDate = checkInDto.ExpireDate.AddMinutes(checkInDto.ClientTimezoneOffset);
             var entryValues = _mapper.Map<StockEntryValue>(checkInDto);
+            entryValues.AmountRemaining = 1;
 
             StockEntryValue newEntry = await _repo.AddStockEntry(entryValues, checkInDto.UsualLifetime);
             var ret = _mapper.Map<EditArticleDto>(newEntry.Article);

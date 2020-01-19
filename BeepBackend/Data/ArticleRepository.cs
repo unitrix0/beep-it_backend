@@ -104,6 +104,12 @@ namespace BeepBackend.Data
             return article;
         }
 
+        public async Task<ArticleUserSetting> GetArticleUserSettings(int id)
+        {
+            ArticleUserSetting aus = await _context.ArticleUserSettings.FirstOrDefaultAsync(x => x.Id == id);
+            return aus;
+        }
+
         public async Task<IEnumerable<ArticleUnit>> GetUnits()
         {
             return await _context.ArticleUnits.ToListAsync();
