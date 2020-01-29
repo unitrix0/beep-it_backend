@@ -13,6 +13,14 @@ namespace UnitTests.Helper
 {
     internal static class Extensions
     {
+        /// <summary>
+        /// Meldet sich mit dem angegebenen Benutzer an. Gibt null zurück falls login fehlschlägt
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="username"></param>
+        /// <param name="password"></param>
+        /// <param name="subUrl"></param>
+        /// <returns></returns>
         public static LoginResponseObject Login(this HttpClient client, string username, string password, string subUrl = "auth/login")
         {
             HttpResponseMessage response = client.PostAsJsonAsync(subUrl, new UserForLoginDto
@@ -29,21 +37,41 @@ namespace UnitTests.Helper
             return content.ToObject<LoginResponseObject>();
         }
 
+
+        /// <summary>
+        /// Setzt den verwendeten Bearer Token im <see cref="client"/>.
+        /// Hiermit kann der verwendete Login definiert werden.
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
         public static HttpClient UseToken(this HttpClient client, string token)
         {
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             return client;
         }
 
-        public static async Task<string> GetByQuery(this HttpClient client, string requestUri, object valueObj)
+        public static async Task<string> GetStringByQueryAsync(this HttpClient client, string requestUri, object valueObj)
         {
-            Dictionary<string, string> valuePairs = valueObj.GetType().GetProperties()
-                .Select(p => new { p.Name, value = p.GetValue(valueObj).ToString() })
-                .ToDictionary(x => x.Name, x => x.value);
-
-            var qry = new QueryBuilder(valuePairs);
+            var qry = new QueryBuilder(valueObj.ToKeyValuePairs());
 
             return await client.GetStringAsync(requestUri + qry);
+        }
+
+        public static async Task<HttpResponseMessage> GetAsyncQuery(this HttpClient client, string requestUri,
+            object valueObj)
+        {
+            var qry = new QueryBuilder(valueObj.ToKeyValuePairs());
+
+            return await client.GetAsync(requestUri + qry);
+        }
+
+        public static async Task<HttpResponseMessage> DeleteAsyncQuery(this HttpClient client, string requestUri,
+            object valueObj)
+        {
+            var qry = new QueryBuilder(valueObj.ToKeyValuePairs());
+
+            return await client.DeleteAsync(requestUri + qry);
         }
 
         public static string ToBits(this PermissionsDto permission)
@@ -57,6 +85,15 @@ namespace UnitTests.Helper
             };
 
             return string.Join("", values);
+        }
+
+        private static Dictionary<string, string> ToKeyValuePairs(this object source)
+        {
+            Dictionary<string, string> valuePairs = source.GetType().GetProperties()
+                .Select(p => new { p.Name, value = p.GetValue(source).ToString() })
+                .ToDictionary(x => x.Name, x => x.value);
+
+            return valuePairs;
         }
     }
 }

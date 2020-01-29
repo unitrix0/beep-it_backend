@@ -1,11 +1,11 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using BeepBackend.DTOs;
-using BeepBackend.Models;
-using Microsoft.AspNetCore.Mvc.Testing;
-using System.Linq;
-using System.Net.Http;
+﻿using BeepBackend.DTOs;
 using BeepBackend.Helpers;
+using BeepBackend.Models;
 using Newtonsoft.Json.Linq;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
 using UnitTests.BaseClasses;
 using UnitTests.DTOs;
 using UnitTests.Helper;
@@ -15,11 +15,34 @@ using Xunit.Abstractions;
 
 namespace UnitTests
 {
-    public class PermissionsChangedDbTest : DbTestBase
+    public class AuthControllerTests : DbTestBase
     {
-        public PermissionsChangedDbTest(ITestOutputHelper output, CustomWebApplicationFactory factory)
+        public AuthControllerTests(ITestOutputHelper output, CustomWebApplicationFactory factory)
             : base(output, factory)
         {
+        }
+        [Fact]
+        public void UpdatePermissionClaims()
+        {
+            ResetDb();
+            JoinEnvironment("fritz", "Zu Hause von Tom", new Permission() { CanScan = true, EditArticleSettings = true });
+
+            var loginSepp = WebClient.Login("sepp", "P@ssw0rd");
+
+            var resultA = WebClient.GetAsyncQuery("auth/UpdatePermissionClaims/1", new { environmentId = 1 }).Result;
+            var resultB = WebClient.GetAsyncQuery("auth/UpdatePermissionClaims/1", new { environmentId = 2 }).Result;
+            var resultC = WebClient.GetAsyncQuery("auth/UpdatePermissionClaims/3", new { environmentId = 2 }).Result;
+
+            var loginFritz = WebClient.Login("fritz", "P@ssw0rd");
+            var resultD = WebClient.GetAsyncQuery("auth/UpdatePermissionClaims/3", new { environmentId = 2 }).Result;
+
+            Assert.NotNull(loginSepp);
+            Assert.NotNull(loginFritz);
+
+            Assert.Equal(HttpStatusCode.OK, resultA.StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, resultB.StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, resultC.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, resultD.StatusCode);
         }
 
         [Fact]
@@ -41,7 +64,7 @@ namespace UnitTests
             LoginResponseObject loginSepp = WebClient.Login("sepp", "P@ssw0rd");
             //Switch to other Environment
             HttpResponseMessage changeEnvironmentResult =
-                WebClient.PostAsync($"auth/UpdatePermissionClaims/{loginSepp.MappedUser.Id}/?environmentId=2", null).Result;
+                WebClient.GetAsync($"auth/UpdatePermissionClaims/{loginSepp.MappedUser.Id}/?environmentId=2").Result;
             loginSepp = JObject.Parse(changeEnvironmentResult.Content.ReadAsStringAsync().Result)
                 .ToObject<LoginResponseObject>();
 
@@ -63,8 +86,8 @@ namespace UnitTests
                 .GetAsync($"users/InvitationsCount/{loginSepp.MappedUser.Id}").Result;
 
             //Update the Token
-            HttpResponseMessage updateTokenResult = WebClient.PostAsync(
-                $"auth/UpdatePermissionClaims/{loginSepp.MappedUser.Id}/?environmentId=2", null).Result;
+            HttpResponseMessage updateTokenResult = WebClient.GetAsync(
+                $"auth/UpdatePermissionClaims/{loginSepp.MappedUser.Id}/?environmentId=2").Result;
             loginSepp = JObject.Parse(updateTokenResult.Content.ReadAsStringAsync().Result)
                 .ToObject<LoginResponseObject>();
             JwtSecurityToken token = JwtHelper.DecodeToken(loginSepp.Token);
@@ -86,8 +109,10 @@ namespace UnitTests
         protected override void ResetDb()
         {
             base.ResetDb();
-            SeedAdditionalUser("Sepp");
-            SeedAdditionalUser("Tom");
+
+            SeedUser("Sepp");
+            SeedUser("Tom");
+            SeedUser("Fritz");
         }
     }
 }

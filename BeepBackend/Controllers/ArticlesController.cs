@@ -3,6 +3,8 @@ using BeepBackend.Data;
 using BeepBackend.DTOs;
 using BeepBackend.Helpers;
 using BeepBackend.Models;
+using BeepBackend.Permissions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -17,16 +19,23 @@ namespace BeepBackend.Controllers
     {
         private readonly IArticleRepository _repo;
         private readonly IMapper _mapper;
+        private readonly IAuthorizationService _authService;
 
-        public ArticlesController(IArticleRepository repo, IMapper mapper)
+        public ArticlesController(IArticleRepository repo, IMapper mapper, IAuthorizationService authService)
         {
             _repo = repo;
             _mapper = mapper;
+            _authService = authService;
         }
 
         [HttpGet("{environmentId}")]
         public async Task<IActionResult> GetArticles(int environmentId, [FromQuery]ArticleFilter filter)
         {
+            if (!await _authService
+                .IsPermitted(User, environmentId,
+                    PermissionFlags.IsOwner | PermissionFlags.EditArticleSettings))
+                return Unauthorized();
+
             PagedList<Article> articles = await _repo.GetArticles(environmentId, filter);
 
             IEnumerable<EditArticleDto> articlesDto = _mapper.Map<IEnumerable<EditArticleDto>>(articles);
@@ -47,6 +56,8 @@ namespace BeepBackend.Controllers
         [HttpGet("LookupArticle/{barcode}/{environmentId}", Name = nameof(LookupArticle))]
         public async Task<IActionResult> LookupArticle(string barcode, int environmentId)
         {
+            if (!await _authService.IsPermitted(User, environmentId, PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
+
             Article article = await _repo.LookupArticle(barcode);
             if (article == null) return Ok(new EditArticleDto());
 
@@ -60,6 +71,9 @@ namespace BeepBackend.Controllers
         [HttpPost("CreateArticle")]
         public async Task<IActionResult> CreateArticle(EditArticleDto newArticleDto)
         {
+            if (!await _authService.IsPermitted(User, 0,
+                PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
+
             var article = _mapper.Map<Article>(newArticleDto);
             var userSettings = _mapper.Map<ArticleUserSetting>(newArticleDto.ArticleUserSettings);
 
@@ -78,6 +92,9 @@ namespace BeepBackend.Controllers
         [HttpPatch("UpdateArticle")]
         public async Task<IActionResult> UpdateArticle(EditArticleDto articleDto)
         {
+            if (!await _authService.IsPermitted(User, 0,
+                PermissionFlags.IsOwner | PermissionFlags.EditArticleSettings)) return Unauthorized();
+
             Article article = await _repo.GetArticle(articleDto.Id);
             ArticleUserSetting articleSettings = await _repo.GetArticleUserSettings(articleDto.ArticleUserSettings.Id);
             _mapper.Map(articleDto, article);
@@ -92,6 +109,9 @@ namespace BeepBackend.Controllers
         [HttpPost("AddStockEntry")]
         public async Task<IActionResult> AddStockEntry(CheckInDto checkInDto)
         {
+            if (!await _authService.IsPermitted(User, 0,
+                PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
+
             checkInDto.ExpireDate = checkInDto.ExpireDate.AddMinutes(checkInDto.ClientTimezoneOffset);
             var entryValues = _mapper.Map<StockEntryValue>(checkInDto);
             entryValues.AmountRemaining = 1;
@@ -106,6 +126,9 @@ namespace BeepBackend.Controllers
         [HttpGet("GetArticleDateSuggestions/{barcode}/{environmentId}")]
         public async Task<IActionResult> GetArticleDateSuggestions(string barcode, int environmentId)
         {
+            if (!await _authService.IsPermitted(User, environmentId,
+               PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
+
             long usualLifetime = await _repo.GetArticleLifetime(barcode, environmentId);
             DateTime lastExpireDate = await _repo.GetLastExpireDate(barcode, environmentId);
             return Ok(new { usualLifetime, lastExpireDate });
@@ -114,6 +137,10 @@ namespace BeepBackend.Controllers
         [HttpGet("GetArticleStock")]
         public async Task<IActionResult> GetArticleStock(int articleId, int environmentId, int pageNumber, int itemsPerPage)
         {
+            if (!await _authService.IsPermitted(User, environmentId,
+                PermissionFlags.IsOwner | PermissionFlags.CanScan | PermissionFlags.EditArticleSettings))
+                return Unauthorized();
+
             PagedList<StockEntryValue> stockEntries =
                 await _repo.GetStockEntries(articleId, environmentId, pageNumber, itemsPerPage);
 
@@ -124,34 +151,15 @@ namespace BeepBackend.Controllers
             return Ok(stockEntriesDto);
         }
 
-        [HttpGet("GetCheckOutArticle")]
-        public async Task<IActionResult> GetCheckOutArticle(int environmentId, string barcode)
-        {
-            StockEntryValue entry = await _repo.GetOldestStockEntryValue(barcode, environmentId);
-            var entryDto = _mapper.Map<StockEntryValueDto>(entry);
-
-            return Ok(entryDto);
-        }
-
-        [HttpDelete("CheckOut")]
-        public async Task<IActionResult> CheckOut(int environmentId, string barcode)
-        {
-            StockEntryValue entry = await _repo.GetOldestStockEntryValue(barcode, environmentId);
-            if (entry.AmountOnStock == 1)
-            {
-                _repo.Delete(entry);
-                return await _repo.SaveAll() ? NoContent(): throw new Exception("Failed to delete the stock entry");
-            }
-
-            entry.AmountOnStock--;
-            return await _repo.SaveAll() ? NoContent() : throw new Exception("Failed to update stock entry");
-
-        }
-
         [HttpDelete("CheckOutById")]
         public async Task<IActionResult> CheckOutById(int entryId, int amount)
         {
             StockEntryValue entry = await _repo.GetStockEntryValue(entryId);
+            if (entry == null) return NotFound();
+
+            if (!await _authService.IsPermitted(User, entry.EnvironmentId,
+               PermissionFlags.IsOwner | PermissionFlags.EditArticleSettings)) return Unauthorized();
+
             if (amount == 0 || entry.AmountOnStock == 1 || entry.AmountOnStock == amount)
             {
                 _repo.Delete(entry);
@@ -160,6 +168,35 @@ namespace BeepBackend.Controllers
 
             entry.AmountOnStock -= amount;
             return await _repo.SaveAll() ? NoContent() : throw new Exception("Failed to update stock entry");
+        }
+
+        [HttpPut("OpenArticle")]
+        public async Task<IActionResult> OpenArticle(StockEntryValueDto stockEntryDto)
+        {
+            StockEntryValue existingEntry = await _repo.GetStockEntryValue(stockEntryDto.Id);
+
+            if (!await _authService.IsPermitted(User, existingEntry.EnvironmentId,
+               PermissionFlags.IsOwner | PermissionFlags.CanScan | PermissionFlags.EditArticleSettings))
+                return Unauthorized();
+
+            stockEntryDto.OpenedOn = stockEntryDto.OpenedOn.AddMinutes(stockEntryDto.ClientTimezoneOffset);
+            if (existingEntry.AmountOnStock == 1)
+            {
+                _mapper.Map(stockEntryDto, existingEntry);
+                if (await _repo.SaveAll()) return NoContent();
+
+                throw new Exception("Error saving the Data");
+            }
+
+            var newEntry = _mapper.Map<StockEntryValue>(stockEntryDto);
+            newEntry.Id = 0;
+            newEntry.AmountOnStock = 1;
+
+            existingEntry.AmountOnStock--;
+
+            if (await _repo.CreateStockEntryValue(newEntry)) return NoContent();
+
+            throw new Exception("Error saving the Data");
         }
     }
 }

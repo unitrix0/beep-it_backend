@@ -25,7 +25,6 @@ namespace UnitTests
             ResetDb();
             OutputWriter.WriteLine(comment);
             LoginResponseObject login = WebClient.Login("sepp", "P@ssw0rd");
-            if (login == null) Assert.False(true);
 
             HttpResponseMessage result = WebClient.PutAsJsonAsync("users/SetPermission", new PermissionsDto()
             {
@@ -34,15 +33,16 @@ namespace UnitTests
                 EditArticleSettings = true
             }).Result;
 
+            Assert.NotNull(login);
             Assert.Equal(expectedResult, result.IsSuccessStatusCode);
         }
 
         protected override void ResetDb()
         {
             base.ResetDb();
-            SeedAdditionalUser("Sepp");
-            SeedAdditionalUser("Tom");
-            SeedAdditionalUser("Markus");
+            SeedUser("Sepp");
+            SeedUser("Tom");
+            SeedUser("Markus");
 
             JoinEnvironment("Markus", "Zu Hause von Tom", new Permission() { CanScan = true });
             JoinEnvironment("Sepp", "Zu Hause von Tom", new Permission() { CanScan = true, ManageUsers = true });

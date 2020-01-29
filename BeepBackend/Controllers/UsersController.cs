@@ -1,14 +1,13 @@
 ﻿using AutoMapper;
 using BeepBackend.Data;
 using BeepBackend.DTOs;
-using BeepBackend.Helpers;
 using BeepBackend.Models;
+using BeepBackend.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using BeepBackend.Permissions;
 using Utrix.WebLib.Helpers;
 
 namespace BeepBackend.Controllers

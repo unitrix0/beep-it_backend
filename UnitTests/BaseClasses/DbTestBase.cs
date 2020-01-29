@@ -75,7 +75,7 @@ namespace UnitTests.BaseClasses
         /// Erstellt einen User mit Member Rolle
         /// </summary>
         /// <param name="displayName"></param>
-        protected void SeedAdditionalUser(string displayName)
+        protected void SeedUser(string displayName)
         {
             var newUser = new User()
             {

@@ -25,5 +25,6 @@ namespace BeepBackend.Data
         Task<StockEntryValue> GetStockEntryValue(int entryId);
         Task<Article> GetArticle(int articleId);
         Task<ArticleUserSetting> GetArticleUserSettings(int id);
+        Task<bool> CreateStockEntryValue(StockEntryValue newEntry);
     }
 }

@@ -81,11 +81,11 @@ namespace BeepBackend
                     builder.Run(async context =>
                     {
                         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                        IExceptionHandlerFeature error = context.Features.Get<IExceptionHandlerFeature>();
-                        if (error != null)
+                        var handler = context.Features.Get<IExceptionHandlerFeature>();
+                        if (handler != null)
                         {
-                            context.Response.AddApplicationError(error.Error.Message);
-                            await context.Response.WriteAsync(error.Error.Message);
+                            context.Response.AddApplicationError(handler.Error.Message);
+                            await context.Response.WriteAsync(handler.Error.Message);
                         }
                     });
                 });

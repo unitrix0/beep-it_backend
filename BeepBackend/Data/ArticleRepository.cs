@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Utrix.WebLib.Pagination;
 using StockEntryValue = BeepBackend.Models.StockEntryValue;
 
@@ -239,6 +240,12 @@ namespace BeepBackend.Data
                 .FirstOrDefaultAsync(sev => sev.Id == entryId);
 
             return entry;
+        }
+
+        public async Task<bool> CreateStockEntryValue(StockEntryValue newEntry)
+        {
+            await _context.StockEntryValues.AddAsync(newEntry);
+            return await _context.SaveChangesAsync() > 0;
         }
     }
 }

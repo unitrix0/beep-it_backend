@@ -24,14 +24,16 @@ namespace BeepBackend.Controllers
         private readonly IAuthRepository _authRepo;
         private readonly IMapper _mapper;
         private readonly IPermissionsCache _permissionsCache;
+        private readonly IAuthorizationService _authService;
         private readonly string _tokenSecretKey;
         private readonly int _tokenLifeTimeSeconds;
 
-        public AuthController(IAuthRepository authRepo, IMapper mapper, IConfiguration config, IPermissionsCache permissionsCache)
+        public AuthController(IAuthRepository authRepo, IMapper mapper, IConfiguration config, IPermissionsCache permissionsCache, IAuthorizationService authService)
         {
             _authRepo = authRepo;
             _mapper = mapper;
             _permissionsCache = permissionsCache;
+            _authService = authService;
             _tokenLifeTimeSeconds = Convert.ToInt32(config.GetSection("AppSettings:TokenLifeTime").Value);
             _tokenSecretKey = config.GetSection("AppSettings:Token").Value;
         }
@@ -84,16 +86,17 @@ namespace BeepBackend.Controllers
             });
         }
 
-        [HttpPost("UpdatePermissionClaims/{userId}")]
+        [HttpGet("UpdatePermissionClaims/{userId}")]
         public async Task<IActionResult> UpdatePermissionClaims(int userId, int environmentId)
         {
             if (!this.VerifyUser(userId)) return Unauthorized();
 
-            List<Claim> newClaims = User.Claims.Where(c => c.Type != BeepClaimTypes.Permissions &&
-                                                        c.Type != BeepClaimTypes.PermissionsSerial &&
-                                                        c.Type != BeepClaimTypes.EnvironmentId).ToList();
-
             Permission permissions = await _authRepo.GetUserPermissionForEnvironment(userId, environmentId);
+            if (permissions == null) return Unauthorized();
+
+            List<Claim> newClaims = User.Claims.Where(c => c.Type != BeepClaimTypes.Permissions &&
+                                                           c.Type != BeepClaimTypes.PermissionsSerial &&
+                                                           c.Type != BeepClaimTypes.EnvironmentId).ToList();
             newClaims.Add(new Claim(BeepClaimTypes.Permissions, permissions.ToBits()));
             newClaims.Add(new Claim(BeepClaimTypes.PermissionsSerial, permissions.Serial));
             newClaims.Add(new Claim(BeepClaimTypes.EnvironmentId, permissions.Environment.Id.ToString()));

@@ -58,6 +58,7 @@ namespace BeepBackend.Helpers
             CreateMap<StockEntryValue, CheckInDto>();
 
             CreateMap<StockEntryValue, StockEntryValueDto>();
+            CreateMap<StockEntryValueDto, StockEntryValue>();
         }
     }
 }

@@ -23,7 +23,7 @@ namespace UnitTests
             ResetDb();
             WebClient.Login("sepp", "P@ssw0rd");
 
-            var res = WebClient.GetByQuery("https://localhost:5001/api/articles/1", new ArticleFilter()
+            var res = WebClient.GetStringByQueryAsync("https://localhost:5001/api/articles/1", new ArticleFilter()
             {
                 IsOpened = true,
                 StoreId = 1
@@ -33,8 +33,8 @@ namespace UnitTests
         protected override void ResetDb()
         {
             base.ResetDb();
-            SeedAdditionalUser("Sepp");
-            SeedAdditionalUser("Tom");
+            SeedUser("Sepp");
+            SeedUser("Tom");
             SeedNewEnvironment("sepp", "Environment2");
             SeedArticleGroup("default");
             SeedArticleGroup("Zahnpasta");
