@@ -47,6 +47,7 @@ namespace BeepBackend.Controllers
         public async Task<IActionResult> SetPermission([FromBody]PermissionsDto newPermission)
         {
             int environmentOwnerId = await _repo.GetEnvironmentOwnerId(newPermission.EnvironmentId);
+            //TODO Umbauen?
             AuthorizationResult authorization = await _authService.AuthorizeAsync(User, null,
                 new[]
                 {
@@ -81,7 +82,8 @@ namespace BeepBackend.Controllers
         [HttpPost("DeleteEnvironment/{userId}/{envId}")]
         public async Task<IActionResult> DeleteEnvironment(int userId, int envId)
         {
-            if (!this.VerifyUser(userId)) return Unauthorized();
+            if (!this.VerifyUser(userId) ||
+                !await _authService.IsPermitted(User, envId, PermissionFlags.IsOwner)) return Unauthorized();
 
             if (await _repo.DeleteEnvironment(envId)) return NoContent();
 
@@ -128,7 +130,7 @@ namespace BeepBackend.Controllers
         {
             int inviteeId = await _repo.GetInviteeId(userId, environmentId);
             if (!this.VerifyUser(inviteeId)) return Unauthorized();
-
+            //TODO Prüfen ob Einladung überhaupt vorhanden
             if (answer == 0)
             {
                 if (await _repo.DeleteInvitation(userId, environmentId)) return NoContent();
@@ -209,6 +211,19 @@ namespace BeepBackend.Controllers
             var result = _mapper.Map<IEnumerable<PermissionsDto>>(permissions);
 
             return Ok(result);
+        }
+
+        [HttpPut("UpdateEnvironmentName/{envId}")]
+        public async Task<IActionResult> UpdateEnvironmentName(int envId, string newName)
+        {
+            if (!await _authService.IsPermitted(User, envId, PermissionFlags.IsOwner)) return Unauthorized();
+
+            BeepEnvironment environment = await _repo.GetEnvironment(envId);
+            environment.Name = newName;
+
+            if (await _repo.SaveAll()) return Ok();
+
+            throw new Exception("Error updating Environment name");
         }
     }
 }

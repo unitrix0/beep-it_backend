@@ -26,5 +26,6 @@ namespace BeepBackend.Data
         Task<Invitation> InviteMemberByMail(string email, int envitonmentId);
         Task<bool> RemoveUserFromEnvironmentAsync(int environmentId, int userId);
         Task<IEnumerable<Permission>> GetEnvironmentPermissions(int environmentId, int userId);
+        Task<BeepEnvironment> GetEnvironment(int envId);
     }
 }

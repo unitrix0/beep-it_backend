@@ -12,7 +12,9 @@ namespace BeepBackend.Helpers
         public AutomapperProfiles()
         {
             CreateMap<UserForRegistrationDto, User>();
-            CreateMap<BeepEnvironment, EnvironmentDto>();
+            CreateMap<BeepEnvironment, EnvironmentDto>()
+                .ForMember(e => e.OwnerId,
+                    opt => opt.MapFrom(src => src.Permissions.FirstOrDefault(p => p.IsOwner).UserId));
 
             CreateMap<Permission, PermissionsDto>()
                 .ForMember(p => p.Username, opt => { opt.MapFrom(src => src.User.UserName); });

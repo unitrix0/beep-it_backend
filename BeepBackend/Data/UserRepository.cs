@@ -76,6 +76,12 @@ namespace BeepBackend.Data
                 .ToListAsync();
         }
 
+        public async Task<BeepEnvironment> GetEnvironment(int envId)
+        {
+            BeepEnvironment environment = await _context.Environments.FirstOrDefaultAsync(e => e.Id == envId);
+            return environment;
+        }
+
         public async Task<IEnumerable<Permission>> GetEnvironmentPermissions(int environmentId, int userId)
         {
             bool isOwner = await _context.Permissions
