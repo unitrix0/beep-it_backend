@@ -12,22 +12,9 @@ namespace BeepBackend.Helpers
         public static void Seed(RoleManager<Role> roleMgr, BeepDbContext context)
         {
             CreateRoles(roleMgr);
-            CreateStores(context);
         }
 
-        private static void CreateStores(BeepDbContext context)
-        {
-            var stores = new List<Store>()
-            {
-                new Store() {Name = "Migros"},
-                new Store() {Name = "Coop"},
-                new Store() {Name = "Denner"},
-                new Store() {Name = "Aldi"}
-            };
 
-            context.Stores.AddRange(stores);
-            context.SaveChangesAsync().Wait();
-        }
 
         private static void CreateRoles(RoleManager<Role> roleMgr)
         {

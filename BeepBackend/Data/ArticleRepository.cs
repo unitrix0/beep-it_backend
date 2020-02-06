@@ -30,7 +30,7 @@ namespace BeepBackend.Data
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<PagedList<Article>> GetArticles(int environmentId, ArticleFilter filter)
+        public async Task<PagedList<Article>> GetArticles(ArticleFilter filter)
         {
             IQueryable<Article> articles = filter.StoreId > 0
                 ? _context.ArticleStores
@@ -41,12 +41,13 @@ namespace BeepBackend.Data
             articles = articles
                 .Include(a => a.ArticleUserSettings)
                 .Include(a => a.StockEntryValues)
-                .Where(a => a.ArticleUserSettings.Any(aus => aus.EnvironmentId == environmentId));
+                .Include(a => a.Stores)
+                .Where(a => a.ArticleUserSettings.Any(aus => aus.EnvironmentId == filter.EnvironmentId));
 
             if (filter.IsOnStock)
             {
                 List<int> articlesOnStock = await _context.StockEntries
-                    .Where(se => se.EnvironmentId == environmentId)
+                    .Where(se => se.EnvironmentId == filter.EnvironmentId)
                     .Select(se => se.ArticleId).ToListAsync();
 
                 articles = articles.Where(a => articlesOnStock.Contains(a.Id));
@@ -55,7 +56,7 @@ namespace BeepBackend.Data
             if (filter.IsOpened)
             {
                 var articlesOpened = await _context.StockEntryValues
-                    .Where(sev => sev.IsOpened && sev.EnvironmentId == environmentId)
+                    .Where(sev => sev.IsOpened && sev.EnvironmentId == filter.EnvironmentId)
                     .Select(sev => sev.ArticleId)
                     .ToListAsync();
 
@@ -65,7 +66,7 @@ namespace BeepBackend.Data
             if (filter.KeepOnStock)
             {
                 var keepStockArticles = await _context.ArticleUserSettings
-                    .Where(aus => aus.KeepStockAmount > 0 && aus.EnvironmentId == environmentId)
+                    .Where(aus => aus.KeepStockAmount > 0 && aus.EnvironmentId == filter.EnvironmentId)
                     .Select(aus => aus.ArticleFk).ToListAsync();
 
                 articles = articles.Where(a => keepStockArticles.Contains(a.Id));
@@ -74,11 +75,11 @@ namespace BeepBackend.Data
             if (!string.IsNullOrEmpty(filter.NameOrEan))
             {
                 var envArticles = await _context.ArticleUserSettings
-                    .Where(aus => aus.EnvironmentId == environmentId)
+                    .Where(aus => aus.EnvironmentId == filter.EnvironmentId)
                     .Select(aus => aus.ArticleFk).ToListAsync();
 
                 articles = articles
-                    .Where(a => a.Barcode.Contains(filter.NameOrEan) || a.Name.Contains(filter.NameOrEan) &&
+                    .Where(a => a.Barcode == filter.NameOrEan || a.Name.Contains(filter.NameOrEan) &&
                                 envArticles.Contains(a.Id));
             }
 
@@ -100,6 +101,7 @@ namespace BeepBackend.Data
         {
             Article article = await _context.Articles
                 .Include(a => a.ArticleUserSettings)
+                .Include(a => a.Stores)
                 .FirstOrDefaultAsync(a => a.Id == articleId);
 
             return article;
@@ -119,6 +121,12 @@ namespace BeepBackend.Data
         public async Task<IEnumerable<ArticleGroup>> GetArticleGroups()
         {
             return await _context.ArticleGroups.ToListAsync();
+        }
+
+        public async Task<IEnumerable<Store>> GetStores()
+        {
+            List<Store> stores = await _context.Stores.ToListAsync();
+            return stores;
         }
 
         public async Task<Article> LookupArticle(string barcode)

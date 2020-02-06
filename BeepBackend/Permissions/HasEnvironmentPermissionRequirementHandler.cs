@@ -20,9 +20,12 @@ namespace BeepBackend.Permissions
         {
             int userId = int.Parse(context.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier).Value);
             Permission userPermission = _permissionsCache.GetUserPermission(userId, requirement.EnvironmentId);
+            if(userPermission == null) return Task.CompletedTask;
+
             var userFlags = (PermissionFlags)Convert.ToInt32(userPermission.ToBits(), 2);
-            
-            if ((requirement.Permission & userFlags) > 0) context.Succeed(requirement);
+
+            if ((requirement.Permission & userFlags) > 0 ||
+                requirement.Permission == PermissionFlags.Any) context.Succeed(requirement);
 
             return Task.CompletedTask;
         }

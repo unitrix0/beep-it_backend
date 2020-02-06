@@ -28,15 +28,14 @@ namespace BeepBackend.Controllers
             _authService = authService;
         }
 
-        [HttpGet("{environmentId}")]
-        public async Task<IActionResult> GetArticles(int environmentId, [FromQuery]ArticleFilter filter)
+        [HttpGet("GetArticles")]
+        public async Task<IActionResult> GetArticles([FromQuery]ArticleFilter filter)
         {
             if (!await _authService
-                .IsPermitted(User, environmentId,
-                    PermissionFlags.IsOwner | PermissionFlags.EditArticleSettings))
+                .IsPermitted(User, filter.EnvironmentId, PermissionFlags.Any))
                 return Unauthorized();
 
-            PagedList<Article> articles = await _repo.GetArticles(environmentId, filter);
+            PagedList<Article> articles = await _repo.GetArticles(filter);
 
             IEnumerable<EditArticleDto> articlesDto = _mapper.Map<IEnumerable<EditArticleDto>>(articles);
             Response.AddPagination(articles.CurrentPage, articles.PageSize, articles.TotalCount, articles.TotalPages);
@@ -49,8 +48,9 @@ namespace BeepBackend.Controllers
         {
             IEnumerable<ArticleUnit> units = await _repo.GetUnits();
             IEnumerable<ArticleGroup> articleGroups = await _repo.GetArticleGroups();
+            IEnumerable<Store> stores = await _repo.GetStores();
 
-            return Ok(new { units, articleGroups });
+            return Ok(new { units, articleGroups, stores });
         }
 
         [HttpGet("LookupArticle/{barcode}/{environmentId}", Name = nameof(LookupArticle))]

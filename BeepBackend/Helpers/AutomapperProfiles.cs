@@ -44,15 +44,16 @@ namespace BeepBackend.Helpers
                 .ForMember(i => i.IsAnswered, opt => opt.MapFrom(src => src.AnsweredOn != DateTime.MinValue));
 
             CreateMap<Article, EditArticleDto>()
-                .ForMember(a => a.ArticleUserSettings, opt => opt.MapFrom(src => src.ArticleUserSettings.FirstOrDefault()))
+                .ForMember(a => a.ArticleUserSettings,
+                    opt => opt.MapFrom(src => src.ArticleUserSettings.FirstOrDefault()))
                 .ForMember(a => a.GroupId, opt => opt.MapFrom(src => src.ArticleGroupFk))
-                .ForMember(a => a.TotalStockAmount, opt => opt.MapFrom(src => src.StockEntryValues.Sum(sev => sev.AmountOnStock)));
-            CreateMap<ArticleUserSetting, ArticleUserSettingDto>();
-
+                .ForMember(a => a.TotalStockAmount,
+                    opt => opt.MapFrom(src => src.StockEntryValues.Sum(sev => sev.AmountOnStock)));
             CreateMap<EditArticleDto, Article>()
                 .ForMember(a => a.ArticleGroupFk, opt => opt.MapFrom(src => src.GroupId))
                 .ForMember(a => a.ArticleUserSettings, opt => opt.Ignore());
 
+            CreateMap<ArticleUserSetting, ArticleUserSettingDto>();
             CreateMap<ArticleUserSettingDto, ArticleUserSetting>();
 
             CreateMap<CheckInDto, StockEntryValue>()
@@ -61,6 +62,9 @@ namespace BeepBackend.Helpers
 
             CreateMap<StockEntryValue, StockEntryValueDto>();
             CreateMap<StockEntryValueDto, StockEntryValue>();
+
+            CreateMap<ArticleStore, ArticleStoreDto>();
+            CreateMap<ArticleStoreDto, ArticleStore>();
         }
     }
 }

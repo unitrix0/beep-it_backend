@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(BeepDbContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20200204134550_AddStoreSpar")]
+    partial class AddStoreSpar
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -328,16 +330,6 @@ namespace BeepBackend.Migrations
                         {
                             Id = 5,
                             Name = "Spar"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Name = "Müller"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            Name = "Online"
                         });
                 });
 

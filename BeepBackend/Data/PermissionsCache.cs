@@ -47,10 +47,17 @@ namespace BeepBackend.Data
             _serialsCache.Add(key, new Tuple<Permission, DateTime>(permission, current.Item2));
         }
 
+        /// <summary>
+        /// Gibt das <see cref="Permission"/> Objekt für den angegebenen Benutz im angegebenen
+        /// Environment zurück. Falls nichts gefunden wird null.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="environmentId"></param>
+        /// <returns></returns>
         public Permission GetUserPermission(int userId, int environmentId)
         {
             string key = $"{userId},{environmentId}";
-            return _serialsCache.ContainsKey(key) ? _serialsCache[key].Item1 : new Permission();
+            return _serialsCache.ContainsKey(key) ? _serialsCache[key].Item1 : null;
         }
 
         private void Cleanup(object state)

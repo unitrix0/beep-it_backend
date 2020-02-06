@@ -50,6 +50,19 @@ namespace BeepBackend.Data
                 artGrp.HasData(new ArticleGroup() { Id = 1, Name = "keine" });
             });
 
+            modelBuilder.Entity<Store>(store =>
+            {
+                store.HasData(
+                    new Store() { Id = 1, Name = "Migros" },
+                    new Store() { Id = 2, Name = "Coop" },
+                    new Store() { Id = 3, Name = "Denner" },
+                    new Store() { Id = 4, Name = "Aldi" },
+                    new Store() { Id = 5, Name = "Spar" },
+                    new Store() { Id = 6, Name = "Müller" },
+                    new Store() { Id = 7, Name = "Online" }
+                    );
+            });
+
             modelBuilder.Entity<ArticleStore>(artStore =>
             {
                 artStore.HasKey(ast => new { ast.ArticleId, ast.StoreId });

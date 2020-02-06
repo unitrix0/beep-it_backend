@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using BeepBackend.Models;
 
 namespace BeepBackend.DTOs
 {
@@ -18,6 +19,8 @@ namespace BeepBackend.DTOs
         public string ImageUrl { get; set; }
         public ArticleUserSettingDto ArticleUserSettings { get; set; }
         public int TotalStockAmount { get; set; }
+
+        public IEnumerable<ArticleStoreDto> Stores { get; set; }
 
         public EditArticleDto()
         {

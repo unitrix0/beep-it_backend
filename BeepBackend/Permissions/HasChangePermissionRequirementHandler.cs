@@ -1,9 +1,9 @@
-﻿using System;
-using System.Security.Claims;
-using System.Threading.Tasks;
-using BeepBackend.Data;
+﻿using BeepBackend.Data;
 using BeepBackend.Models;
 using Microsoft.AspNetCore.Authorization;
+using System;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace BeepBackend.Permissions
 {
@@ -20,9 +20,11 @@ namespace BeepBackend.Permissions
         {
             int userId = int.Parse(context.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier).Value);
             Permission userPermission = _permissionsCache.GetUserPermission(userId, requirement.EnvironmentId);
+            if (userPermission == null) return Task.CompletedTask;
+
             var userFlags = (PermissionFlags)Convert.ToInt32(userPermission.ToBits(), 2);
 
-            if((requirement.PermissionsUserId == userId ||
+            if ((requirement.PermissionsUserId == userId ||
                 requirement.PermissionsUserId == requirement.EnvironmentOwnerId) &&
                !userFlags.HasFlag(PermissionFlags.IsOwner)) return Task.CompletedTask;
 

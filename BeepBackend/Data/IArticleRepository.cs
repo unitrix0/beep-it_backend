@@ -9,7 +9,7 @@ namespace BeepBackend.Data
 {
     public interface IArticleRepository
     {
-        Task<PagedList<Article>> GetArticles(int environmentId, ArticleFilter filter);
+        Task<PagedList<Article>> GetArticles(ArticleFilter filter);
         Task<IEnumerable<ArticleUnit>> GetUnits();
         Task<IEnumerable<ArticleGroup>> GetArticleGroups();
         Task<Article> LookupArticle(string barcode);
@@ -26,5 +26,6 @@ namespace BeepBackend.Data
         Task<Article> GetArticle(int articleId);
         Task<ArticleUserSetting> GetArticleUserSettings(int id);
         Task<bool> CreateStockEntryValue(StockEntryValue newEntry);
+        Task<IEnumerable<Store>> GetStores();
     }
 }
