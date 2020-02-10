@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Utrix.WebLib.Pagination;
 using StockEntryValue = BeepBackend.Models.StockEntryValue;
 
@@ -67,7 +66,7 @@ namespace BeepBackend.Data
             {
                 var keepStockArticles = await _context.ArticleUserSettings
                     .Where(aus => aus.KeepStockAmount > 0 && aus.EnvironmentId == filter.EnvironmentId)
-                    .Select(aus => aus.ArticleFk).ToListAsync();
+                    .Select(aus => aus.ArticleId).ToListAsync();
 
                 articles = articles.Where(a => keepStockArticles.Contains(a.Id));
             }
@@ -76,7 +75,7 @@ namespace BeepBackend.Data
             {
                 var envArticles = await _context.ArticleUserSettings
                     .Where(aus => aus.EnvironmentId == filter.EnvironmentId)
-                    .Select(aus => aus.ArticleFk).ToListAsync();
+                    .Select(aus => aus.ArticleId).ToListAsync();
 
                 articles = articles
                     .Where(a => a.Barcode == filter.NameOrEan || a.Name.Contains(filter.NameOrEan) &&
@@ -107,10 +106,13 @@ namespace BeepBackend.Data
             return article;
         }
 
-        public async Task<ArticleUserSetting> GetArticleUserSettings(int id)
+        public async Task<ArticleUserSetting> GetArticleUserSettings(int articleId, int environmentId)
         {
-            ArticleUserSetting aus = await _context.ArticleUserSettings.FirstOrDefaultAsync(x => x.Id == id);
-            return aus;
+            ArticleUserSetting articleUserSettings =await _context.ArticleUserSettings
+                    .FirstOrDefaultAsync(aus => aus.ArticleId == articleId && 
+                                                aus.EnvironmentId == environmentId );
+
+            return articleUserSettings;
         }
 
         public async Task<IEnumerable<ArticleUnit>> GetUnits()
@@ -137,15 +139,6 @@ namespace BeepBackend.Data
             return article;
         }
 
-        public async Task<ArticleUserSetting> LookupArticleUserSettings(int articleId, int environmentId)
-        {
-            ArticleUserSetting userSettings = await _context.ArticleUserSettings
-                .FirstOrDefaultAsync(aus => aus.ArticleFk == articleId &&
-                                            aus.EnvironmentId == environmentId);
-
-            return userSettings;
-        }
-
         public async Task<long> GetArticleLifetime(string barcode, int environmentId)
         {
             ArticleUserSetting userSettings = await _context.ArticleUserSettings
@@ -153,7 +146,7 @@ namespace BeepBackend.Data
                 .FirstOrDefaultAsync(aus => aus.Article.Barcode == barcode &&
                                             aus.EnvironmentId == environmentId);
 
-            return userSettings.UsualLifetime;
+            return userSettings?.UsualLifetime ?? 0;
         }
 
         public async Task<DateTime> GetLastExpireDate(string barcode, int environmentId)
@@ -167,14 +160,18 @@ namespace BeepBackend.Data
             return lastExpireDate?.ExpireDate ?? DateTime.Now;
         }
 
-        public async Task<Article> CreateArticle(Article article, ArticleUserSetting userSettings)
+        public async Task<Article> CreateArticle(Article article)
         {
-            userSettings.Article = article;
-            await _context.ArticleUserSettings.AddAsync(userSettings);
             await _context.Articles.AddAsync(article);
-
             await _context.SaveChangesAsync();
             return article;
+        }
+
+        public async Task<ArticleUserSetting> CreateArticleUserSetting(ArticleUserSetting articleUserSetting)
+        {
+            await _context.ArticleUserSettings.AddAsync(articleUserSetting);
+            await _context.SaveChangesAsync();
+            return articleUserSetting;
         }
 
         public async Task<StockEntryValue> AddStockEntry(StockEntryValue entryValues, long usualLifetime)
@@ -222,13 +219,13 @@ namespace BeepBackend.Data
             return entryValues;
         }
 
-        public async Task<PagedList<StockEntryValue>> GetStockEntries(int articleId, int environmentId, int page, int itemsPerPage)
+        public async Task<PagedStockList> GetStockEntries(int articleId, int environmentId, int page, int itemsPerPage)
         {
             IQueryable<StockEntryValue> qry = _context.StockEntryValues
                 .Where(se => se.EnvironmentId == environmentId && se.ArticleId == articleId)
                 .OrderBy(se => se.ExpireDate).ThenByDescending(se => se.IsOpened);
 
-            return await PagedList<StockEntryValue>.CreateAsync(qry, page, itemsPerPage);
+            return await PagedStockList.CreateAsync(qry, page, itemsPerPage);
         }
 
         public async Task<StockEntryValue> GetOldestStockEntryValue(string barcode, int environmentId)
@@ -241,7 +238,7 @@ namespace BeepBackend.Data
 
             return entry;
         }
-        
+
         public async Task<StockEntryValue> GetStockEntryValue(int entryId)
         {
             StockEntryValue entry = await _context.StockEntryValues

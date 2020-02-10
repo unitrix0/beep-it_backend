@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Utrix.WebLib;
 using Utrix.WebLib.Pagination;
 
 namespace BeepBackend.Controllers
@@ -32,15 +33,37 @@ namespace BeepBackend.Controllers
         public async Task<IActionResult> GetArticles([FromQuery]ArticleFilter filter)
         {
             if (!await _authService
-                .IsPermitted(User, filter.EnvironmentId, PermissionFlags.Any))
+                .IsPermitted(User, filter.EnvironmentId))
                 return Unauthorized();
 
             PagedList<Article> articles = await _repo.GetArticles(filter);
 
-            IEnumerable<EditArticleDto> articlesDto = _mapper.Map<IEnumerable<EditArticleDto>>(articles);
+            IEnumerable<ArticleDto> articlesDto = _mapper.Map<IEnumerable<ArticleDto>>(articles);
             Response.AddPagination(articles.CurrentPage, articles.PageSize, articles.TotalCount, articles.TotalPages);
 
             return Ok(articlesDto);
+        }
+
+        [HttpGet("LookupArticle/{barcode}", Name = nameof(LookupArticle))]
+        public async Task<IActionResult> LookupArticle(string barcode)
+        {
+            if (!await _authService.IsPermitted(User, 0,
+                PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
+
+            Article article = await _repo.LookupArticle(barcode);
+            if (article == null) return Ok(new ArticleDto());
+
+            var articleDto = _mapper.Map<ArticleDto>(article);
+            return Ok(articleDto);
+        }
+
+        [HttpGet("GetArticleUserSettings")]
+        public async Task<IActionResult> GetArticleUserSettings(int articleId, int environmentId)
+        {
+            if (!await _authService.IsPermitted(User, environmentId)) return Unauthorized();
+
+            ArticleUserSetting aus = await _repo.GetArticleUserSettings(articleId, environmentId);
+            return aus == null ? Ok(new ArticleUserSettingDto()) : Ok(aus);
         }
 
         [HttpGet("GetBaseData")]
@@ -53,52 +76,62 @@ namespace BeepBackend.Controllers
             return Ok(new { units, articleGroups, stores });
         }
 
-        [HttpGet("LookupArticle/{barcode}/{environmentId}", Name = nameof(LookupArticle))]
-        public async Task<IActionResult> LookupArticle(string barcode, int environmentId)
-        {
-            if (!await _authService.IsPermitted(User, environmentId, PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
-
-            Article article = await _repo.LookupArticle(barcode);
-            if (article == null) return Ok(new EditArticleDto());
-
-            ArticleUserSetting userSetting = await _repo.LookupArticleUserSettings(article.Id, environmentId);
-            var articleDto = _mapper.Map<EditArticleDto>(article);
-            articleDto.ArticleUserSettings = _mapper.Map<ArticleUserSettingDto>(userSetting);
-
-            return Ok(articleDto);
-        }
-
         [HttpPost("CreateArticle")]
-        public async Task<IActionResult> CreateArticle(EditArticleDto newArticleDto)
+        public async Task<IActionResult> CreateArticle(ArticleDto newArticleDto)
         {
             if (!await _authService.IsPermitted(User, 0,
                 PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
 
             var article = _mapper.Map<Article>(newArticleDto);
-            var userSettings = _mapper.Map<ArticleUserSetting>(newArticleDto.ArticleUserSettings);
 
-            Article createdArticle = await _repo.CreateArticle(article, userSettings);
-            var createdArticleDto = _mapper.Map<EditArticleDto>(createdArticle);
+            Article createdArticle = await _repo.CreateArticle(article);
+            var createdArticleDto = _mapper.Map<ArticleDto>(createdArticle);
 
             return CreatedAtRoute(nameof(LookupArticle),
                 new
                 {
                     controller = "Articles",
                     barcode = createdArticle.Barcode,
-                    environmentId = newArticleDto.ArticleUserSettings.EnvironmentId
                 }, createdArticleDto);
         }
 
+        [HttpPost("CreateArticleUserSettings")]
+        public async Task<IActionResult> CreateArticleUserSettings(ArticleUserSettingDto articleUserSettingDto)
+        {
+            if (!await _authService.IsPermitted(User, 0,
+                PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
+
+            var articleUserSetting = _mapper.Map<ArticleUserSetting>(articleUserSettingDto);
+            ArticleUserSetting articleUserSettingCreated = await _repo.CreateArticleUserSetting(articleUserSetting);
+
+            var dto = _mapper.Map<ArticleUserSettingDto>(articleUserSettingCreated);
+            return CreatedAtRoute(nameof(GetArticleUserSettings), new
+            {
+                controller = "Articles",
+                articleId = articleUserSettingCreated.ArticleId,
+                environmentId = articleUserSettingCreated.EnvironmentId
+            }, dto);
+        }
+
+        [HttpGet("GetArticleDateSuggestions/{barcode}/{environmentId}")]
+        public async Task<IActionResult> GetArticleDateSuggestions(string barcode, int environmentId)
+        {
+            if (!await _authService.IsPermitted(User, environmentId,
+                PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
+
+            long usualLifetime = await _repo.GetArticleLifetime(barcode, environmentId);
+            DateTime lastExpireDate = await _repo.GetLastExpireDate(barcode, environmentId);
+            return Ok(new { usualLifetime, lastExpireDate });
+        }
+
         [HttpPatch("UpdateArticle")]
-        public async Task<IActionResult> UpdateArticle(EditArticleDto articleDto)
+        public async Task<IActionResult> UpdateArticle(ArticleDto articleDto)
         {
             if (!await _authService.IsPermitted(User, 0,
                 PermissionFlags.IsOwner | PermissionFlags.EditArticleSettings)) return Unauthorized();
 
             Article article = await _repo.GetArticle(articleDto.Id);
-            ArticleUserSetting articleSettings = await _repo.GetArticleUserSettings(articleDto.ArticleUserSettings.Id);
             _mapper.Map(articleDto, article);
-            _mapper.Map(articleDto.ArticleUserSettings, articleSettings);
 
             if (await _repo.SaveAll())
                 return NoContent();
@@ -117,36 +150,25 @@ namespace BeepBackend.Controllers
             entryValues.AmountRemaining = 1;
 
             StockEntryValue newEntry = await _repo.AddStockEntry(entryValues, checkInDto.UsualLifetime);
-            var ret = _mapper.Map<EditArticleDto>(newEntry.Article);
+            var ret = _mapper.Map<ArticleDto>(newEntry.Article);
 
             return CreatedAtRoute(nameof(LookupArticle),
                 new { controller = "Articles", barcode = checkInDto.Barcode, environmentId = checkInDto.EnvironmentId }, ret);
-        }
-
-        [HttpGet("GetArticleDateSuggestions/{barcode}/{environmentId}")]
-        public async Task<IActionResult> GetArticleDateSuggestions(string barcode, int environmentId)
-        {
-            if (!await _authService.IsPermitted(User, environmentId,
-               PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
-
-            long usualLifetime = await _repo.GetArticleLifetime(barcode, environmentId);
-            DateTime lastExpireDate = await _repo.GetLastExpireDate(barcode, environmentId);
-            return Ok(new { usualLifetime, lastExpireDate });
         }
 
         [HttpGet("GetArticleStock")]
         public async Task<IActionResult> GetArticleStock(int articleId, int environmentId, int pageNumber, int itemsPerPage)
         {
             if (!await _authService.IsPermitted(User, environmentId,
-                PermissionFlags.IsOwner | PermissionFlags.CanScan | PermissionFlags.EditArticleSettings))
-                return Unauthorized();
+                PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
 
-            PagedList<StockEntryValue> stockEntries =
+            PagedStockList stockEntries =
                 await _repo.GetStockEntries(articleId, environmentId, pageNumber, itemsPerPage);
 
             IEnumerable<StockEntryValueDto>
                 stockEntriesDto = _mapper.Map<IEnumerable<StockEntryValueDto>>(stockEntries);
             Response.AddPagination(stockEntries.CurrentPage, stockEntries.PageSize, stockEntries.TotalCount, stockEntries.TotalPages);
+            Response.AddCustomHeader("TotalStockAmount", stockEntries.TotalStockAmount.ToString());
 
             return Ok(stockEntriesDto);
         }

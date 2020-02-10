@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using BeepBackend.Models;
 
 namespace BeepBackend.DTOs
 {
-    public class EditArticleDto
+    public class ArticleDto
     {
         public int Id { get; set; }
         public string Barcode { set; get; }
@@ -17,14 +14,7 @@ namespace BeepBackend.DTOs
         public bool HasLifetime { get; set; }
         public DateTime NextExpireDate { get; set; }
         public string ImageUrl { get; set; }
-        public ArticleUserSettingDto ArticleUserSettings { get; set; }
-        public int TotalStockAmount { get; set; }
 
         public IEnumerable<ArticleStoreDto> Stores { get; set; }
-
-        public EditArticleDto()
-        {
-            ArticleUserSettings = new ArticleUserSettingDto();
-        }
     }
 }

@@ -24,7 +24,7 @@ namespace BeepBackend.Permissions
         }
 
         /// <summary>
-        /// Prüft ob der übergebene Benutzer für einen API Call berechtigt ist
+        /// Prüft ob der übergebene Benutzer die angegeben Berechtigung im angegebenen Environment hat
         /// </summary>
         /// <param name="authService"></param>
         /// <param name="user">User dessen berechtigung geprüft werden soll</param>
@@ -39,6 +39,26 @@ namespace BeepBackend.Permissions
             AuthorizationResult result = await authService.AuthorizeAsync(user, null, new[]
             {
                 new HasEnvironmentPermissionRequirement(environmentId, requiredPermission),
+            });
+
+            return result.Succeeded;
+        }
+        
+        /// <summary>
+        /// Prüft ob der übergebene Benutzer im angegebenen Evnrionment mitglied ist.
+        /// </summary>
+        /// <param name="authService"></param>
+        /// <param name="user">User dessen berechtigung geprüft werden soll</param>
+        /// <param name="environmentId">Id des Environments in dem der Benutzer berechtigt sein muss. Falls 0 wird die ID aus den User-Claims verwendet</param>
+        /// <returns></returns>
+        public static async Task<bool> IsPermitted(this IAuthorizationService authService, ClaimsPrincipal user, int environmentId)
+        {
+            environmentId = environmentId == 0
+                ? int.Parse(user.FindFirst(c => c.Type == BeepClaimTypes.EnvironmentId).Value)
+                : environmentId;
+            AuthorizationResult result = await authService.AuthorizeAsync(user, null, new[]
+            {
+                new HasEnvironmentPermissionRequirement(environmentId),
             });
 
             return result.Succeeded;

@@ -24,16 +24,14 @@ namespace BeepBackend.Controllers
         private readonly IAuthRepository _authRepo;
         private readonly IMapper _mapper;
         private readonly IPermissionsCache _permissionsCache;
-        private readonly IAuthorizationService _authService;
         private readonly string _tokenSecretKey;
         private readonly int _tokenLifeTimeSeconds;
 
-        public AuthController(IAuthRepository authRepo, IMapper mapper, IConfiguration config, IPermissionsCache permissionsCache, IAuthorizationService authService)
+        public AuthController(IAuthRepository authRepo, IMapper mapper, IConfiguration config, IPermissionsCache permissionsCache)
         {
             _authRepo = authRepo;
             _mapper = mapper;
             _permissionsCache = permissionsCache;
-            _authService = authService;
             _tokenLifeTimeSeconds = Convert.ToInt32(config.GetSection("AppSettings:TokenLifeTime").Value);
             _tokenSecretKey = config.GetSection("AppSettings:Token").Value;
         }
@@ -76,7 +74,7 @@ namespace BeepBackend.Controllers
             claims.Add(new Claim(BeepClaimTypes.PermissionsSerial, defaultPermission.Serial));
             claims.Add(new Claim(BeepClaimTypes.EnvironmentId, defaultPermission.Environment.Id.ToString()));
 
-            _permissionsCache.AddEntriesForUser(defaultPermission.UserId, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds),
+            _permissionsCache.AddEntriesForUser(defaultPermission.UserId,
                 await _authRepo.GetAllUserPermissions(userFromRepo.Id));
 
             return Ok(new

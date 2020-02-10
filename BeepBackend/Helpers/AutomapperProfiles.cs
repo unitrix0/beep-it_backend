@@ -43,15 +43,10 @@ namespace BeepBackend.Helpers
                 .ForMember(i => i.Invitee, opt => opt.MapFrom(src => src.Invitee.DisplayName))
                 .ForMember(i => i.IsAnswered, opt => opt.MapFrom(src => src.AnsweredOn != DateTime.MinValue));
 
-            CreateMap<Article, EditArticleDto>()
-                .ForMember(a => a.ArticleUserSettings,
-                    opt => opt.MapFrom(src => src.ArticleUserSettings.FirstOrDefault()))
-                .ForMember(a => a.GroupId, opt => opt.MapFrom(src => src.ArticleGroupFk))
-                .ForMember(a => a.TotalStockAmount,
-                    opt => opt.MapFrom(src => src.StockEntryValues.Sum(sev => sev.AmountOnStock)));
-            CreateMap<EditArticleDto, Article>()
-                .ForMember(a => a.ArticleGroupFk, opt => opt.MapFrom(src => src.GroupId))
-                .ForMember(a => a.ArticleUserSettings, opt => opt.Ignore());
+            CreateMap<Article, ArticleDto>()
+                .ForMember(a => a.GroupId, opt => opt.MapFrom(src => src.ArticleGroupId));
+            CreateMap<ArticleDto, Article>()
+                .ForMember(a => a.ArticleGroupId, opt => opt.MapFrom(src => src.GroupId));
 
             CreateMap<ArticleUserSetting, ArticleUserSettingDto>();
             CreateMap<ArticleUserSettingDto, ArticleUserSetting>();

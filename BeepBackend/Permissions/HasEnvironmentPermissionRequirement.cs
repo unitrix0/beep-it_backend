@@ -25,5 +25,10 @@ namespace BeepBackend.Permissions
             EnvironmentId = environmentId;
             Permission = permission;
         }
+
+        public HasEnvironmentPermissionRequirement(int environmentId)
+        {
+            EnvironmentId = environmentId;
+        }
     }
 }

@@ -35,7 +35,7 @@ namespace BeepBackend.Data
             {
                 artSettings.HasOne(us => us.Article)
                     .WithMany(a => a.ArticleUserSettings)
-                    .HasForeignKey(us => us.ArticleFk);
+                    .HasForeignKey(us => us.ArticleId);
 
                 artSettings.HasOne(us => us.Environment)
                     .WithMany(e => e.ArticleUserSettings);
@@ -45,7 +45,7 @@ namespace BeepBackend.Data
             {
                 artGrp.HasMany(ag => ag.Articles)
                     .WithOne(a => a.ArticleGroup)
-                    .HasForeignKey(a => a.ArticleGroupFk);
+                    .HasForeignKey(a => a.ArticleGroupId);
 
                 artGrp.HasData(new ArticleGroup() { Id = 1, Name = "keine" });
             });

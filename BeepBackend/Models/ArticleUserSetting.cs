@@ -7,7 +7,7 @@
         public int KeepStockAmount { get; set; }
         public long UsualLifetime { get; set; }
 
-        public int ArticleFk { get; set; }
+        public int ArticleId { get; set; }
         public Article Article { get; set; }
 
         public int EnvironmentId { get; set; }

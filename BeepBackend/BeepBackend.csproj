@@ -73,6 +73,8 @@
     <Compile Remove="Migrations\20200115160237_ArticleUnitRelation.Designer.cs" />
     <Compile Remove="Migrations\20200121160212_AddStockEntryIdInStockEntryValue.cs" />
     <Compile Remove="Migrations\20200121160212_AddStockEntryIdInStockEntryValue.Designer.cs" />
+    <Compile Remove="Migrations\20200209190817_RenameArtikelFk.cs" />
+    <Compile Remove="Migrations\20200209190817_RenameArtikelFk.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

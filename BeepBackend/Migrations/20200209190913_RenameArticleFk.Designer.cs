@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(BeepDbContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20200209190913_RenameArticleFk")]
+    partial class RenameArticleFk
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -25,7 +27,7 @@ namespace BeepBackend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int>("ArticleGroupId");
+                    b.Property<int>("ArticleGroupFk");
 
                     b.Property<string>("Barcode");
 
@@ -43,7 +45,7 @@ namespace BeepBackend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ArticleGroupId");
+                    b.HasIndex("ArticleGroupFk");
 
                     b.HasIndex("UnitId");
 
@@ -495,7 +497,7 @@ namespace BeepBackend.Migrations
                 {
                     b.HasOne("BeepBackend.Models.ArticleGroup", "ArticleGroup")
                         .WithMany("Articles")
-                        .HasForeignKey("ArticleGroupId")
+                        .HasForeignKey("ArticleGroupFk")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("BeepBackend.Models.ArticleUnit", "Unit")

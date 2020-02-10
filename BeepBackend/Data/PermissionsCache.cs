@@ -5,35 +5,39 @@ using System.Threading;
 using System.Threading.Tasks;
 using BeepBackend.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace BeepBackend.Data
 {
     public class PermissionsCache : IPermissionsCache
     {
-        private readonly Dictionary<string, Tuple<Permission, DateTime>> _serialsCache;
 
-        public PermissionsCache()
+        private readonly Dictionary<string, Tuple<Permission, DateTime>> _serialsCache;
+        private readonly int _tokenLifeTimeSeconds;
+
+        public PermissionsCache(IConfiguration config)
         {
             _serialsCache = new Dictionary<string, Tuple<Permission, DateTime>>();
+            _tokenLifeTimeSeconds = Convert.ToInt32(config.GetSection("AppSettings:TokenLifeTime").Value);
 
             var cleanupTimer = new Timer(Cleanup);
             cleanupTimer.Change(new TimeSpan(), new TimeSpan(1, 0, 0, 0));
         }
 
-        public bool SerialsMatch(string userId, int environmentId, string permissionSerial)
+        public bool SerialsMatch(int userId, int environmentId, string permissionSerial)
         {
             string key = $"{userId},{environmentId}";
             return _serialsCache.ContainsKey(key) && _serialsCache[key].Item1.Serial == permissionSerial;
         }
 
-        public void AddEntriesForUser(int userId, DateTime lifetime, IEnumerable<Permission> permissions)
+        public void AddEntriesForUser(int userId, IEnumerable<Permission> permissions)
         {
             foreach (Permission p in permissions)
             {
                 string key = $"{userId},{p.EnvironmentId}";
 
                 if (_serialsCache.ContainsKey(key)) _serialsCache.Remove(key);
-                _serialsCache.Add(key, new Tuple<Permission, DateTime>(p, lifetime));
+                _serialsCache.Add(key, new Tuple<Permission, DateTime>(p, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)));
             }
         }
 
@@ -48,7 +52,7 @@ namespace BeepBackend.Data
         }
 
         /// <summary>
-        /// Gibt das <see cref="Permission"/> Objekt für den angegebenen Benutz im angegebenen
+        /// Gibt das <see cref="Permission"/> Objekt für den angegebenen Benutzer im angegebenen
         /// Environment zurück. Falls nichts gefunden wird null.
         /// </summary>
         /// <param name="userId"></param>

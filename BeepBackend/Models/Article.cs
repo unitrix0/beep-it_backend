@@ -14,7 +14,7 @@ namespace BeepBackend.Models
         public string ImageUrl { get; set; }
         public int ContentAmount { get; set; }
 
-        public int ArticleGroupFk { get; set; }
+        public int ArticleGroupId { get; set; }
         public ArticleGroup ArticleGroup { get; set; }
 
         public int UnitId { get; set; }

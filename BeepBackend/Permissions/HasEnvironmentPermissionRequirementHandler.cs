@@ -25,7 +25,7 @@ namespace BeepBackend.Permissions
             var userFlags = (PermissionFlags)Convert.ToInt32(userPermission.ToBits(), 2);
 
             if ((requirement.Permission & userFlags) > 0 ||
-                requirement.Permission == PermissionFlags.Any) context.Succeed(requirement);
+                requirement.Permission == 0) context.Succeed(requirement);
 
             return Task.CompletedTask;
         }

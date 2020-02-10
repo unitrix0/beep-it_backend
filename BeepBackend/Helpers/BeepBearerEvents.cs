@@ -12,10 +12,12 @@ namespace BeepBackend.Helpers
     public class BeepBearerEvents : JwtBearerEvents
     {
         private readonly IPermissionsCache _cache;
+        private readonly IAuthRepository _authRepo;
 
-        public BeepBearerEvents(IPermissionsCache cache)
+        public BeepBearerEvents(IPermissionsCache cache, IAuthRepository authRepo)
         {
             _cache = cache;
+            _authRepo = authRepo;
         }
 
         public override Task TokenValidated(TokenValidatedContext context)
@@ -33,7 +35,7 @@ namespace BeepBackend.Helpers
                 ? Convert.ToInt32(claims[BeepClaimTypes.EnvironmentId])
                 : 0;
 
-            string userId = context.Principal.FindFirst(ClaimTypes.NameIdentifier).Value;
+            int userId = Convert.ToInt32(context.Principal.FindFirst(ClaimTypes.NameIdentifier).Value);
             if (_cache.SerialsMatch(userId, environmentId, serial)) return Task.CompletedTask;
 
             context.Response.Headers.Add("PermissionsChanged", "true");
