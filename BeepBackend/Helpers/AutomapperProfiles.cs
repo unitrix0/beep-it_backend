@@ -60,6 +60,9 @@ namespace BeepBackend.Helpers
 
             CreateMap<ArticleStore, ArticleStoreDto>();
             CreateMap<ArticleStoreDto, ArticleStore>();
+
+            CreateMap<Camera, CameraDto>();
+            CreateMap<CameraDto, Camera>();
         }
     }
 }

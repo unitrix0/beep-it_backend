@@ -47,9 +47,6 @@ namespace BeepBackend.Controllers
         [HttpGet("LookupArticle/{barcode}", Name = nameof(LookupArticle))]
         public async Task<IActionResult> LookupArticle(string barcode)
         {
-            if (!await _authService.IsPermitted(User, 0,
-                PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
-
             Article article = await _repo.LookupArticle(barcode);
             if (article == null) return Ok(new ArticleDto());
 
@@ -79,9 +76,6 @@ namespace BeepBackend.Controllers
         [HttpPost("CreateArticle")]
         public async Task<IActionResult> CreateArticle(ArticleDto newArticleDto)
         {
-            if (!await _authService.IsPermitted(User, 0,
-                PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
-
             var article = _mapper.Map<Article>(newArticleDto);
 
             Article createdArticle = await _repo.CreateArticle(article);
@@ -98,7 +92,7 @@ namespace BeepBackend.Controllers
         [HttpPost("CreateArticleUserSettings")]
         public async Task<IActionResult> CreateArticleUserSettings(ArticleUserSettingDto articleUserSettingDto)
         {
-            if (!await _authService.IsPermitted(User, 0,
+            if (!await _authService.IsPermitted(User, articleUserSettingDto.EnvironmentId,
                 PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
 
             var articleUserSetting = _mapper.Map<ArticleUserSetting>(articleUserSettingDto);
@@ -127,9 +121,6 @@ namespace BeepBackend.Controllers
         [HttpPatch("UpdateArticle")]
         public async Task<IActionResult> UpdateArticle(ArticleDto articleDto)
         {
-            if (!await _authService.IsPermitted(User, 0,
-                PermissionFlags.IsOwner | PermissionFlags.EditArticleSettings)) return Unauthorized();
-
             Article article = await _repo.GetArticle(articleDto.Id);
             _mapper.Map(articleDto, article);
 
@@ -142,7 +133,7 @@ namespace BeepBackend.Controllers
         [HttpPost("AddStockEntry")]
         public async Task<IActionResult> AddStockEntry(CheckInDto checkInDto)
         {
-            if (!await _authService.IsPermitted(User, 0,
+            if (!await _authService.IsPermitted(User,checkInDto.EnvironmentId,
                 PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
 
             checkInDto.ExpireDate = checkInDto.ExpireDate.AddMinutes(checkInDto.ClientTimezoneOffset);

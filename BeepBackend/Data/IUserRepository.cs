@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using BeepBackend.Models;
 using System.Threading.Tasks;
+using BeepBackend.DTOs;
 
 namespace BeepBackend.Data
 {
@@ -27,5 +28,8 @@ namespace BeepBackend.Data
         Task<bool> RemoveUserFromEnvironmentAsync(int environmentId, int userId);
         Task<IEnumerable<Permission>> GetEnvironmentPermissions(int environmentId, int userId);
         Task<BeepEnvironment> GetEnvironment(int envId);
+        Task<List<Camera>> GetCamsForUser(int userId);
+        Task<bool> AddCamForUser(int userId, Camera cam);
+        Task<string> GetCamForUser(int userId, IEnumerable<string> deviceIds);
     }
 }

@@ -1,5 +1,5 @@
-﻿using BeepBackend.Helpers;
-using BeepBackend.Models;
+﻿using BeepBackend.Models;
+using BeepBackend.Permissions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using BeepBackend.Permissions;
 
 namespace BeepBackend.Data
 {
@@ -89,7 +88,7 @@ namespace BeepBackend.Data
                                p.UserId == userId && p.IsOwner);
 
             Expression<Func<Permission, bool>> condition = isOwner
-                ? (Expression<Func<Permission, bool>>) (p => p.EnvironmentId == environmentId)
+                ? (Expression<Func<Permission, bool>>)(p => p.EnvironmentId == environmentId)
                 : p => p.EnvironmentId == environmentId &&
                        p.UserId != userId &&
                        !p.IsOwner;
@@ -273,6 +272,34 @@ namespace BeepBackend.Data
 
             _context.Permissions.Remove(permission);
             if (invitation != null) _context.Invitations.Remove(invitation);
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<string> GetCamForUser(int userId, IEnumerable<string> deviceIds)
+        {
+            var cam = await _context
+                .UserCameras.Include(uc => uc.Camera)
+                .FirstOrDefaultAsync(uc => uc.UserId == userId && deviceIds.Contains(uc.Camera.DeviceId));
+
+            return cam?.Camera.DeviceId ?? string.Empty;
+        }
+
+        public async Task<List<Camera>> GetCamsForUser(int userId)
+        {
+            var deviceIds = await _context.UserCameras
+                .Include(uc => uc.Camera)
+                .Where(uc => uc.UserId == userId)
+                .Select(uc => uc.Camera).ToListAsync();
+
+            return deviceIds;
+        }
+
+        public async Task<bool> AddCamForUser(int userId, Camera cam)
+        {
+            var uc = new UserCamera() { Camera = cam, UserId = userId };
+            await _context.Cameras.AddAsync(cam);
+            await _context.UserCameras.AddAsync(uc);
 
             return await _context.SaveChangesAsync() > 0;
         }
