@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Utrix.WebLib.Pagination;
 using StockEntryValue = BeepBackend.Models.StockEntryValue;
@@ -108,9 +109,9 @@ namespace BeepBackend.Data
 
         public async Task<ArticleUserSetting> GetArticleUserSettings(int articleId, int environmentId)
         {
-            ArticleUserSetting articleUserSettings =await _context.ArticleUserSettings
-                    .FirstOrDefaultAsync(aus => aus.ArticleId == articleId && 
-                                                aus.EnvironmentId == environmentId );
+            ArticleUserSetting articleUserSettings = await _context.ArticleUserSettings
+                    .FirstOrDefaultAsync(aus => aus.ArticleId == articleId &&
+                                                aus.EnvironmentId == environmentId);
 
             return articleUserSettings;
         }
@@ -251,6 +252,38 @@ namespace BeepBackend.Data
         {
             await _context.StockEntryValues.AddAsync(newEntry);
             return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task WriteActivityLog(ActivityAction action, ClaimsPrincipal user, int environmentId, int articleId, string amount)
+        {
+            Article article = await _context.Articles
+                .Include(a => a.Unit)
+                .FirstOrDefaultAsync(a => a.Id == articleId);
+
+            amount = article.UnitId == 1 ? $"{amount} {article.Unit.Abbreviation}" : $"{amount}x {article.ContentAmount}{article.Unit.Abbreviation}";
+
+            var newEntry = new ActivityLogEntry()
+            {
+                EnvironmentId = environmentId,
+                Action = (int)action,
+                Amount = amount,
+                Description = article.Name,
+                ImgUrl = article.ImageUrl,
+                Username = user.FindFirstValue(ClaimTypes.Name),
+                ActionDate = DateTime.Now
+            };
+            await _context.ActivityLogEntries.AddAsync(newEntry);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<ActivityLogEntry>> GetActivityLog(int environmentId)
+        {
+            var entries = await _context.ActivityLogEntries
+                .Where(ale => ale.EnvironmentId == environmentId)
+                .OrderByDescending(ale => ale.ActionDate)
+                .Take(4).ToListAsync();
+
+            return entries;
         }
     }
 }

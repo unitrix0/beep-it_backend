@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using BeepBackend.Helpers;
 using BeepBackend.Models;
@@ -27,5 +28,7 @@ namespace BeepBackend.Data
         Task<bool> CreateStockEntryValue(StockEntryValue newEntry);
         Task<IEnumerable<Store>> GetStores();
         Task<ArticleUserSetting> CreateArticleUserSetting(ArticleUserSetting articleUserSetting);
+        Task WriteActivityLog(ActivityAction action, ClaimsPrincipal user, int environmentId, int articleId, string amount);
+        Task<IEnumerable<ActivityLogEntry>> GetActivityLog(int environmentId);
     }
 }

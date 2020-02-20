@@ -70,7 +70,8 @@ namespace BeepBackend.Controllers
             IList<string> roles = await _authRepo.GetUserRoles(userFromRepo);
             identityClaims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
-            List<Claim> permissionClaims = await BuildPermissionClaims(userFromRepo);
+            var defaultPermission = await _authRepo.GetDefaultPermissions(userFromRepo.Id);
+            List<Claim> permissionClaims = BuildPermissionClaims(defaultPermission);
             var settings = await GetSettings(userFromRepo.Id, user.Cameras);
 
             _permissionsCache.AddEntriesForUser(userFromRepo.Id,
@@ -95,14 +96,14 @@ namespace BeepBackend.Controllers
             };
         }
 
-        private async Task<List<Claim>> BuildPermissionClaims(User userFromRepo)
+        private List<Claim> BuildPermissionClaims(Permission permission)
         {
-            Permission defaultPermission = await _authRepo.GetDefaultPermissions(userFromRepo.Id);
             var permissionClaims = new List<Claim>
             {
-                new Claim(BeepClaimTypes.Permissions, defaultPermission.ToBits()),
-                new Claim(BeepClaimTypes.PermissionsSerial, defaultPermission.Serial),
-                new Claim(BeepClaimTypes.EnvironmentId, defaultPermission.Environment.Id.ToString())
+                new Claim(ClaimTypes.NameIdentifier, permission.UserId.ToString()),
+                new Claim(BeepClaimTypes.Permissions, permission.ToBits()),
+                new Claim(BeepClaimTypes.PermissionsSerial, permission.Serial),
+                new Claim(BeepClaimTypes.EnvironmentId, permission.Environment.Id.ToString())
             };
 
             return permissionClaims;
@@ -116,21 +117,11 @@ namespace BeepBackend.Controllers
             Permission permissions = await _authRepo.GetUserPermissionForEnvironment(userId, environmentId);
             if (permissions == null) return Unauthorized();
 
-            //TODO Überarbeiten (separater Token)
-            List<Claim> newClaims = User.Claims.Where(c => c.Type != BeepClaimTypes.Permissions &&
-                                                           c.Type != BeepClaimTypes.PermissionsSerial &&
-                                                           c.Type != BeepClaimTypes.EnvironmentId).ToList();
-
-            newClaims.Add(new Claim(BeepClaimTypes.Permissions, permissions.ToBits()));
-            newClaims.Add(new Claim(BeepClaimTypes.PermissionsSerial, permissions.Serial));
-            newClaims.Add(new Claim(BeepClaimTypes.EnvironmentId, permissions.Environment.Id.ToString()));
-
-            var mappedUser = _mapper.Map<UserForTokenDto>(permissions.User);
+            var newClaims = BuildPermissionClaims(permissions);
             string newJwtToken = JwtHelper.CreateToken(newClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds));
             return new ObjectResult(new
             {
-                token = newJwtToken,
-                mappedUser
+                permissionsToken = newJwtToken,
             });
         }
 

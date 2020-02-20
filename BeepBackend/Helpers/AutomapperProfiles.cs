@@ -63,6 +63,9 @@ namespace BeepBackend.Helpers
 
             CreateMap<Camera, CameraDto>();
             CreateMap<CameraDto, Camera>();
+
+            CreateMap<ActivityLogEntry, ActivityLogEntryDto>();
+            CreateMap<ActivityLogEntryDto, ActivityLogEntry>();
         }
     }
 }

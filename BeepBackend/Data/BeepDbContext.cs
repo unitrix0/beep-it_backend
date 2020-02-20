@@ -26,6 +26,7 @@ namespace BeepBackend.Data
         public DbSet<StockEntryValue> StockEntryValues { get; set; }
         public DbSet<UserCamera> UserCameras { get; set; }
         public DbSet<Camera> Cameras { get; set; }
+        public DbSet<ActivityLogEntry> ActivityLogEntries { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -207,6 +208,16 @@ namespace BeepBackend.Data
                     .WithMany(c => c.Users)
                     .HasForeignKey(uc => uc.CameraId)
                     .IsRequired();
+            });
+
+            modelBuilder.Entity<ActivityLogEntry>(logEntries =>
+            {
+                logEntries.HasKey(ale => ale.Id);
+
+                logEntries.HasOne(ale => ale.Environment)
+                    .WithMany(e => e.ActivityLogEntries)
+                    .HasForeignKey(ale => ale.EnvironmentId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
         }

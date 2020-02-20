@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading.Tasks;
 using Utrix.WebLib;
 using Utrix.WebLib.Pagination;
@@ -54,7 +55,7 @@ namespace BeepBackend.Controllers
             return Ok(articleDto);
         }
 
-        [HttpGet("GetArticleUserSettings")]
+        [HttpGet("GetArticleUserSettings", Name = nameof(GetArticleUserSettings))]
         public async Task<IActionResult> GetArticleUserSettings(int articleId, int environmentId)
         {
             if (!await _authService.IsPermitted(User, environmentId)) return Unauthorized();
@@ -133,7 +134,7 @@ namespace BeepBackend.Controllers
         [HttpPost("AddStockEntry")]
         public async Task<IActionResult> AddStockEntry(CheckInDto checkInDto)
         {
-            if (!await _authService.IsPermitted(User,checkInDto.EnvironmentId,
+            if (!await _authService.IsPermitted(User, checkInDto.EnvironmentId,
                 PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
 
             checkInDto.ExpireDate = checkInDto.ExpireDate.AddMinutes(checkInDto.ClientTimezoneOffset);
@@ -142,6 +143,8 @@ namespace BeepBackend.Controllers
 
             StockEntryValue newEntry = await _repo.AddStockEntry(entryValues, checkInDto.UsualLifetime);
             var ret = _mapper.Map<ArticleDto>(newEntry.Article);
+
+            await _repo.WriteActivityLog(ActivityAction.CheckIn, User, checkInDto.EnvironmentId, checkInDto.ArticleId, checkInDto.AmountOnStock.ToString());
 
             return CreatedAtRoute(nameof(LookupArticle),
                 new { controller = "Articles", barcode = checkInDto.Barcode, environmentId = checkInDto.EnvironmentId }, ret);
@@ -171,13 +174,20 @@ namespace BeepBackend.Controllers
             if (entry == null) return NotFound();
 
             if (!await _authService.IsPermitted(User, entry.EnvironmentId,
-               PermissionFlags.IsOwner | PermissionFlags.EditArticleSettings)) return Unauthorized();
+               PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
 
             if (amount == 0 || entry.AmountOnStock == 1 || entry.AmountOnStock == amount)
             {
                 _repo.Delete(entry);
-                return await _repo.SaveAll() ? NoContent() : throw new Exception("Failed to delete the stock entry");
+                if (!await _repo.SaveAll()) throw new Exception("Failed to delete the stock entry");
+
+                await _repo.WriteActivityLog(ActivityAction.CheckOut, User, entry.EnvironmentId, entry.ArticleId,
+                    entry.AmountRemaining.ToString(CultureInfo.CurrentCulture));
+                return NoContent();
             }
+
+            await _repo.WriteActivityLog(ActivityAction.CheckOut, User, entry.EnvironmentId, entry.ArticleId,
+                amount.ToString());
 
             entry.AmountOnStock -= amount;
             return await _repo.SaveAll() ? NoContent() : throw new Exception("Failed to update stock entry");
@@ -207,9 +217,24 @@ namespace BeepBackend.Controllers
 
             existingEntry.AmountOnStock--;
 
+            await _repo.WriteActivityLog(ActivityAction.Open, User, existingEntry.EnvironmentId, existingEntry.ArticleId,
+                newEntry.AmountRemaining.ToString(CultureInfo.CurrentCulture));
+
             if (await _repo.CreateStockEntryValue(newEntry)) return NoContent();
 
             throw new Exception("Error saving the Data");
+        }
+
+        [HttpGet("GetActivityLog/{environmentId}")]
+        public async Task<IActionResult> GetActivityLog(int environmentId)
+        {
+            if (!await _authService.IsPermitted(User, environmentId)) return Unauthorized();
+
+            IEnumerable<ActivityLogEntry> entries = await _repo.GetActivityLog(environmentId);
+
+            var entriesDto = _mapper.Map<IEnumerable<ActivityLogEntryDto>>(entries);
+
+            return Ok(entriesDto);
         }
     }
 }
