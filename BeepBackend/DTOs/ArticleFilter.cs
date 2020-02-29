@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Utrix.WebLib.Pagination;
+﻿using Utrix.WebLib.Pagination;
 
-namespace BeepBackend.Helpers
+namespace BeepBackend.DTOs
 {
     public class ArticleFilter : PaginationParams
     {

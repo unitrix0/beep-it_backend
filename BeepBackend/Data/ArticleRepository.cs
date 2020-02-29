@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using BeepBackend.DTOs;
 using Utrix.WebLib.Pagination;
 using StockEntryValue = BeepBackend.Models.StockEntryValue;
 
@@ -254,7 +255,7 @@ namespace BeepBackend.Data
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task WriteActivityLog(ActivityAction action, ClaimsPrincipal user, int environmentId, int articleId, string amount)
+        public async Task WriteActivityLog(ActivityLogAction logAction, ClaimsPrincipal user, int environmentId, int articleId, string amount)
         {
             Article article = await _context.Articles
                 .Include(a => a.Unit)
@@ -265,7 +266,7 @@ namespace BeepBackend.Data
             var newEntry = new ActivityLogEntry()
             {
                 EnvironmentId = environmentId,
-                Action = (int)action,
+                Action = (int)logAction,
                 Amount = amount,
                 Description = article.Name,
                 ImgUrl = article.ImageUrl,

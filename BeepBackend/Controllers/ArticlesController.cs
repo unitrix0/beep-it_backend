@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using Utrix.WebLib;
+using Utrix.WebLib.Helpers;
 using Utrix.WebLib.Pagination;
 
 namespace BeepBackend.Controllers
@@ -144,7 +145,7 @@ namespace BeepBackend.Controllers
             StockEntryValue newEntry = await _repo.AddStockEntry(entryValues, checkInDto.UsualLifetime);
             var ret = _mapper.Map<ArticleDto>(newEntry.Article);
 
-            await _repo.WriteActivityLog(ActivityAction.CheckIn, User, checkInDto.EnvironmentId, checkInDto.ArticleId, checkInDto.AmountOnStock.ToString());
+            await _repo.WriteActivityLog(ActivityLogAction.CheckIn, User, checkInDto.EnvironmentId, checkInDto.ArticleId, checkInDto.AmountOnStock.ToString());
 
             return CreatedAtRoute(nameof(LookupArticle),
                 new { controller = "Articles", barcode = checkInDto.Barcode, environmentId = checkInDto.EnvironmentId }, ret);
@@ -181,12 +182,12 @@ namespace BeepBackend.Controllers
                 _repo.Delete(entry);
                 if (!await _repo.SaveAll()) throw new Exception("Failed to delete the stock entry");
 
-                await _repo.WriteActivityLog(ActivityAction.CheckOut, User, entry.EnvironmentId, entry.ArticleId,
+                await _repo.WriteActivityLog(ActivityLogAction.CheckOut, User, entry.EnvironmentId, entry.ArticleId,
                     entry.AmountRemaining.ToString(CultureInfo.CurrentCulture));
                 return NoContent();
             }
 
-            await _repo.WriteActivityLog(ActivityAction.CheckOut, User, entry.EnvironmentId, entry.ArticleId,
+            await _repo.WriteActivityLog(ActivityLogAction.CheckOut, User, entry.EnvironmentId, entry.ArticleId,
                 amount.ToString());
 
             entry.AmountOnStock -= amount;
@@ -217,7 +218,7 @@ namespace BeepBackend.Controllers
 
             existingEntry.AmountOnStock--;
 
-            await _repo.WriteActivityLog(ActivityAction.Open, User, existingEntry.EnvironmentId, existingEntry.ArticleId,
+            await _repo.WriteActivityLog(ActivityLogAction.Open, User, existingEntry.EnvironmentId, existingEntry.ArticleId,
                 newEntry.AmountRemaining.ToString(CultureInfo.CurrentCulture));
 
             if (await _repo.CreateStockEntryValue(newEntry)) return NoContent();

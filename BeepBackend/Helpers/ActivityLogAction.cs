@@ -1,6 +1,6 @@
 ﻿namespace BeepBackend.Helpers
 {
-    public enum ActivityAction
+    public enum ActivityLogAction
     {
         CheckIn = 1,
         CheckOut,
