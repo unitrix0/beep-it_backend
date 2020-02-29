@@ -6,10 +6,7 @@ namespace BeepBackend.Data
 {
     public interface IAuthRepository
     {
-        Task<User> Register(User userToCreate, string password);
-        Task<bool> UserExists(string username);
-        Task<User> Login(string username, string password);
-        Task<IList<string>> GetUserRoles(User userName);
+        Task<User> CreateFirstEnvironment(User userToCreate);
         Task<Permission> GetDefaultPermissions(int userId);
         Task<Permission> GetUserPermissionForEnvironment(int userId, int environmentId);
         Task<IEnumerable<Permission>> GetAllUserPermissions(int userId);

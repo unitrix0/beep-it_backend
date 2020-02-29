@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -18,30 +17,38 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.Net;
 using System.Text;
+using BeepBackend.Mailing;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Utrix.WebLib;
 
 namespace BeepBackend
 {
     public class Startup
     {
+        private readonly IHostingEnvironment _environment;
         public IConfiguration Configuration { get; }
 
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IHostingEnvironment environment)
         {
+            _environment = environment;
             Configuration = configuration;
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public virtual void ConfigureServices(IServiceCollection services)
         {
-            IdentityBuilder builder = services.AddIdentityCore<User>(opt => { opt.Password.RequiredLength = 6; });
+            IdentityBuilder builder = services.AddIdentityCore<User>(opt =>
+            {
+                opt.Password.RequiredLength = 6;
+                opt.Password.RequireNonAlphanumeric = false;
+                opt.SignIn.RequireConfirmedEmail = true;
+            });
 
             builder = new IdentityBuilder(builder.UserType, typeof(Role), builder.Services);
             builder.AddEntityFrameworkStores<BeepDbContext>();
+            builder.AddDefaultTokenProviders();
             builder.AddRoleValidator<RoleValidator<Role>>();
             builder.AddRoleManager<RoleManager<Role>>();
             builder.AddSignInManager<SignInManager<User>>();
@@ -65,12 +72,21 @@ namespace BeepBackend
             services.AddTransient<IAuthorizationHandler, HasEnvironmentPermissionRequirementHandler>();
             services.AddSingleton<IPermissionsCache, PermissionsCache>();
             services.AddTransient<BeepBearerEvents>();
+            services.AddTransient<IBeepMailer, Mailer>();
+            if (_environment.IsDevelopment())
+            {
+                services.AddTransient<IMailerClient, SmtpMailerClient>();
+            }
+            else
+            {
+                services.AddTransient<IMailerClient, SendGridMailerClient>();
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public virtual void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public virtual void Configure(IApplicationBuilder app)
         {
-            if (env.IsDevelopment())
+            if (_environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }

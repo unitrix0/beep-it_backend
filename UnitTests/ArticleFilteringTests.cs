@@ -2,6 +2,7 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
+using BeepBackend.DTOs;
 using BeepBackend.Helpers;
 using Microsoft.AspNetCore.Http.Extensions;
 using UnitTests.BaseClasses;

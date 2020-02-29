@@ -303,5 +303,12 @@ namespace BeepBackend.Data
 
             return await _context.SaveChangesAsync() > 0;
         }
+
+        public async Task<bool> ChangePassword(int userId, string currentPw, string newPw)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            IdentityResult result = await _userMgr.ChangePasswordAsync(user, currentPw, newPw);
+            return result.Succeeded;
+        }
     }
 }
