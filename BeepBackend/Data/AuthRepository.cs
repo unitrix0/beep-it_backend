@@ -1,33 +1,24 @@
-﻿using BeepBackend.Helpers;
-using BeepBackend.Models;
+﻿using BeepBackend.Models;
+using BeepBackend.Permissions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BeepBackend.Permissions;
 
 namespace BeepBackend.Data
 {
     public class AuthRepository : IAuthRepository
     {
         private readonly BeepDbContext _context;
-        private readonly UserManager<User> _userMgr;
-        private readonly SignInManager<User> _signInMgr;
 
-        public AuthRepository(BeepDbContext context, UserManager<User> userMgr, SignInManager<User> signInMgr)
+        public AuthRepository(BeepDbContext context)
         {
             _context = context;
-            _userMgr = userMgr;
-            _signInMgr = signInMgr;
         }
 
-        public async Task<User> Register(User newUser, string password)
+        public async Task<User> CreateFirstEnvironment(User newUser)
         {
-            IdentityResult result = await _userMgr.CreateAsync(newUser, password);
-            if (!result.Succeeded) return null;
-            await _userMgr.AddToRoleAsync(newUser, RoleNames.Member);
-
             var environment = new BeepEnvironment() { Name = $"Zu Hause von {newUser.DisplayName}", User = newUser, DefaultEnvironment = true };
             var permissions = new Permission() { IsOwner = true, User = newUser, Environment = environment, Serial = SerialGenerator.Generate() };
 
@@ -38,25 +29,6 @@ namespace BeepBackend.Data
             return newUser;
         }
 
-        public async Task<User> Login(string username, string password)
-        {
-            User user = await _userMgr.FindByNameAsync(username);
-            if (user == null) return null;
-            SignInResult result = await _signInMgr.CheckPasswordSignInAsync(user, password, false);
-
-            return result.Succeeded ? user : null;
-        }
-
-        public async Task<IList<string>> GetUserRoles(User user)
-        {
-            IList<string> roles = await _userMgr.GetRolesAsync(user);
-            return roles;
-        }
-
-        public async Task<bool> UserExists(string username)
-        {
-            return await _userMgr.FindByNameAsync(username) != null;
-        }
 
         public async Task<Permission> GetDefaultPermissions(int userId)
         {

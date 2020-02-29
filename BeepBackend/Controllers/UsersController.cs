@@ -4,11 +4,16 @@ using BeepBackend.DTOs;
 using BeepBackend.Models;
 using BeepBackend.Permissions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text;
 using System.Threading.Tasks;
+using BeepBackend.Helpers;
+using BeepBackend.Mailing;
 using Utrix.WebLib.Helpers;
 
 namespace BeepBackend.Controllers
@@ -21,13 +26,18 @@ namespace BeepBackend.Controllers
         private readonly IMapper _mapper;
         private readonly IPermissionsCache _permissionsCache;
         private readonly IAuthorizationService _authService;
+        private readonly UserManager<User> _userManager;
+        private readonly IBeepMailer _mailer;
 
-        public UsersController(IUserRepository repo, IMapper mapper, IPermissionsCache permissionsCache, IAuthorizationService authService)
+        public UsersController(IUserRepository repo, IMapper mapper, IPermissionsCache permissionsCache,
+            IAuthorizationService authService, UserManager<User> userManager, IBeepMailer mailer)
         {
             _repo = repo;
             _mapper = mapper;
             _permissionsCache = permissionsCache;
             _authService = authService;
+            _userManager = userManager;
+            _mailer = mailer;
         }
 
         [HttpGet("{id}", Name = nameof(GetUser))]
@@ -250,6 +260,42 @@ namespace BeepBackend.Controllers
             };
 
             return Ok(result);
+        }
+
+        [HttpPut("SetDisplayName/{userId}")]
+        public async Task<IActionResult> SetDisplayName(int userId, [FromBody] ProfileChangeDto changesDto)
+        {
+            if (!this.VerifyUser(userId)) return Unauthorized();
+
+            User user = await _repo.GetUser(userId);
+            user.DisplayName = changesDto.DisplayName;
+
+            if (await _repo.SaveAll()) return NoContent();
+
+            throw new Exception("Error updating display name");
+        }
+
+        [HttpPut("SetEmailAddress/{userId}")]
+        public async Task<IActionResult> SetEmailAddress(int userId, [FromBody] ProfileChangeDto changesDto)
+        {
+            if (!this.VerifyUser(userId)) return Unauthorized();
+
+            User user = await _repo.GetUser(userId);
+            string token = await _userManager.GenerateChangeEmailTokenAsync(user, changesDto.EMail);
+            await _mailer.SendConfirmationMail(user.Id, changesDto.EMail, token, true);
+
+            return Ok();
+        }
+
+        [HttpPut("ChangePassword/{userId}")]
+        public async Task<IActionResult> ChangePassword(int userId, [FromBody] ProfileChangeDto changesDto)
+        {
+            if (!this.VerifyUser(userId)) return Unauthorized();
+
+            bool changed = await _repo.ChangePassword(userId, changesDto.CurrentPassword, changesDto.Password);
+
+            if (changed) return NoContent();
+            throw new Exception("Error updating E-Mail address");
         }
     }
 }

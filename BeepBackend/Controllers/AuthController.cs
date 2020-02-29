@@ -2,12 +2,13 @@
 using BeepBackend.Data;
 using BeepBackend.DTOs;
 using BeepBackend.Helpers;
+using BeepBackend.Mailing;
 using BeepBackend.Models;
 using BeepBackend.Permissions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Utrix.WebLib;
 using Utrix.WebLib.Helpers;
+using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace BeepBackend.Controllers
 {
@@ -26,15 +28,22 @@ namespace BeepBackend.Controllers
         private readonly IUserRepository _userRepo;
         private readonly IMapper _mapper;
         private readonly IPermissionsCache _permissionsCache;
+        private readonly IBeepMailer _mailer;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
         private readonly string _tokenSecretKey;
         private readonly int _tokenLifeTimeSeconds;
 
-        public AuthController(IAuthRepository authRepo, IUserRepository userRepo, IMapper mapper, IConfiguration config, IPermissionsCache permissionsCache)
+        public AuthController(IAuthRepository authRepo, IUserRepository userRepo, IMapper mapper, IConfiguration config,
+            IPermissionsCache permissionsCache, IBeepMailer mailer, UserManager<User> userManager, SignInManager<User> signInManager)
         {
             _authRepo = authRepo;
             _userRepo = userRepo;
             _mapper = mapper;
             _permissionsCache = permissionsCache;
+            _mailer = mailer;
+            _userManager = userManager;
+            _signInManager = signInManager;
             _tokenLifeTimeSeconds = Convert.ToInt32(config.GetSection("AppSettings:TokenLifeTime").Value);
             _tokenSecretKey = config.GetSection("AppSettings:Token").Value;
         }
@@ -46,9 +55,17 @@ namespace BeepBackend.Controllers
             newUser.Username = newUser.Username.ToLower();
 
             var userToCreate = _mapper.Map<User>(newUser);
-            User createdUser = await _authRepo.Register(userToCreate, newUser.Password);
+            IdentityResult createUsrResult = await _userManager.CreateAsync(userToCreate, newUser.Password);
+            if (!createUsrResult.Succeeded) throw new Exception("Error Creating the user");
 
-            var userToReturn = _mapper.Map<UserForEditDto>(createdUser);
+            IdentityResult addRoleResult = await _userManager.AddToRoleAsync(userToCreate, RoleNames.Member);
+            if (!addRoleResult.Succeeded) throw new Exception("Error adding roles for User");
+
+            userToCreate = await _authRepo.CreateFirstEnvironment(userToCreate);
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(userToCreate);
+            await _mailer.SendConfirmationMail(userToCreate.Id, string.Empty, token, false);
+
+            var userToReturn = _mapper.Map<UserForEditDto>(userToCreate);
             Response.ExposeHeader("location");
             return CreatedAtRoute(nameof(UsersController.GetUser), new { controller = "Users", id = userToReturn.Id }, userToReturn);
         }
@@ -57,9 +74,11 @@ namespace BeepBackend.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(UserForLoginDto user)
         {
-            Console.WriteLine($"New Login from: {user.Username}");
-            User userFromRepo = await _authRepo.Login(user.Username.ToLower(), user.Password);
+            User userFromRepo = await _userManager.FindByNameAsync(user.Username);
             if (userFromRepo == null) return Unauthorized();
+
+            SignInResult signInResult = await _signInManager.CheckPasswordSignInAsync(userFromRepo, user.Password, false);
+            if (!signInResult.Succeeded) return Unauthorized(new { signInResult.IsLockedOut, signInResult.IsNotAllowed });
 
             var mappedUser = _mapper.Map<UserForTokenDto>(userFromRepo);
             var identityClaims = new List<Claim>()
@@ -67,7 +86,7 @@ namespace BeepBackend.Controllers
                 new Claim(ClaimTypes.NameIdentifier, userFromRepo.Id.ToString()),
                 new Claim(ClaimTypes.Name, userFromRepo.UserName)
             };
-            IList<string> roles = await _authRepo.GetUserRoles(userFromRepo);
+            IList<string> roles = await _userManager.GetRolesAsync(userFromRepo);
             identityClaims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
             var defaultPermission = await _authRepo.GetDefaultPermissions(userFromRepo.Id);
@@ -86,27 +105,37 @@ namespace BeepBackend.Controllers
             });
         }
 
-        private async Task<SettingsDto> GetSettings(int userId, IEnumerable<CameraDto> userCameras)
+        [HttpPut("ConfirmEmail")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmEmail(string id, string token, string email, bool isChange)
         {
-            string deviceId = await _userRepo.GetCamForUser(userId, userCameras.Select(uc => uc.DeviceId));
+            User user = await _userManager.FindByIdAsync(id);
+            if (user == null) throw new Exception("Failed to confirm the address");
 
-            return new SettingsDto()
+            if (!isChange)
             {
-                CameraDeviceId = deviceId
-            };
+                if (user.EmailConfirmed) return Ok();
+                IdentityResult result = await _userManager.ConfirmEmailAsync(user, token.FromBase64());
+                if (result.Succeeded) return Ok();
+            }
+            else
+            {
+                IdentityResult result = await _userManager.ChangeEmailAsync(user, email.FromBase64(), token.FromBase64());
+                if (result.Succeeded) return Ok();
+            }
+
+            throw new Exception("Failed to confirm the address");
         }
 
-        private List<Claim> BuildPermissionClaims(Permission permission)
+        [HttpGet("ResendEmailConfirmation/{username}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> ResendEmailConfirmation(string username)
         {
-            var permissionClaims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, permission.UserId.ToString()),
-                new Claim(BeepClaimTypes.Permissions, permission.ToBits()),
-                new Claim(BeepClaimTypes.PermissionsSerial, permission.Serial),
-                new Claim(BeepClaimTypes.EnvironmentId, permission.Environment.Id.ToString())
-            };
+            User user = await _userManager.FindByNameAsync(username);
+            string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            if (User != null && !user.EmailConfirmed) await _mailer.SendConfirmationMail(user.Id, string.Empty, token, false);
 
-            return permissionClaims;
+            return Ok();
         }
 
         [HttpGet("UpdatePermissionClaims/{userId}")]
@@ -130,9 +159,33 @@ namespace BeepBackend.Controllers
         {
             if (!this.VerifyUser(userId)) return Unauthorized();
 
-            bool exists = await _authRepo.UserExists(username);
-            return Ok(exists);
+            User user = await _userManager.FindByNameAsync(username);
+            return Ok(user != null);
         }
 
+
+
+        private async Task<SettingsDto> GetSettings(int userId, IEnumerable<CameraDto> userCameras)
+        {
+            string deviceId = await _userRepo.GetCamForUser(userId, userCameras.Select(uc => uc.DeviceId));
+
+            return new SettingsDto()
+            {
+                CameraDeviceId = deviceId
+            };
+        }
+
+        private List<Claim> BuildPermissionClaims(Permission permission)
+        {
+            var permissionClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, permission.UserId.ToString()),
+                new Claim(BeepClaimTypes.Permissions, permission.ToBits()),
+                new Claim(BeepClaimTypes.PermissionsSerial, permission.Serial),
+                new Claim(BeepClaimTypes.EnvironmentId, permission.Environment.Id.ToString())
+            };
+
+            return permissionClaims;
+        }
     }
 }
