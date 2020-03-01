@@ -56,10 +56,10 @@ namespace BeepBackend.Controllers
 
             var userToCreate = _mapper.Map<User>(newUser);
             IdentityResult createUsrResult = await _userManager.CreateAsync(userToCreate, newUser.Password);
-            if (!createUsrResult.Succeeded) throw new Exception("Error Creating the user");
+            if (!createUsrResult.Succeeded) return BadRequest(createUsrResult.Errors);
 
             IdentityResult addRoleResult = await _userManager.AddToRoleAsync(userToCreate, RoleNames.Member);
-            if (!addRoleResult.Succeeded) throw new Exception("Error adding roles for User");
+            if (!addRoleResult.Succeeded) BadRequest(addRoleResult.Errors);
 
             userToCreate = await _authRepo.CreateFirstEnvironment(userToCreate);
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(userToCreate);
