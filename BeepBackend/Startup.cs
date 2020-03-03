@@ -73,6 +73,8 @@ namespace BeepBackend
             services.AddSingleton<IPermissionsCache, PermissionsCache>();
             services.AddTransient<BeepBearerEvents>();
             services.AddTransient<IBeepMailer, Mailer>();
+            services.AddScoped<IShoppingListRepo, ShoppingListRepo>();
+
             if (_environment.IsDevelopment())
             {
                 services.AddTransient<IMailerClient, SmtpMailerClient>();
@@ -110,8 +112,7 @@ namespace BeepBackend
 
             //app.UseHttpsRedirection();
             app.UseAuthentication();
-            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()
-                .AllowCredentials());
+            app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             app.UseMvc();
         }
 

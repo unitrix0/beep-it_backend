@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.Expressions;
 
 namespace BeepBackend.Data
 {
@@ -27,10 +28,13 @@ namespace BeepBackend.Data
         public DbSet<UserCamera> UserCameras { get; set; }
         public DbSet<Camera> Cameras { get; set; }
         public DbSet<ActivityLogEntry> ActivityLogEntries { get; set; }
+        public DbQuery<ShoppingListArticleEntry> ShoppingList { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Query<ShoppingListArticleEntry>(sle => sle.ToView("ShoppingList"));
 
             modelBuilder.Entity<Article>(artSettings => { artSettings.Property(x => x.UnitId).HasDefaultValue(1); });
 
@@ -71,11 +75,11 @@ namespace BeepBackend.Data
                 artStore.HasKey(ast => new { ast.ArticleId, ast.StoreId });
 
                 artStore.HasOne(ast => ast.Article)
-                    .WithMany(a => a.Stores)
+                    .WithMany(a => a.ArticleStores)
                     .HasForeignKey(ast => ast.ArticleId);
 
                 artStore.HasOne(ast => ast.Store)
-                    .WithMany(s => s.Articles)
+                    .WithMany(s => s.ArticleStores)
                     .HasForeignKey(ast => ast.StoreId);
             });
 
