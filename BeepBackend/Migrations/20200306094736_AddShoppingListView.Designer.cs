@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(BeepDbContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20200306094736_AddShoppingListView")]
+    partial class AddShoppingListView
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -312,9 +314,7 @@ namespace BeepBackend.Migrations
 
                     b.Property<int>("AmountOnStock");
 
-                    b.Property<decimal>("AmountRemaining")
-                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 38, scale: 17)))
-                        .HasColumnType("decimal(3,2)");
+                    b.Property<float>("AmountRemaining");
 
                     b.Property<int>("ArticleId");
 

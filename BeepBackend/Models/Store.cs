@@ -7,6 +7,6 @@ namespace BeepBackend.Models
         public int Id { get; set; }
         public string Name { get; set; }
 
-        public ICollection<ArticleStore> Articles { get; set; }
+        public ICollection<ArticleStore> ArticleStores { get; set; }
     }
 }

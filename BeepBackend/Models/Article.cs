@@ -21,7 +21,7 @@ namespace BeepBackend.Models
         public ArticleUnit Unit { get; set; }
 
         public ICollection<ArticleUserSetting> ArticleUserSettings { get; set; }
-        public ICollection<ArticleStore> Stores { get; set; }
+        public ICollection<ArticleStore> ArticleStores { get; set; }
         public ICollection<UserArticle> UserArticles { get; set; }
         public ICollection<StockEntry> StockEntries { get; set; }
         public ICollection<StockEntryValue> StockEntryValues { get; set; }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BeepBackend.Models
 {
@@ -10,6 +11,7 @@ namespace BeepBackend.Models
         public int AmountOnStock { get; set; }
         public DateTime OpenedOn { get; set; }
         public DateTime ExpireDate { get; set; }
+        [Column(TypeName = "decimal(3,2)")]
         public float AmountRemaining { get; set; }
 
         public int EnvironmentId { get; set; }

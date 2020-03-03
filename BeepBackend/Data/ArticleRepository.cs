@@ -42,7 +42,7 @@ namespace BeepBackend.Data
             articles = articles
                 .Include(a => a.ArticleUserSettings)
                 .Include(a => a.StockEntryValues)
-                .Include(a => a.Stores)
+                .Include(a => a.ArticleStores)
                 .Where(a => a.ArticleUserSettings.Any(aus => aus.EnvironmentId == filter.EnvironmentId));
 
             if (filter.IsOnStock)
@@ -102,7 +102,7 @@ namespace BeepBackend.Data
         {
             Article article = await _context.Articles
                 .Include(a => a.ArticleUserSettings)
-                .Include(a => a.Stores)
+                .Include(a => a.ArticleStores)
                 .FirstOrDefaultAsync(a => a.Id == articleId);
 
             return article;
