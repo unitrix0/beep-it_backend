@@ -121,10 +121,16 @@ namespace BeepBackend.Controllers
         }
 
         [HttpPatch("UpdateArticle")]
-        public async Task<IActionResult> UpdateArticle(ArticleDto articleDto)
+        public async Task<IActionResult> UpdateArticle(UpdateArticleDto update)
         {
-            Article article = await _repo.GetArticle(articleDto.Id);
-            _mapper.Map(articleDto, article);
+            if (!await _authService.IsPermitted(User, update.ArticleUserSettings.EnvironmentId))
+                return Unauthorized();
+
+            Article article = await _repo.GetArticle(update.Article.Id);
+            ArticleUserSetting articleUserSettings = await _repo.GetArticleUserSettings(update.Article.Id, update.ArticleUserSettings.EnvironmentId);
+
+            _mapper.Map(update.Article, article);
+            _mapper.Map(update.ArticleUserSettings, articleUserSettings);
 
             if (await _repo.SaveAll())
                 return NoContent();
