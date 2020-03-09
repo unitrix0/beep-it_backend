@@ -3,11 +3,15 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using BeepBackend.Helpers;
 using UnitTests.DTOs;
+using Utrix.WebLib.Helpers;
 
 namespace UnitTests.Helper
 {
@@ -26,28 +30,46 @@ namespace UnitTests.Helper
             HttpResponseMessage response = client.PostAsJsonAsync(subUrl, new UserForLoginDto
             {
                 Username = username,
-                Password = password
+                Password = password,
+                Cameras = new List<CameraDto>()
             }).Result;
 
             if (!response.IsSuccessStatusCode) return null;
 
             var content = JObject.Parse(response.Content.ReadAsStringAsync().Result);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", content.SelectToken("token").Value<string>());
+            JwtSecurityToken permissionsToken = JwtHelper.DecodeToken(content.SelectToken("permissionsToken").Value<string>());
+            Claim serialClaim = permissionsToken.Claims.FirstOrDefault(c => c.Type == BeepClaimTypes.PermissionsSerial);
+            Claim envIdClaim = permissionsToken.Claims.FirstOrDefault(c => c.Type == BeepClaimTypes.EnvironmentId);
+            client.DefaultRequestHeaders.Remove("PermissionsSerial");
+            client.DefaultRequestHeaders.Remove("EnvironmentId");
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", content.SelectToken("identityToken").Value<string>());
+            client.DefaultRequestHeaders.Add("PermissionsSerial",serialClaim?.Value);
+            client.DefaultRequestHeaders.Add("EnvironmentId",envIdClaim?.Value);
+
 
             return content.ToObject<LoginResponseObject>();
         }
 
 
         /// <summary>
-        /// Setzt den verwendeten Bearer Token im <see cref="client"/>.
-        /// Hiermit kann der verwendete Login definiert werden.
+        /// Setzt den verwendeten Bearer Token sowie PermissionsSerial und EnvironmentId Header
+        /// im <see cref="client"/>.
         /// </summary>
         /// <param name="client"></param>
-        /// <param name="token"></param>
+        /// <param name="login">Login Objekt mit den Token Informationen</param>
         /// <returns></returns>
-        public static HttpClient UseToken(this HttpClient client, string token)
+        public static HttpClient UseLogin(this HttpClient client, LoginResponseObject login)
         {
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            Claim serialClaim = JwtHelper.DecodeToken(login.PermissionsToken).Claims
+                .FirstOrDefault(c => c.Type == BeepClaimTypes.PermissionsSerial);
+            Claim envId = JwtHelper.DecodeToken(login.PermissionsToken).Claims
+                .FirstOrDefault(c => c.Type == BeepClaimTypes.EnvironmentId);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login.IdentityToken);
+            client.DefaultRequestHeaders.Remove("PermissionsSerial");
+            client.DefaultRequestHeaders.Remove("EnvironmentId");
+            client.DefaultRequestHeaders.Add("PermissionsSerial", serialClaim?.Value);
+            client.DefaultRequestHeaders.Add("EnvironmentId", envId?.Value);
             return client;
         }
 
