@@ -91,6 +91,10 @@ namespace UnitTests.BaseClasses
             };
 
             UsrManager.CreateAsync(newUser, "P@ssw0rd").Wait();
+            string confirmationToken = UsrManager.GenerateEmailConfirmationTokenAsync(newUser).Result;
+            IdentityResult result = UsrManager.ConfirmEmailAsync(newUser, confirmationToken).Result;
+            if (!result.Succeeded) OutputWriter.WriteLine(string.Join("\n", result.Errors));
+
             UsrManager.AddToRoleAsync(newUser, RoleNames.Member).Wait();
             DbContext.Environments.Add(newEnvironment);
             DbContext.Permissions.Add(new Permission()

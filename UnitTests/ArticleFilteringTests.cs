@@ -17,20 +17,7 @@ namespace UnitTests
         public ArticleFilteringTests(ITestOutputHelper output, CustomWebApplicationFactory factory) : base(output, factory)
         {
         }
-
-        [Fact]
-        public void FilterTest()
-        {
-            ResetDb();
-            WebClient.Login("sepp", "P@ssw0rd");
-
-            var res = WebClient.GetStringByQueryAsync("https://localhost:5001/api/articles/1", new ArticleFilter()
-            {
-                IsOpened = true,
-                StoreId = 1
-            }).Result;
-        }
-
+        
         protected override void ResetDb()
         {
             base.ResetDb();

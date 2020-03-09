@@ -1,8 +1,8 @@
-﻿using System;
+﻿using BeepBackend.DTOs;
+using BeepBackend.Models;
+using System;
 using System.Net;
 using System.Net.Http;
-using BeepBackend.DTOs;
-using BeepBackend.Models;
 using UnitTests.BaseClasses;
 using UnitTests.DTOs;
 using UnitTests.Helper;
@@ -22,12 +22,16 @@ namespace UnitTests
         {
             ResetDb();
             LoginResponseObject login = WebClient.Login("sepp", "P@ssw0rd");
-            HttpResponseMessage resultA = WebClient.GetAsync("articles/2").Result;
-            HttpResponseMessage resultB = WebClient.GetAsync("articles/1").Result;
+            HttpResponseMessage resultA =
+                WebClient.GetAsyncQuery("articles/GetArticles", new { EnvironmentId = 2 }).Result;
+            HttpResponseMessage resultB =
+                WebClient.GetAsyncQuery("articles/GetArticles", new { EnvironmentId = 1 }).Result;
 
             LoginResponseObject loginFritz = WebClient.Login("fritz", "P@ssw0rd");
-            HttpResponseMessage resultC = WebClient.GetAsync("articles/2").Result;
-            HttpResponseMessage resultD = WebClient.GetAsync("articles/1").Result;
+            HttpResponseMessage resultC =
+                WebClient.GetAsyncQuery("articles/GetArticles", new { EnvironmentId = 2 }).Result;
+            HttpResponseMessage resultD =
+                WebClient.GetAsyncQuery("articles/GetArticles", new { EnvironmentId = 1 }).Result;
 
 
             Assert.NotNull(login);
@@ -53,27 +57,6 @@ namespace UnitTests
             Assert.Equal(HttpStatusCode.Unauthorized, resultA.StatusCode);
         }
 
-        [Fact]
-        public void LookupArticleNoPermission()
-        {
-            ResetDb();
-
-            LoginResponseObject login = WebClient.Login("sepp", "P@ssw0rd");
-            HttpResponseMessage resultA = WebClient.GetAsync("articles/LookupArticle/99999/2").Result;
-            HttpResponseMessage resultB = WebClient.GetAsync("articles/LookupArticle/99999/1").Result;
-
-            LoginResponseObject loginFritz = WebClient.Login("fritz", "P@ssw0rd");
-            HttpResponseMessage resultC = WebClient.GetAsync("articles/LookupArticle/99999/2").Result;
-            HttpResponseMessage resultD = WebClient.GetAsync("articles/LookupArticle/99999/1").Result;
-
-            Assert.NotNull(login);
-            Assert.NotNull(loginFritz);
-            Assert.Equal(HttpStatusCode.Unauthorized, resultA.StatusCode);
-            Assert.Equal(HttpStatusCode.OK, resultB.StatusCode);
-            Assert.Equal(HttpStatusCode.Unauthorized, resultC.StatusCode);
-            Assert.Equal(HttpStatusCode.OK, resultD.StatusCode);
-        }
-        
         [Fact]
         public void GetArticleDateSuggestion()
         {
@@ -149,11 +132,11 @@ namespace UnitTests
                 entryId = "1",
                 amount = "1"
             };
-            
+
             LoginResponseObject loginSepp = WebClient.Login("sepp", "P@ssw0rd");
             HttpResponseMessage resultA = WebClient.DeleteAsyncQuery("articles/CheckOutById", queryObj).Result;
 
-            LoginResponseObject loginFritz= WebClient.Login("fritz", "P@ssw0rd");
+            LoginResponseObject loginFritz = WebClient.Login("fritz", "P@ssw0rd");
             HttpResponseMessage resultB = WebClient.DeleteAsyncQuery("articles/CheckOutById", queryObj).Result;
 
             LoginResponseObject loginTom = WebClient.Login("tom", "P@ssw0rd");
