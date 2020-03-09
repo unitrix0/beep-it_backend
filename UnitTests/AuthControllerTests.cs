@@ -6,6 +6,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection.Emit;
 using UnitTests.BaseClasses;
 using UnitTests.DTOs;
 using UnitTests.Helper;
@@ -65,8 +66,8 @@ namespace UnitTests
             //Switch to other Environment
             HttpResponseMessage changeEnvironmentResult =
                 WebClient.GetAsync($"auth/UpdatePermissionClaims/{loginSepp.MappedUser.Id}/?environmentId=2").Result;
-            loginSepp = JObject.Parse(changeEnvironmentResult.Content.ReadAsStringAsync().Result)
-                .ToObject<LoginResponseObject>();
+            loginSepp.PermissionsToken = JObject.Parse(changeEnvironmentResult.Content.ReadAsStringAsync().Result)
+                .ToObject<LoginResponseObject>().PermissionsToken;
 
             //Set new Permissions
             var newPermission = new PermissionsDto()
@@ -82,19 +83,19 @@ namespace UnitTests
                 WebClient.PutAsJsonAsync("users/SetPermission", newPermission).Result;
 
             //Execute some Action to trigger permissions changed notification
-            HttpResponseMessage invitationsCountResult = WebClient.UseToken(loginSepp.Token)
+            HttpResponseMessage invitationsCountResult = WebClient.UseLogin(loginSepp)
                 .GetAsync($"users/InvitationsCount/{loginSepp.MappedUser.Id}").Result;
 
             //Update the Token
             HttpResponseMessage updateTokenResult = WebClient.GetAsync(
                 $"auth/UpdatePermissionClaims/{loginSepp.MappedUser.Id}/?environmentId=2").Result;
-            loginSepp = JObject.Parse(updateTokenResult.Content.ReadAsStringAsync().Result)
-                .ToObject<LoginResponseObject>();
-            JwtSecurityToken token = JwtHelper.DecodeToken(loginSepp.Token);
+            loginSepp.PermissionsToken = JObject.Parse(updateTokenResult.Content.ReadAsStringAsync().Result)
+                .ToObject<LoginResponseObject>().PermissionsToken;
+            JwtSecurityToken token = JwtHelper.DecodeToken(loginSepp.PermissionsToken);
             string updatedPermissions = token.Claims.FirstOrDefault(c => c.Type == BeepClaimTypes.Permissions)?.Value;
 
             //Execute another action to verify permissions changed notification is gone
-            HttpResponseMessage noPermissionsChangedHeader = WebClient.UseToken(loginSepp.Token)
+            HttpResponseMessage noPermissionsChangedHeader = WebClient.UseLogin(loginSepp)
                 .GetAsync($"users/InvitationsCount/{loginSepp.MappedUser.Id}").Result;
 
 
