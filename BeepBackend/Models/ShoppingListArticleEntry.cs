@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BeepBackend.Models
 {
@@ -14,6 +15,7 @@ namespace BeepBackend.Models
         public int OnStock { get; set; }
         public int Opened { get; set; }
         public int Needed { get; set; }
+        [Column(TypeName = "decimal(3,2)")]
         public decimal AmountRemaining { get; set; }
     }
 }
