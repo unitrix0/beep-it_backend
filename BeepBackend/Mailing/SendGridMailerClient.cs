@@ -1,7 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text;
 using Microsoft.Extensions.Configuration;
 using SendGrid;
 using SendGrid.Helpers.Mail;
+using System.Threading.Tasks;
 
 namespace BeepBackend.Mailing
 {
@@ -30,7 +35,15 @@ namespace BeepBackend.Mailing
             // See https://sendgrid.com/docs/User_Guide/Settings/tracking.html
             msg.SetClickTracking(false, false);
 
-            return client.SendEmailAsync(msg);
+            Response result= client.SendEmailAsync(msg).Result;
+            if (result.StatusCode == HttpStatusCode.Accepted) return Task.CompletedTask;
+
+            var sb = new StringBuilder();
+            Dictionary<string, dynamic> body = result.DeserializeResponseBodyAsync(result.Body).Result;
+            sb.AppendJoin(Environment.NewLine, body.Select(i => $"{i.Key}={i.Value}").ToList());
+
+            Console.WriteLine($"Error Sending Mail: {result.StatusCode} Body: {sb}");
+            return Task.CompletedTask;
         }
     }
 }

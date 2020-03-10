@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System;
+using System.ComponentModel;
+using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
 
@@ -12,6 +14,7 @@ namespace BeepBackend.Mailing
             {
                 Credentials = new NetworkCredential(***REMOVED***)
             };
+            client.SendCompleted += OnSendCompleted;
 
             return client.SendMailAsync(new MailMessage()
             {
@@ -21,6 +24,13 @@ namespace BeepBackend.Mailing
                 Body = msgPlaintxt
             });
 
+        }
+
+        private void OnSendCompleted(object sender, AsyncCompletedEventArgs e)
+        {
+            Console.WriteLine(e.Error != null
+                ? $"Error Sending Mail: {e.Error.Message}"
+                : "Message sent.");
         }
     }
 }
