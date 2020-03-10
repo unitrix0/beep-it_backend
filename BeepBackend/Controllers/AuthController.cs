@@ -63,7 +63,7 @@ namespace BeepBackend.Controllers
 
             userToCreate = await _authRepo.CreateFirstEnvironment(userToCreate);
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(userToCreate);
-            await _mailer.SendConfirmationMail(userToCreate.Id, string.Empty, token, false);
+            await _mailer.SendConfirmationMail(userToCreate.Id, userToCreate.Email, token, false);
 
             var userToReturn = _mapper.Map<UserForEditDto>(userToCreate);
             Response.ExposeHeader("location");
@@ -133,7 +133,7 @@ namespace BeepBackend.Controllers
         {
             User user = await _userManager.FindByNameAsync(username);
             string token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            if (User != null && !user.EmailConfirmed) await _mailer.SendConfirmationMail(user.Id, string.Empty, token, false);
+            if (User != null && !user.EmailConfirmed) await _mailer.SendConfirmationMail(user.Id, user.Email, token, false);
 
             return Ok();
         }
