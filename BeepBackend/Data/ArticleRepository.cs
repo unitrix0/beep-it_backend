@@ -84,17 +84,6 @@ namespace BeepBackend.Data
                                 envArticles.Contains(a.Id));
             }
 
-            //TODO noch benötigt?
-            //if (filter.StoreId > 0)
-            //{
-            //    var stores = await _context.ArticleStores
-            //        .Where(ast => ast.StoreId == filter.StoreId)
-            //        .Select(ast => ast.ArticleId).ToListAsync();
-
-            //    articles = articles.Where(a => stores.Contains(a.Id));
-            //}
-
-
             return await PagedList<Article>.CreateAsync(articles, filter.PageNumber, filter.PageSize);
         }
 

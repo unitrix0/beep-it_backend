@@ -223,7 +223,6 @@ namespace BeepBackend.Data
                     .HasForeignKey(ale => ale.EnvironmentId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
-
         }
     }
 }
