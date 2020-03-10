@@ -1,9 +1,8 @@
-﻿using System.Net;
+﻿using BeepBackend.Helpers;
+using Microsoft.Extensions.Configuration;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using BeepBackend.Helpers;
-using BeepBackend.Models;
-using Microsoft.Extensions.Configuration;
 
 namespace BeepBackend.Mailing
 {
@@ -16,11 +15,6 @@ namespace BeepBackend.Mailing
         {
             _client = client;
             _config = config;
-        }
-
-        public Task SendEmailAsync(string email, string subject, string htmlMessage)
-        {
-            return _client.Send(email, subject, htmlMessage, htmlMessage);
         }
 
         public Task SendConfirmationMail(int userId, string email, string token, bool isChange)
@@ -36,8 +30,9 @@ namespace BeepBackend.Mailing
 
             var subject = isChange ? "Beep-it change email" : "Beep-it email confirmation link";
 
-            return SendEmailAsync(email, subject, message.ToString());
+            return _client.Send(email, subject, message.ToString(), message.ToString());
         }
+
     }
 }
 

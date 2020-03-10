@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace BeepBackend.Mailing
 {
-    public interface IBeepMailer : IEmailSender
+    public interface IBeepMailer
     {
         /// <summary>
         /// Sendet ein Mail an den angegebenen User mit einem Lik zur bestätigung der E-Mail Adresse

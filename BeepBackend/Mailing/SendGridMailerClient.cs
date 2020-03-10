@@ -21,10 +21,10 @@ namespace BeepBackend.Mailing
 
         public Task Send(string toAdr, string subject, string msgPlaintxt, string msgHtml)
         {
-            var client = new SendGridClient(_config["SendGridKey"]);
+            var client = new SendGridClient(_config["Key"]);
             var msg = new SendGridMessage()
             {
-                From = new EmailAddress("noreply@beep-it.ch", _config["SendGridUser"]),
+                From = new EmailAddress("noreply@beep-it.ch", "Beep It!"),
                 Subject = subject,
                 PlainTextContent = msgHtml,
                 HtmlContent = msgPlaintxt
