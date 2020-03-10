@@ -43,7 +43,7 @@ namespace BeepBackend
             {
                 opt.Password.RequiredLength = 6;
                 opt.Password.RequireNonAlphanumeric = false;
-                opt.SignIn.RequireConfirmedEmail = true;
+                opt.SignIn.RequireConfirmedEmail = false;
             });
 
             builder = new IdentityBuilder(builder.UserType, typeof(Role), builder.Services);
