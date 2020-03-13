@@ -8,7 +8,7 @@ namespace BeepBackend.Mailing
 {
     public class SmtpMailerClient : IMailerClient
     {
-        public Task Send(string toAdr, string subject, string msgPlaintxt, string msgHtml)
+        public Task Send(string toAdr, string subject, string msgTxt)
         {
             var client = new SmtpClient("exch.hive.loc")
             {
@@ -21,7 +21,8 @@ namespace BeepBackend.Mailing
                 From = new MailAddress("postmaster@unimatrix0.ch", "Beep Development"),
                 To = { new MailAddress(toAdr) },
                 Subject = subject,
-                Body = msgPlaintxt
+                Body = msgTxt,
+                IsBodyHtml = true
             });
 
         }

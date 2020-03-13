@@ -19,15 +19,14 @@ namespace BeepBackend.Mailing
             _config = config.GetSection("SendGridSettings");
         }
 
-        public Task Send(string toAdr, string subject, string msgPlaintxt, string msgHtml)
+        public Task Send(string toAdr, string subject, string msgTxt)
         {
             var client = new SendGridClient(_config["Key"]);
             var msg = new SendGridMessage()
             {
                 From = new EmailAddress("noreply@beep-it.ch", "Beep It!"),
                 Subject = subject,
-                PlainTextContent = msgHtml,
-                HtmlContent = msgPlaintxt
+                HtmlContent = msgTxt
             };
             msg.AddTo(new EmailAddress(toAdr));
 

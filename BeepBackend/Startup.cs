@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BeepBackend.Data;
 using BeepBackend.Helpers;
+using BeepBackend.Mailing;
 using BeepBackend.Models;
 using BeepBackend.Permissions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -19,8 +20,6 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Net;
 using System.Text;
-using BeepBackend.Mailing;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Utrix.WebLib;
 
 namespace BeepBackend
@@ -118,7 +117,7 @@ namespace BeepBackend
             app.UseMvc(routes =>
                 {
                     routes.MapSpaFallbackRoute(name: "spa-fallback",
-                        defaults: new {controller = "Fallback", action = "Index"});
+                        defaults: new { controller = "Fallback", action = "Index" });
                 });
         }
 
