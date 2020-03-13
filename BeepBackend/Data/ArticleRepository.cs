@@ -84,6 +84,7 @@ namespace BeepBackend.Data
                                 envArticles.Contains(a.Id));
             }
 
+            articles = articles.OrderBy(a => a.Name);
             return await PagedList<Article>.CreateAsync(articles, filter.PageNumber, filter.PageSize);
         }
 
