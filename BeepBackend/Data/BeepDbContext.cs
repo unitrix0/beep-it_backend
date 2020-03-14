@@ -184,7 +184,8 @@ namespace BeepBackend.Data
                     new ArticleUnit() { Id = 3, Abbreviation = "dl", Name = "Deziliter" },
                     new ArticleUnit() { Id = 4, Abbreviation = "cl", Name = "Centiliter" },
                     new ArticleUnit() { Id = 5, Abbreviation = "g", Name = "Gramm" },
-                    new ArticleUnit() { Id = 6, Abbreviation = "kg", Name = "Kilogramm" }
+                    new ArticleUnit() { Id = 6, Abbreviation = "kg", Name = "Kilogramm" },
+                    new ArticleUnit() { Id = 7, Abbreviation = "ml", Name = "Milliliter" }
                     );
             });
 
