@@ -12,7 +12,7 @@ namespace BeepBackend.Mailing
         {
             var client = new SmtpClient("exch.hive.loc")
             {
-                Credentials = new NetworkCredential(***REMOVED***)
+                Credentials = new NetworkCredential("", "", "")
             };
             client.SendCompleted += OnSendCompleted;
 
