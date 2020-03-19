@@ -16,5 +16,10 @@ namespace BeepBackend.DTOs
         public string ImageUrl { get; set; }
 
         public IEnumerable<ArticleStoreDto> Stores { get; set; }
+
+        public ArticleDto()
+        {
+            Stores = new List<ArticleStoreDto>();
+        }
     }
 }
