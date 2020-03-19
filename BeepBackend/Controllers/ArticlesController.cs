@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using Utrix.WebLib;
-using Utrix.WebLib.Helpers;
 using Utrix.WebLib.Pagination;
 
 namespace BeepBackend.Controllers
@@ -151,7 +150,8 @@ namespace BeepBackend.Controllers
             StockEntryValue newEntry = await _repo.AddStockEntry(entryValues, checkInDto.UsualLifetime);
             var ret = _mapper.Map<ArticleDto>(newEntry.Article);
 
-            await _repo.WriteActivityLog(ActivityLogAction.CheckIn, User, checkInDto.EnvironmentId, checkInDto.ArticleId, checkInDto.AmountOnStock.ToString());
+            await _repo.WriteActivityLog(ActivityLogAction.CheckIn, User, checkInDto.EnvironmentId,
+                checkInDto.ArticleId, checkInDto.AmountOnStock.ToString());
 
             return CreatedAtRoute(nameof(LookupArticle),
                 new { controller = "Articles", barcode = checkInDto.Barcode, environmentId = checkInDto.EnvironmentId }, ret);

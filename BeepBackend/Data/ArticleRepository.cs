@@ -188,7 +188,8 @@ namespace BeepBackend.Data
             {
                 StockEntryValue existingEntryValues = await _context.StockEntryValues
                     .FirstOrDefaultAsync(sev => sev.ArticleId == entryValues.ArticleId &&
-                                                sev.ExpireDate == entryValues.ExpireDate);
+                                                sev.ExpireDate == entryValues.ExpireDate &&
+                                                sev.IsOpened == false);
 
                 if (existingEntryValues == null)
                 {
