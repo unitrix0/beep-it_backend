@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http.Internal;
 using Utrix.WebLib;
 using Utrix.WebLib.Helpers;
 using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
@@ -167,11 +168,12 @@ namespace BeepBackend.Controllers
 
         private async Task<SettingsDto> GetSettings(int userId, IEnumerable<CameraDto> userCameras)
         {
-            string deviceId = await _userRepo.GetCamForUser(userId, userCameras.Select(uc => uc.DeviceId));
+            Camera cam = await _userRepo.GetCamForUser(userId, userCameras.Select(uc => uc.DeviceId));
 
             return new SettingsDto()
             {
-                CameraDeviceId = deviceId
+                CameraDeviceId = cam?.DeviceId ?? "",
+                CameraLabel = cam?.Label ?? ""
             };
         }
 

@@ -30,7 +30,8 @@ namespace BeepBackend.Data
         Task<BeepEnvironment> GetEnvironment(int envId);
         Task<List<Camera>> GetCamsForUser(int userId);
         Task<bool> AddCamForUser(int userId, Camera cam);
-        Task<string> GetCamForUser(int userId, IEnumerable<string> deviceIds);
+        Task<Camera> GetCamForUser(int userId, IEnumerable<string> deviceIds);
         Task<bool> ChangePassword(int userId, string currentPw, string newPw);
+        Task<bool> RemoveCamForUser(int userId, string oldCamDeviceId);
     }
 }

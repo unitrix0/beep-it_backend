@@ -1,19 +1,16 @@
 ﻿using AutoMapper;
 using BeepBackend.Data;
 using BeepBackend.DTOs;
+using BeepBackend.Mailing;
 using BeepBackend.Models;
 using BeepBackend.Permissions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
-using BeepBackend.Helpers;
-using BeepBackend.Mailing;
 using Utrix.WebLib.Helpers;
 
 namespace BeepBackend.Controllers
@@ -237,29 +234,16 @@ namespace BeepBackend.Controllers
         }
 
         [HttpPost("AddCamForUser/{userId}")]
-        public async Task<IActionResult> AddCamForUser(int userId, CameraDto camDto)
+        public async Task<IActionResult> AddCamForUser(int userId, AddCameraDto camDto)
         {
             if (!this.VerifyUser(userId)) return Unauthorized();
 
-            var cam = _mapper.Map<Camera>(camDto);
-            if (!await _repo.AddCamForUser(userId, cam)) throw new Exception("Error adding cam for user");
+            var cam = _mapper.Map<Camera>(camDto.Camera);
+            if (!await _repo.RemoveCamForUser(userId, camDto.OldCamDeviceId) ||
+                !await _repo.AddCamForUser(userId, cam)) throw new Exception("Error adding cam for user");
 
             var camCreated = _mapper.Map<CameraDto>(cam);
             return StatusCode((int)HttpStatusCode.Created, camCreated);
-        }
-
-        [HttpGet("GetSettings/{userId}")]
-        public async Task<IActionResult> GetSettings(int userId)
-        {
-            if (!this.VerifyUser(userId)) return Unauthorized();
-
-            List<Camera> cams = await _repo.GetCamsForUser(userId);
-            var result = new SettingsDto()
-            {
-                //Cameras = _mapper.Map<IEnumerable<CameraDto>>(cams)
-            };
-
-            return Ok(result);
         }
 
         [HttpPut("SetDisplayName/{userId}")]

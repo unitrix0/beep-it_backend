@@ -276,13 +276,13 @@ namespace BeepBackend.Data
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<string> GetCamForUser(int userId, IEnumerable<string> deviceIds)
+        public async Task<Camera> GetCamForUser(int userId, IEnumerable<string> deviceIds)
         {
             var cam = await _context
                 .UserCameras.Include(uc => uc.Camera)
                 .FirstOrDefaultAsync(uc => uc.UserId == userId && deviceIds.Contains(uc.Camera.DeviceId));
 
-            return cam?.Camera.DeviceId ?? string.Empty;
+            return cam?.Camera;
         }
 
         public async Task<List<Camera>> GetCamsForUser(int userId)
@@ -297,10 +297,31 @@ namespace BeepBackend.Data
 
         public async Task<bool> AddCamForUser(int userId, Camera cam)
         {
-            var uc = new UserCamera() { Camera = cam, UserId = userId };
-            await _context.Cameras.AddAsync(cam);
-            await _context.UserCameras.AddAsync(uc);
+            UserCamera existingCam = await _context.UserCameras
+                .Include(uc => uc.Camera)
+                .Where(uc => uc.Camera.DeviceId == cam.DeviceId)
+                .FirstOrDefaultAsync();
 
+
+            if (existingCam != null) return true;
+
+            var newCam = new UserCamera() { Camera = cam, UserId = userId };
+            await _context.Cameras.AddAsync(cam);
+            await _context.UserCameras.AddAsync(newCam);
+
+            return await _context.SaveChangesAsync() > 0;
+
+        }
+
+        public async Task<bool> RemoveCamForUser(int userId, string oldCamDeviceId)
+        {
+            UserCamera oldCam = await _context.UserCameras
+                .Include(uc => uc.Camera)
+                .FirstOrDefaultAsync(uc => uc.UserId == userId && uc.Camera.DeviceId == oldCamDeviceId);
+
+            if (oldCam == null) return true;
+
+            _context.Cameras.Remove(oldCam.Camera);
             return await _context.SaveChangesAsync() > 0;
         }
 

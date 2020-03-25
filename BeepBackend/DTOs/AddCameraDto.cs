@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace BeepBackend.DTOs
 {
-    public class SettingsDto
+    public class AddCameraDto
     {
-        public string CameraDeviceId { get; set; }
-        public string CameraLabel { get; set; }
+        public CameraDto Camera { get; set; }
+        public string OldCamDeviceId { get; set; }
     }
 }
