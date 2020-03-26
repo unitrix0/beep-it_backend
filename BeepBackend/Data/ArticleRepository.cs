@@ -40,7 +40,6 @@ namespace BeepBackend.Data
                 : _context.Articles.AsQueryable();
 
             articles = articles
-                .Include(a => a.ArticleUserSettings)
                 .Include(a => a.StockEntryValues)
                 .Include(a => a.ArticleStores)
                 .Where(a => a.ArticleUserSettings.Any(aus => aus.EnvironmentId == filter.EnvironmentId));
