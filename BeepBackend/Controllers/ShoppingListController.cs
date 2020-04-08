@@ -1,12 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using BeepBackend.Data;
 using BeepBackend.DTOs;
 using BeepBackend.Models;
 using BeepBackend.Permissions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BeepBackend.Controllers
 {
@@ -31,9 +31,16 @@ namespace BeepBackend.Controllers
             if (!await _authService.IsPermitted(User, environmentId)) return Unauthorized();
 
             IEnumerable<ShoppingListEntry> articles = await _repo.GetShoppingListAsync(environmentId);
+            IEnumerable<ShoppingListGroupEntry> groupsEntries =
+                await _repo.GetShoppingListGroupEntriesAsync(environmentId);
 
-            IEnumerable<ShoppingListEntryDto> list = _mapper.Map<IEnumerable<ShoppingListEntryDto>>(articles);
-            return Ok(list);
+            var shoppingList = new ShopplingListDto
+            {
+                ArticleEntries = _mapper.Map<IEnumerable<ShoppingListEntryDto>>(articles),
+                GroupEntries = _mapper.Map<IEnumerable<ShoppingListGroupEntryDto>>(groupsEntries)
+            };
+
+            return Ok(shoppingList);
         }
     }
 }

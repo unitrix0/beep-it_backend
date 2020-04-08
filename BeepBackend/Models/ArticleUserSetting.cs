@@ -12,5 +12,8 @@
 
         public int EnvironmentId { get; set; }
         public BeepEnvironment Environment { get; set; }
+
+        public int ArticleGroupId { get; set; }
+        public ArticleGroup ArticleGroup { get; set; }
     }
 }

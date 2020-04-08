@@ -7,5 +7,6 @@ namespace BeepBackend.Data
     public interface IShoppingListRepo
     {
         Task<IEnumerable<ShoppingListEntry>> GetShoppingListAsync(int environmentId);
+        Task<IEnumerable<ShoppingListGroupEntry>> GetShoppingListGroupEntriesAsync(int environmentId);
     }
 }

@@ -8,7 +8,6 @@ namespace BeepBackend.DTOs
         public int Id { get; set; }
         public string Barcode { set; get; }
         public string Name { get; set; }
-        public int GroupId { get; set; }
         public int UnitId { get; set; }
         public int ContentAmount { get; set; }
         public bool HasLifetime { get; set; }

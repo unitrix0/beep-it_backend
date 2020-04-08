@@ -13,7 +13,7 @@ namespace BeepBackend.Data
     {
         Task<PagedList<Article>> GetArticles(ArticleFilter filter);
         Task<IEnumerable<ArticleUnit>> GetUnits();
-        Task<IEnumerable<ArticleGroup>> GetArticleGroups();
+        Task<IEnumerable<ArticleGroup>> GetArticleGroups(int userId);
         Task<Article> LookupArticle(string barcode);
         Task<long> GetArticleLifetime(string barcode, int environmentId);
         Task<Article> CreateArticle(Article article);
@@ -31,5 +31,17 @@ namespace BeepBackend.Data
         Task<ArticleUserSetting> CreateArticleUserSetting(ArticleUserSetting articleUserSetting);
         Task WriteActivityLog(ActivityLogAction logAction, ClaimsPrincipal user, int environmentId, int articleId, string amount);
         Task<IEnumerable<ActivityLogEntry>> GetActivityLog(int environmentId);
+        Task<ArticleGroup> CreateArticleGroup(ArticleGroup newGroup);
+        /// <summary>
+        /// Ruft ide <see cref="ArticleGroup"/> mit der angegebenen Id ab.
+        /// Falls gewünscht werden die verknüpften <see cref="ArticleUserSetting"/>
+        /// auch abgefragt.
+        /// </summary>
+        /// <param name="articleGroupId"></param>
+        /// <param name="expanded"><c>true</c> wenn die <see cref="ArticleUserSetting"/> auch abgefragt werden sollen</param>
+        /// <returns></returns>
+        Task<ArticleGroup> GetArticleGroup(int articleGroupId, bool expanded);
+        Task<int> GetArticleGroupMemberCount(int groupId);
+        Task<int> GetEnvironmentOwnerId(int environmentId);
     }
 }

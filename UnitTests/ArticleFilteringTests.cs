@@ -24,16 +24,16 @@ namespace UnitTests
             SeedUser("Sepp");
             SeedUser("Tom");
             SeedNewEnvironment("sepp", "Environment2");
-            SeedArticleGroup("default");
-            SeedArticleGroup("Zahnpasta");
+            //SeedArticleGroup("default");
+            //SeedArticleGroup("Zahnpasta");
 
-            SeedNewArticle("0001", "Magendarm Tee", "default", "Stk.", "Migros");
-            SeedNewArticle("0002", "Schoggimousse", "default", "Stk.", "Coop");
-            SeedNewArticle("0003", "Butter", "default", "g", "Aldi");
-            SeedNewArticle("0004", "Milch", "default", "l", "Denner");
-            SeedNewArticle("0005", "Brot", "default", "Stk.", "Migros");
-            SeedNewArticle("0006", "Candida", "Zahnpasta", "Stk.", "Migros");
-            SeedNewArticle("0007", "Elmex", "Zahnpasta", "Stk.", "Migros");
+            SeedNewArticle("0001", "Magendarm Tee", "Stk.", "Migros");
+            SeedNewArticle("0002", "Schoggimousse", "Stk.", "Coop");
+            SeedNewArticle("0003", "Butter", "g", "Aldi");
+            SeedNewArticle("0004", "Milch", "l", "Denner");
+            SeedNewArticle("0005", "Brot", "Stk.", "Migros");
+            SeedNewArticle("0006", "Candida", "Stk.", "Migros");
+            SeedNewArticle("0007", "Elmex", "Stk.", "Migros");
 
             SeedArticleUserSetting("0001", "Zu Hause von Sepp", 0, 1);
             SeedArticleUserSetting("0004", "Zu Hause von Sepp", 1, 1);

@@ -117,16 +117,14 @@ namespace UnitTests.BaseClasses
             Seeder.Seed(_roleMgr, DbContext);
         }
 
-        protected Article SeedNewArticle(string barcode, string name, string articleGroupName, string unitAbbreviation, string storeName)
+        protected Article SeedNewArticle(string barcode, string name, string unitAbbreviation, string storeName)
         {
-            ArticleGroup articleGroup = DbContext.ArticleGroups.FirstOrDefault(g => g.Name == articleGroupName);
             Store store = DbContext.Stores.FirstOrDefault(s => s.Name == storeName);
 
             var article = new Article()
             {
                 Name = name,
-                Barcode = barcode,
-                ArticleGroup = articleGroup,
+                Barcode = barcode
             };
 
             DbContext.Articles.Add(article);
@@ -137,9 +135,9 @@ namespace UnitTests.BaseClasses
         }
 
 
-        protected void SeedArticleGroup(string name)
+        protected void SeedArticleGroup(string name, int userId)
         {
-            DbContext.ArticleGroups.Add(new ArticleGroup() { Name = name });
+            DbContext.ArticleGroups.Add(new ArticleGroup() { Name = name});
             DbContext.SaveChanges();
         }
 

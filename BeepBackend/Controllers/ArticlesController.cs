@@ -61,14 +61,16 @@ namespace BeepBackend.Controllers
             if (!await _authService.IsPermitted(User, environmentId)) return Unauthorized();
 
             ArticleUserSetting aus = await _repo.GetArticleUserSettings(articleId, environmentId);
-            return aus == null ? Ok(new ArticleUserSettingDto()) : Ok(aus);
+            var ausDto = _mapper.Map<ArticleUserSettingDto>(aus);
+
+            return aus == null ? Ok(new ArticleUserSettingDto()) : Ok(ausDto);
         }
 
-        [HttpGet("GetBaseData")]
-        public async Task<IActionResult> GetBaseData()
+        [HttpGet("GetBaseData/{environmentId}", Name = nameof(GetBaseData))]
+        public async Task<IActionResult> GetBaseData(int environmentId)
         {
             IEnumerable<ArticleUnit> units = await _repo.GetUnits();
-            IEnumerable<ArticleGroup> articleGroups = await _repo.GetArticleGroups();
+            IEnumerable<ArticleGroup> articleGroups = await _repo.GetArticleGroups(environmentId);
             IEnumerable<Store> stores = await _repo.GetStores();
 
             return Ok(new { units, articleGroups, stores });
@@ -97,6 +99,7 @@ namespace BeepBackend.Controllers
                 PermissionFlags.IsOwner | PermissionFlags.CanScan)) return Unauthorized();
 
             var articleUserSetting = _mapper.Map<ArticleUserSetting>(articleUserSettingDto);
+
             ArticleUserSetting articleUserSettingCreated = await _repo.CreateArticleUserSetting(articleUserSetting);
 
             var dto = _mapper.Map<ArticleUserSettingDto>(articleUserSettingCreated);
@@ -119,7 +122,7 @@ namespace BeepBackend.Controllers
             return Ok(new { usualLifetime, lastExpireDate });
         }
 
-        [HttpPatch("UpdateArticle")]
+        [HttpPut("UpdateArticle")]
         public async Task<IActionResult> UpdateArticle(UpdateArticleDto update)
         {
             if (!await _authService.IsPermitted(User, update.ArticleUserSettings.EnvironmentId))
@@ -127,9 +130,11 @@ namespace BeepBackend.Controllers
 
             Article article = await _repo.GetArticle(update.Article.Id);
             ArticleUserSetting articleUserSettings = await _repo.GetArticleUserSettings(update.Article.Id, update.ArticleUserSettings.EnvironmentId);
+            ArticleGroup newGroup = await _repo.GetArticleGroup(update.ArticleUserSettings.ArticleGroupId, false);
 
             _mapper.Map(update.Article, article);
             _mapper.Map(update.ArticleUserSettings, articleUserSettings);
+            _mapper.Map(update.ArticleUserSettings.ArticleGroup, newGroup);
 
             if (await _repo.SaveAll())
                 return NoContent();
@@ -242,6 +247,53 @@ namespace BeepBackend.Controllers
             var entriesDto = _mapper.Map<IEnumerable<ActivityLogEntryDto>>(entries);
 
             return Ok(entriesDto);
+        }
+
+        [HttpPost("AddArticleGroup/{environmentId}")]
+        public async Task<IActionResult> AddArticleGroup(int environmentId, ArticleGroupDto newGroup)
+        {
+            if (!await _authService.IsPermitted(User, environmentId,
+                PermissionFlags.IsOwner | PermissionFlags.EditArticleSettings)) return Unauthorized();
+
+            int envOwnerId = await _repo.GetEnvironmentOwnerId(environmentId);
+            var grp = _mapper.Map<ArticleGroup>(newGroup);
+            grp.UserId = envOwnerId;
+            grp = await _repo.CreateArticleGroup(grp);
+
+            return CreatedAtRoute(nameof(GetBaseData), new
+            {
+                controller = "Articles",
+                environmentId
+            }, grp);
+        }
+
+        [HttpGet("ArticleGroupHasMembers/{environmentId}/{groupId}")]
+        public async Task<IActionResult> ArticleGroupHasMembers(int environmentId, int groupId)
+        {
+            if (!await _authService.IsPermitted(User, environmentId,
+                PermissionFlags.IsOwner | PermissionFlags.EditArticleSettings)) return Unauthorized();
+
+            int count = await _repo.GetArticleGroupMemberCount(groupId);
+
+            return Ok(count > 0);
+        }
+
+        [HttpDelete("DeleteArticleGroup/{environmentId}/{groupId}")]
+        public async Task<IActionResult> DeleteArticleGroup(int environmentId, int groupId)
+        {
+            if (!await _authService.IsPermitted(User, environmentId,
+                PermissionFlags.IsOwner | PermissionFlags.EditArticleSettings)) return Unauthorized();
+
+            ArticleGroup group = await _repo.GetArticleGroup(groupId, true);
+            foreach (ArticleUserSetting articleUserSetting in group.ArticleUserSettings)
+            {
+                articleUserSetting.ArticleGroupId = 1;
+            }
+            _repo.Delete(group);
+
+            if (!await _repo.SaveAll()) throw new Exception("Failed to delete the group");
+
+            return NoContent();
         }
     }
 }

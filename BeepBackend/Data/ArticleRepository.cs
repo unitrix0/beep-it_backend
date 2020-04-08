@@ -1,4 +1,5 @@
-﻿using BeepBackend.Helpers;
+﻿using BeepBackend.DTOs;
+using BeepBackend.Helpers;
 using BeepBackend.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -6,7 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using BeepBackend.DTOs;
 using Utrix.WebLib.Pagination;
 using StockEntryValue = BeepBackend.Models.StockEntryValue;
 
@@ -100,8 +100,9 @@ namespace BeepBackend.Data
         public async Task<ArticleUserSetting> GetArticleUserSettings(int articleId, int environmentId)
         {
             ArticleUserSetting articleUserSettings = await _context.ArticleUserSettings
-                    .FirstOrDefaultAsync(aus => aus.ArticleId == articleId &&
-                                                aus.EnvironmentId == environmentId);
+                .Include(aus => aus.ArticleGroup).ThenInclude(ag => ag.ArticleUserSettings)
+                .FirstOrDefaultAsync(aus => aus.ArticleId == articleId &&
+                                            aus.EnvironmentId == environmentId);
 
             return articleUserSettings;
         }
@@ -111,9 +112,34 @@ namespace BeepBackend.Data
             return await _context.ArticleUnits.ToListAsync();
         }
 
-        public async Task<IEnumerable<ArticleGroup>> GetArticleGroups()
+        public async Task<IEnumerable<ArticleGroup>> GetArticleGroups(int environmentId)
         {
-            return await _context.ArticleGroups.ToListAsync();
+            BeepEnvironment environment = await _context.Environments.FirstOrDefaultAsync(e => e.Id == environmentId);
+            return await _context.ArticleGroups
+                .Where(grp => grp.UserId == null || grp.UserId == environment.UserId)
+                .ToListAsync();
+        }
+
+        public async Task<ArticleGroup> GetArticleGroup(int articleGroupId, bool expanded)
+        {
+            IQueryable<ArticleGroup> qry = _context.ArticleGroups.Where(grp => grp.Id == articleGroupId).AsQueryable();
+
+            if (expanded) qry = qry.Include(grp => grp.ArticleUserSettings);
+            ArticleGroup group = await qry.FirstOrDefaultAsync(grp => grp.Id == articleGroupId);
+
+            return group;
+        }
+
+        public async Task<int> GetArticleGroupMemberCount(int groupId)
+        {
+            return await _context.ArticleUserSettings.CountAsync(aus => aus.ArticleGroupId == groupId);
+        }
+
+        public async Task<ArticleGroup> CreateArticleGroup(ArticleGroup newGroup)
+        {
+            await _context.ArticleGroups.AddAsync(newGroup);
+
+            return await _context.SaveChangesAsync() > 0 ? newGroup : null;
         }
 
         public async Task<IEnumerable<Store>> GetStores()
@@ -125,6 +151,7 @@ namespace BeepBackend.Data
         public async Task<Article> LookupArticle(string barcode)
         {
             Article article = await _context.Articles
+                .Include(a => a.ArticleStores)
                 .FirstOrDefaultAsync(a => a.Barcode == barcode);
 
             return article;
@@ -188,6 +215,7 @@ namespace BeepBackend.Data
                 StockEntryValue existingEntryValues = await _context.StockEntryValues
                     .FirstOrDefaultAsync(sev => sev.ArticleId == entryValues.ArticleId &&
                                                 sev.ExpireDate == entryValues.ExpireDate &&
+                                                sev.EnvironmentId == entryValues.EnvironmentId &&
                                                 sev.IsOpened == false);
 
                 if (existingEntryValues == null)
@@ -275,6 +303,14 @@ namespace BeepBackend.Data
                 .Take(4).ToListAsync();
 
             return entries;
+        }
+
+        public async Task<int> GetEnvironmentOwnerId(int environmentId)
+        {
+            BeepEnvironment environment = await _context.Environments
+                .FirstOrDefaultAsync(e => e.Id == environmentId);
+
+            return environment.UserId;
         }
     }
 }

@@ -88,6 +88,46 @@
     <Compile Remove="Migrations\20200306143722_ChangeDataTypeAmountRemaining.Designer.cs" />
     <Compile Remove="Migrations\20200306154518_ChangeDataTypeAmountRemaining.cs" />
     <Compile Remove="Migrations\20200306154518_ChangeDataTypeAmountRemaining.Designer.cs" />
+    <Compile Remove="Migrations\20200407144316_ChangeArticleGroupRelation.cs" />
+    <Compile Remove="Migrations\20200407144316_ChangeArticleGroupRelation.Designer.cs" />
+    <Compile Remove="Migrations\20200407144637_ChangeArticleGroupRelation.cs" />
+    <Compile Remove="Migrations\20200407144637_ChangeArticleGroupRelation.Designer.cs" />
+    <Compile Remove="Migrations\20200407145958_RemoveArticleGroupRelation.cs" />
+    <Compile Remove="Migrations\20200407145958_RemoveArticleGroupRelation.Designer.cs" />
+    <Compile Remove="Migrations\20200407150107_RemoveArticleGroupRelation.cs" />
+    <Compile Remove="Migrations\20200407150107_RemoveArticleGroupRelation.Designer.cs" />
+    <Compile Remove="Migrations\20200407150418_AddArticleGroupArticleUserGroupRelation.cs" />
+    <Compile Remove="Migrations\20200407150418_AddArticleGroupArticleUserGroupRelation.Designer.cs" />
+    <Compile Remove="Migrations\20200407150438_AddArticleGroupArticleUserSettingsRelation.cs" />
+    <Compile Remove="Migrations\20200407150438_AddArticleGroupArticleUserSettingsRelation.Designer.cs" />
+    <Compile Remove="Migrations\20200407151202_AddArticleGroupArticleUserSettingsRelation.cs" />
+    <Compile Remove="Migrations\20200407151202_AddArticleGroupArticleUserSettingsRelation.Designer.cs" />
+    <Compile Remove="Migrations\20200407173317_AddArticleGroupArticleUserSettingsRelation.cs" />
+    <Compile Remove="Migrations\20200407173317_AddArticleGroupArticleUserSettingsRelation.Designer.cs" />
+    <Compile Remove="Migrations\20200407182513_AddArticleGroupUserRelation.cs" />
+    <Compile Remove="Migrations\20200407182513_AddArticleGroupUserRelation.Designer.cs" />
+    <Compile Remove="Migrations\20200407182740_AddArticleGroupUserRelation.cs" />
+    <Compile Remove="Migrations\20200407182740_AddArticleGroupUserRelation.Designer.cs" />
+    <Compile Remove="Migrations\20200408092422_NewUserArticleGroupArticleUserSettingsRelatino.cs" />
+    <Compile Remove="Migrations\20200408092422_NewUserArticleGroupArticleUserSettingsRelatino.Designer.cs" />
+    <Compile Remove="Migrations\20200408092438_NewUserArticleGroupArticleUserSettingsRelation.cs" />
+    <Compile Remove="Migrations\20200408092438_NewUserArticleGroupArticleUserSettingsRelation.Designer.cs" />
+    <Compile Remove="Migrations\20200408092731_NewUserArticleGroupArticleUserSettingsRelation.cs" />
+    <Compile Remove="Migrations\20200408092731_NewUserArticleGroupArticleUserSettingsRelation.Designer.cs" />
+    <Compile Remove="Migrations\20200410070328_AddKeepStockAmountArticleGroup.cs" />
+    <Compile Remove="Migrations\20200410070328_AddKeepStockAmountArticleGroup.Designer.cs" />
+    <Compile Remove="Migrations\20200411192745_test.cs" />
+    <Compile Remove="Migrations\20200411192745_test.Designer.cs" />
+    <Compile Remove="Migrations\20200411193028_test.cs" />
+    <Compile Remove="Migrations\20200411193028_test.Designer.cs" />
+    <Compile Remove="Migrations\20200411193731_test2.cs" />
+    <Compile Remove="Migrations\20200411193731_test2.Designer.cs" />
+    <Compile Remove="Migrations\20200411193804_test.cs" />
+    <Compile Remove="Migrations\20200411193804_test.Designer.cs" />
+    <Compile Remove="Migrations\20200411194253_AddNewArticleGroupRelation.cs" />
+    <Compile Remove="Migrations\20200411194253_AddNewArticleGroupRelation.Designer.cs" />
+    <Compile Remove="Migrations\20200411194844_AddNewArticleGroupRelation.cs" />
+    <Compile Remove="Migrations\20200411194844_AddNewArticleGroupRelation.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

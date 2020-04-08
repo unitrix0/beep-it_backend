@@ -299,7 +299,7 @@ namespace BeepBackend.Data
         {
             UserCamera existingCam = await _context.UserCameras
                 .Include(uc => uc.Camera)
-                .Where(uc => uc.Camera.DeviceId == cam.DeviceId)
+                .Where(uc => uc.Camera.DeviceId == cam.DeviceId && uc.UserId == userId)
                 .FirstOrDefaultAsync();
 
 

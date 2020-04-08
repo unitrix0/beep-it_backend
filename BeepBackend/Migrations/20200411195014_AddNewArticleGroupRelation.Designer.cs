@@ -4,14 +4,16 @@ using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(BeepDbContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20200411195014_AddNewArticleGroupRelation")]
+    partial class AddNewArticleGroupRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -79,15 +81,13 @@ namespace BeepBackend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int>("KeepStockAmount");
+                    b.Property<int?>("EnvironmentId");
 
                     b.Property<string>("Name");
 
-                    b.Property<int?>("UserId");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("EnvironmentId");
 
                     b.ToTable("ArticleGroups");
 
@@ -95,7 +95,6 @@ namespace BeepBackend.Migrations
                         new
                         {
                             Id = 1,
-                            KeepStockAmount = 0,
                             Name = "keine"
                         });
                 });
@@ -581,9 +580,9 @@ namespace BeepBackend.Migrations
 
             modelBuilder.Entity("BeepBackend.Models.ArticleGroup", b =>
                 {
-                    b.HasOne("BeepBackend.Models.User", "User")
+                    b.HasOne("BeepBackend.Models.BeepEnvironment", "Environment")
                         .WithMany("ArticleGroups")
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("EnvironmentId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

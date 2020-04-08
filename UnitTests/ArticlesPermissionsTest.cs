@@ -62,7 +62,7 @@ namespace UnitTests
         {
             ResetDb();
 
-            SeedNewArticle("9999", "Dummy", "keine", "Stk.", "Migros");
+            SeedNewArticle("9999", "Dummy", "Stk.", "Migros");
             SeedArticleUserSetting("9999", "Zu Hause von Sepp", 1, 1);
             SeedStockEntry("9999", "Zu Hause von Sepp", false, 1, DateTime.Now, DateTime.Now, 1);
 
@@ -123,7 +123,7 @@ namespace UnitTests
         public void CheckOutById()
         {
             ResetDb();
-            SeedNewArticle("9999", "xxx", "keine", "Stk.", "Migros");
+            SeedNewArticle("9999", "xxx", "Stk.", "Migros");
             SeedArticleUserSetting("9999", "Zu Hause von Tom", 1, 1);
             SeedStockEntry("9999", "Zu Hause von Tom", false, 2, DateTime.Now, DateTime.Now, 1);
 
@@ -154,7 +154,7 @@ namespace UnitTests
         public void OpenArticle()
         {
             ResetDb();
-            SeedNewArticle("9999", "xxx", "keine", "Stk.", "Migros");
+            SeedNewArticle("9999", "xxx", "Stk.", "Migros");
             SeedArticleUserSetting("9999", "Zu Hause von Tom", 1, 1);
             SeedStockEntry("9999", "Zu Hause von Tom", false, 2, DateTime.Now, DateTime.Now, 1);
 

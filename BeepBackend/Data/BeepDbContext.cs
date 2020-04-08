@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.Expressions;
 
 namespace BeepBackend.Data
 {
@@ -29,12 +28,15 @@ namespace BeepBackend.Data
         public DbSet<Camera> Cameras { get; set; }
         public DbSet<ActivityLogEntry> ActivityLogEntries { get; set; }
         public DbQuery<ShoppingListArticleEntry> ShoppingList { get; set; }
+        public DbQuery<ShoppingListGroupEntry> ShoppingListGroups { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.Query<ShoppingListArticleEntry>(sle => sle.ToView("ShoppingList"));
+
+            modelBuilder.Query<ShoppingListGroupEntry>(gsle => gsle.ToView("ShoppingListGroups"));
 
             modelBuilder.Entity<Article>(artSettings => { artSettings.Property(x => x.UnitId).HasDefaultValue(1); });
 
@@ -46,13 +48,23 @@ namespace BeepBackend.Data
 
                 artSettings.HasOne(us => us.Environment)
                     .WithMany(e => e.ArticleUserSettings);
+
+                artSettings.Property(ars => ars.ArticleGroupId).HasDefaultValue(1);
             });
 
             modelBuilder.Entity<ArticleGroup>(artGrp =>
             {
-                artGrp.HasMany(ag => ag.Articles)
-                    .WithOne(a => a.ArticleGroup)
-                    .HasForeignKey(a => a.ArticleGroupId);
+                artGrp.HasKey(ag => ag.Id);
+
+                artGrp.HasMany(ag => ag.ArticleUserSettings)
+                    .WithOne(aus => aus.ArticleGroup)
+                    .HasForeignKey(aus => aus.ArticleGroupId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                artGrp.HasOne(ag => ag.User)
+                    .WithMany(env => env.ArticleGroups)
+                    .HasForeignKey(ag => ag.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
                 artGrp.HasData(new ArticleGroup() { Id = 1, Name = "keine" });
             });
@@ -201,7 +213,7 @@ namespace BeepBackend.Data
 
             modelBuilder.Entity<UserCamera>(userCams =>
             {
-                userCams.HasKey(uc => new {uc.UserId, uc.CameraId});
+                userCams.HasKey(uc => new { uc.UserId, uc.CameraId });
 
                 userCams.HasOne(uc => uc.User)
                     .WithMany(u => u.Cameras)
