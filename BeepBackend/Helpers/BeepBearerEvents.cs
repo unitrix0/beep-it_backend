@@ -1,11 +1,10 @@
-﻿using System;
+﻿using BeepBackend.Data;
+using BeepBackend.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using BeepBackend.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace BeepBackend.Helpers
 {
@@ -26,9 +25,19 @@ namespace BeepBackend.Helpers
             int environmentId = Convert.ToInt32(context.Request.Headers["EnvironmentId"]);
             int userId = Convert.ToInt32(context.Principal.FindFirst(ClaimTypes.NameIdentifier).Value);
 
-            if (_cache.SerialsMatch(userId, environmentId, serial)) return Task.CompletedTask;
+            PermissionsChacheResult chacheResult = _cache.SerialsMatch(userId, environmentId, serial);
+            switch (chacheResult)
+            {
+                case PermissionsChacheResult.DoNotMatch:
+                    context.Response.Headers.Add("PermissionsChanged", "true");
+                    break;
+                case PermissionsChacheResult.NotCached:
+                    IEnumerable<Permission> userPermissions = _authRepo.GetAllUserPermissions(userId).Result;
+                    _cache.AddEntriesForUser(userId, userPermissions);
+                    //return TokenValidated(context);
+                    break;
+            }
 
-            context.Response.Headers.Add("PermissionsChanged", "true");
             return Task.CompletedTask;
         }
     }

@@ -23,10 +23,12 @@ namespace BeepBackend.Data
             cleanupTimer.Change(new TimeSpan(), new TimeSpan(1, 0, 0, 0));
         }
 
-        public bool SerialsMatch(int userId, int environmentId, string permissionSerial)
+        public PermissionsChacheResult SerialsMatch(int userId, int environmentId, string permissionSerial)
         {
             string key = $"{userId},{environmentId}";
-            return _serialsCache.ContainsKey(key) && _serialsCache[key].Item1.Serial == permissionSerial;
+
+            if (!_serialsCache.ContainsKey(key)) return PermissionsChacheResult.NotCached;
+            return _serialsCache[key].Item1.Serial == permissionSerial ? PermissionsChacheResult.DoMatch:PermissionsChacheResult.DoNotMatch;
         }
 
         public void AddEntriesForUser(int userId, IEnumerable<Permission> permissions)
