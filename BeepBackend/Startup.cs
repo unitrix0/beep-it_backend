@@ -114,6 +114,7 @@ namespace BeepBackend
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             app.UseDefaultFiles();
             app.UseStaticFiles();
+            app.UseMiddleware<PermissionsChangedMiddleware>();
 
             if (_environment.IsProduction())
             {

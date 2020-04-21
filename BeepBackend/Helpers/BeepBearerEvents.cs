@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Utrix.WebLib;
 
 namespace BeepBackend.Helpers
 {
@@ -26,16 +27,11 @@ namespace BeepBackend.Helpers
             int userId = Convert.ToInt32(context.Principal.FindFirst(ClaimTypes.NameIdentifier).Value);
 
             PermissionsChacheResult chacheResult = _cache.SerialsMatch(userId, environmentId, serial);
-            switch (chacheResult)
+
+            if (chacheResult == PermissionsChacheResult.NotCached)
             {
-                case PermissionsChacheResult.DoNotMatch:
-                    context.Response.Headers.Add("PermissionsChanged", "true");
-                    break;
-                case PermissionsChacheResult.NotCached:
-                    IEnumerable<Permission> userPermissions = _authRepo.GetAllUserPermissions(userId).Result;
-                    _cache.AddEntriesForUser(userId, userPermissions);
-                    //return TokenValidated(context);
-                    break;
+                IEnumerable<Permission> userPermissions = _authRepo.GetAllUserPermissions(userId).Result;
+                _cache.AddEntriesForUser(userId, userPermissions);
             }
 
             return Task.CompletedTask;

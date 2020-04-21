@@ -33,7 +33,6 @@ namespace BeepBackend.Data
         public async Task<Permission> GetDefaultPermissions(int userId)
         {
             Permission permission = await _context.Permissions
-                .Include(p => p.Environment)
                 .FirstOrDefaultAsync(p => p.UserId == userId && p.Environment.DefaultEnvironment);
 
             return permission;

@@ -14,7 +14,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http.Internal;
 using Utrix.WebLib;
 using Utrix.WebLib.Helpers;
 using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
@@ -149,10 +148,8 @@ namespace BeepBackend.Controllers
 
             var newClaims = BuildPermissionClaims(permissions);
             string newJwtToken = JwtHelper.CreateToken(newClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds));
-            return new ObjectResult(new
-            {
-                permissionsToken = newJwtToken,
-            });
+
+            return Ok(new { permissionsToken = newJwtToken });
         }
 
         [HttpGet("UserExists/{userId}")]
@@ -184,7 +181,7 @@ namespace BeepBackend.Controllers
                 new Claim(ClaimTypes.NameIdentifier, permission.UserId.ToString()),
                 new Claim(BeepClaimTypes.Permissions, permission.ToBits()),
                 new Claim(BeepClaimTypes.PermissionsSerial, permission.Serial),
-                new Claim(BeepClaimTypes.EnvironmentId, permission.Environment.Id.ToString())
+                new Claim(BeepClaimTypes.EnvironmentId, permission.EnvironmentId.ToString())
             };
 
             return permissionClaims;

@@ -150,7 +150,7 @@
 
   <ItemGroup>
     <Reference Include="WebLib">
-      <HintPath>..\..\..\WebLib\WebLib\bin\Release\netcoreapp2.2\WebLib.dll</HintPath>
+      <HintPath>..\..\..\WebLib\WebLib\bin\Debug\netcoreapp2.2\WebLib.dll</HintPath>
     </Reference>
   </ItemGroup>
 
