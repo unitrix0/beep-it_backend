@@ -8,7 +8,11 @@ namespace BeepBackend.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             var qry = new StringBuilder();
-            qry.AppendLine("CREATE VIEW [dbo].[ShoppingList]")
+            qry.AppendLine("IF EXISTS(select * FROM sys.views where name = 'ShoppingList') BEGIN")
+                .AppendLine("DROP VIEW [dbo].[ShoppingList]")
+                .AppendLine("END")
+                .AppendLine("GO")
+                .AppendLine("CREATE VIEW [dbo].[ShoppingList]")
                 .AppendLine("AS")
                 .AppendLine(
                     "SELECT Name AS StoreName, Barcode, ArticleName, ImageUrl, UnitAbbreviation, EnvironmentId, KeepStockAmount, OnStock, Opened, KeepStockAmount - OnStock AS Needed, ContentAmount * ISNULL(AmountRemaining, 0) ")
