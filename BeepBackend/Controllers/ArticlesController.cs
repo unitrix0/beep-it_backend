@@ -218,9 +218,12 @@ namespace BeepBackend.Controllers
             if (existingEntry.AmountOnStock == 1)
             {
                 _mapper.Map(stockEntryDto, existingEntry);
-                if (await _repo.SaveAll()) return NoContent();
+                if (!await _repo.SaveAll()) throw new Exception("Error saving the Data");
 
-                throw new Exception("Error saving the Data");
+                await _repo.WriteActivityLog(ActivityLogAction.Open, User, existingEntry.EnvironmentId, existingEntry.ArticleId,
+                    existingEntry.AmountRemaining.ToString(CultureInfo.CurrentCulture));
+                return NoContent();
+
             }
 
             var newEntry = _mapper.Map<StockEntryValue>(stockEntryDto);
