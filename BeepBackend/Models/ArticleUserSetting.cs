@@ -3,7 +3,6 @@
     public class ArticleUserSetting
     {
         public int Id { get; set; }
-        public int KeepStockMode { get; set; }
         public int KeepStockAmount { get; set; }
         public long UsualLifetime { get; set; }
 
