@@ -47,10 +47,10 @@ namespace UnitTests
         {
             ResetDb();
 
-            HttpResponseMessage resultA = WebClient.GetAsync("articles/GetBaseData").Result;
+            HttpResponseMessage resultA = WebClient.GetAsync("articles/GetBaseData/99").Result;
 
             LoginResponseObject login = WebClient.Login("sepp", "P@ssw0rd");
-            HttpResponseMessage resultB = WebClient.GetAsync("articles/GetBaseData").Result;
+            HttpResponseMessage resultB = WebClient.GetAsync("articles/GetBaseData/2").Result;
 
             Assert.NotNull(login);
             Assert.Equal(HttpStatusCode.OK, resultB.StatusCode);
