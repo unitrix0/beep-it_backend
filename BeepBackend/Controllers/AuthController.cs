@@ -32,7 +32,7 @@ namespace BeepBackend.Controllers
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly string _tokenSecretKey;
-        private readonly int _tokenLifeTimeSeconds;
+        private readonly IConfigurationSection _appSettings;
 
         public AuthController(IAuthRepository authRepo, IUserRepository userRepo, IMapper mapper, IConfiguration config,
             IPermissionsCache permissionsCache, IBeepMailer mailer, UserManager<User> userManager, SignInManager<User> signInManager)
@@ -44,7 +44,7 @@ namespace BeepBackend.Controllers
             _mailer = mailer;
             _userManager = userManager;
             _signInManager = signInManager;
-            _tokenLifeTimeSeconds = Convert.ToInt32(config.GetSection("AppSettings:TokenLifeTime").Value);
+            _appSettings = config.GetSection("AppSettings");
             _tokenSecretKey = config.GetSection("AppSettings:Token").Value;
         }
 
@@ -74,6 +74,7 @@ namespace BeepBackend.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(UserForLoginDto user)
         {
+            var tokenLifeTimeSeconds = Convert.ToInt32(_appSettings["TokenLifeTime"]);
             User userFromRepo = await _userManager.FindByNameAsync(user.Username);
             if (userFromRepo == null) return Unauthorized();
 
@@ -178,13 +179,14 @@ namespace BeepBackend.Controllers
         [HttpGet("UpdatePermissionClaims/{userId}")]
         public async Task<IActionResult> UpdatePermissionClaims(int userId, int environmentId)
         {
+            var tokenLifeTimeSeconds = Convert.ToInt32(_appSettings["TokenLifeTime"]);
             if (!this.VerifyUser(userId)) return Unauthorized();
 
             Permission permissions = await _authRepo.GetUserPermissionForEnvironment(userId, environmentId);
             if (permissions == null) return Unauthorized();
 
             var newClaims = BuildPermissionClaims(permissions);
-            string newJwtToken = JwtHelper.CreateToken(newClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds));
+            string newJwtToken = JwtHelper.CreateToken(newClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(tokenLifeTimeSeconds));
 
             return Ok(new { permissionsToken = newJwtToken });
         }
