@@ -73,6 +73,8 @@ namespace BeepBackend
             services.AddTransient<BeepBearerEvents>();
             services.AddTransient<IBeepMailer, Mailer>();
             services.AddScoped<IShoppingListRepo, ShoppingListRepo>();
+            services.AddHostedService<DemoUserCleanup>();
+            services.AddHostedService<PermissionsCacheCleanup>();
 
             if (_environment.IsDevelopment())
             {

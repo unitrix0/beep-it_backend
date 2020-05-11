@@ -59,7 +59,7 @@ namespace BeepBackend.Controllers
             if (!createUsrResult.Succeeded) return BadRequest(createUsrResult.Errors);
 
             IdentityResult addRoleResult = await _userManager.AddToRoleAsync(userToCreate, RoleNames.Member);
-            if (!addRoleResult.Succeeded) BadRequest(addRoleResult.Errors);
+            if (!addRoleResult.Succeeded) return BadRequest(addRoleResult.Errors);
 
             userToCreate = await _authRepo.CreateFirstEnvironment(userToCreate);
             var token = await _userManager.GenerateEmailConfirmationTokenAsync(userToCreate);
@@ -81,13 +81,7 @@ namespace BeepBackend.Controllers
             if (!signInResult.Succeeded) return Unauthorized(new { signInResult.IsLockedOut, signInResult.IsNotAllowed });
 
             var mappedUser = _mapper.Map<UserForTokenDto>(userFromRepo);
-            var identityClaims = new List<Claim>()
-            {
-                new Claim(ClaimTypes.NameIdentifier, userFromRepo.Id.ToString()),
-                new Claim(ClaimTypes.Name, userFromRepo.UserName)
-            };
-            IList<string> roles = await _userManager.GetRolesAsync(userFromRepo);
-            identityClaims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
+            List<Claim> identityClaims = await BuildIdentityClaims(userFromRepo);
 
             var defaultPermission = await _authRepo.GetDefaultPermissions(userFromRepo.Id);
             List<Claim> permissionClaims = BuildPermissionClaims(defaultPermission);
@@ -98,8 +92,51 @@ namespace BeepBackend.Controllers
 
             return Ok(new
             {
-                identityToken = JwtHelper.CreateToken(identityClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
-                permissionsToken = JwtHelper.CreateToken(permissionClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
+                identityToken = JwtHelper.CreateToken(identityClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(tokenLifeTimeSeconds)),
+                permissionsToken = JwtHelper.CreateToken(permissionClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(tokenLifeTimeSeconds)),
+                mappedUser,
+                settings
+            });
+        }
+
+        [HttpPost("DemoLogin")]
+        [AllowAnonymous]
+        public async Task<IActionResult> DemoLogin()
+        {
+            var tokenLifeTimeSeconds = Convert.ToInt32(_appSettings["TokenLifeTime"]);
+            int demoUserCount = await _authRepo.CountDemoUsers();
+            demoUserCount++;
+
+            var newUser = new User()
+            {
+                UserName = $"demo{demoUserCount}",
+                DisplayName = "Demo Benutzer",
+                Email = "demo@beep-it.ch",
+                AccountExpireDate = DateTime.Now.AddSeconds(tokenLifeTimeSeconds)
+            };
+            
+            IdentityResult creationResult = await _userManager.CreateAsync(newUser, "P@ssw0rd");
+            if (!creationResult.Succeeded) BadRequest(creationResult.Errors);
+
+            IdentityResult addRoleResult = await _userManager.AddToRolesAsync(newUser, new[] { RoleNames.Member, RoleNames.Demo });
+            if (!addRoleResult.Succeeded) return BadRequest(addRoleResult.Errors);
+
+            newUser = await _authRepo.CreateDemoData(newUser);
+            if(newUser == null) throw new Exception("Error creating environment/demo data");
+
+            List<Claim> identityClaims = await BuildIdentityClaims(newUser);
+
+            Permission defaultPermissions = await _authRepo.GetDefaultPermissions(newUser.Id);
+            List<Claim> permissionClaims = BuildPermissionClaims(defaultPermissions);
+            SettingsDto settings = await GetSettings(newUser.Id, new List<CameraDto>());
+
+            _permissionsCache.AddEntriesForUser(newUser.Id, await _authRepo.GetAllUserPermissions(newUser.Id));
+            var mappedUser = _mapper.Map<UserForTokenDto>(newUser);
+
+            return Ok(new
+            {
+                identityToken = JwtHelper.CreateToken(identityClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(tokenLifeTimeSeconds)),
+                permissionsToken = JwtHelper.CreateToken(permissionClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(tokenLifeTimeSeconds)),
                 mappedUser,
                 settings
             });
@@ -162,7 +199,6 @@ namespace BeepBackend.Controllers
         }
 
 
-
         private async Task<SettingsDto> GetSettings(int userId, IEnumerable<CameraDto> userCameras)
         {
             Camera cam = await _userRepo.GetCamForUser(userId, userCameras.Select(uc => uc.DeviceId));
@@ -185,6 +221,18 @@ namespace BeepBackend.Controllers
             };
 
             return permissionClaims;
+        }
+
+        private async Task<List<Claim>> BuildIdentityClaims(User userFromRepo)
+        {
+            var identityClaims = new List<Claim>()
+            {
+                new Claim(ClaimTypes.NameIdentifier, userFromRepo.Id.ToString()),
+                new Claim(ClaimTypes.Name, userFromRepo.UserName)
+            };
+            IList<string> roles = await _userManager.GetRolesAsync(userFromRepo);
+            identityClaims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
+            return identityClaims;
         }
     }
 }

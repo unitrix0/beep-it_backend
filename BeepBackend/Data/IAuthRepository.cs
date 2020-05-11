@@ -10,5 +10,7 @@ namespace BeepBackend.Data
         Task<Permission> GetDefaultPermissions(int userId);
         Task<Permission> GetUserPermissionForEnvironment(int userId, int environmentId);
         Task<IEnumerable<Permission>> GetAllUserPermissions(int userId);
+        Task<int> CountDemoUsers();
+        Task<User> CreateDemoData(User newUser);
     }
 }

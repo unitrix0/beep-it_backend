@@ -17,6 +17,12 @@ namespace BeepBackend.Data
             _context = context;
         }
 
+        public async Task<int> CountDemoUsers()
+        {
+            int count = await _context.UserRoles.CountAsync(r => r.Role.Name == RoleNames.Demo);
+            return count;
+        }
+
         public async Task<User> CreateFirstEnvironment(User newUser)
         {
             var environment = new BeepEnvironment() { Name = $"Zu Hause von {newUser.DisplayName}", User = newUser, DefaultEnvironment = true };
@@ -54,6 +60,14 @@ namespace BeepBackend.Data
                 .ToListAsync();
 
             return permissions;
+        }
+
+        public async Task<User> CreateDemoData(User newUser)
+        {
+            newUser = await CreateFirstEnvironment(newUser);
+            bool demoDataCreated = await _context.CreateDemoDataForUser(newUser.Id);
+
+            return !demoDataCreated ? null : newUser;
         }
     }
 }

@@ -128,6 +128,12 @@
     <Compile Remove="Migrations\20200411194253_AddNewArticleGroupRelation.Designer.cs" />
     <Compile Remove="Migrations\20200411194844_AddNewArticleGroupRelation.cs" />
     <Compile Remove="Migrations\20200411194844_AddNewArticleGroupRelation.Designer.cs" />
+    <Compile Remove="Migrations\20200509194106_SP_CreateDemoData.cs" />
+    <Compile Remove="Migrations\20200509194106_SP_CreateDemoData.Designer.cs" />
+    <Compile Remove="Migrations\20200511064107_AddUserAccountExpireDate.cs" />
+    <Compile Remove="Migrations\20200511064107_AddUserAccountExpireDate.Designer.cs" />
+    <Compile Remove="Migrations\20200511064539_AddUserAccountExpireDate.cs" />
+    <Compile Remove="Migrations\20200511064539_AddUserAccountExpireDate.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

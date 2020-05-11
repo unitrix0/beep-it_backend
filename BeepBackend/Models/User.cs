@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
@@ -8,6 +9,7 @@ namespace BeepBackend.Models
     public class User : IdentityUser<int>
     {
         public string DisplayName { get; set; }
+        public DateTime? AccountExpireDate { get; set; }
 
         public ICollection<UserArticle> UserArticles { get; set; }
         public ICollection<ArticleGroup> ArticleGroups { get; set; }

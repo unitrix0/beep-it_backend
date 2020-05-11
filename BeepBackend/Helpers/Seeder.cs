@@ -22,7 +22,8 @@ namespace BeepBackend.Helpers
             {
                 new Role() {Name = RoleNames.Admin},
                 new Role() {Name = RoleNames.Member},
-                new Role() {Name = RoleNames.Dummy}
+                new Role() {Name = RoleNames.Dummy},
+                new Role() {Name = RoleNames.Demo}
             };
             if (roleMgr.Roles.Count() == roles.Count) return;
 

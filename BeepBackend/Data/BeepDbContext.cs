@@ -1,4 +1,6 @@
-﻿using BeepBackend.Models;
+﻿using System.Diagnostics;
+using System.Threading.Tasks;
+using BeepBackend.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -236,6 +238,13 @@ namespace BeepBackend.Data
                     .HasForeignKey(ale => ale.EnvironmentId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
+        }
+
+        public async Task<bool> CreateDemoDataForUser(int userId)
+        {
+            int count = await this.Database.ExecuteSqlCommandAsync("EXEC CreateDemoDataForUser @p0", parameters: userId.ToString());
+
+            return count > 0;
         }
     }
 }
