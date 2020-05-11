@@ -102,9 +102,9 @@ namespace UnitTests
             Assert.True(changeEnvironmentResult.IsSuccessStatusCode);
             Assert.True(setPermissionsResult.IsSuccessStatusCode);
 
-            Assert.NotNull(invitationsCountResult.Headers.FirstOrDefault(h => h.Key == "PermissionsChanged").Value);
+            Assert.NotNull(invitationsCountResult.Headers.FirstOrDefault(h => h.Key == "permissions_changed").Value);
             Assert.Equal(newPermission.ToBits(), updatedPermissions);
-            Assert.Null(noPermissionsChangedHeader.Headers.FirstOrDefault(h => h.Key == "PermissionsChanged").Value);
+            Assert.Null(noPermissionsChangedHeader.Headers.FirstOrDefault(h => h.Key == "permissions_changed").Value);
         }
 
         protected override void ResetDb()

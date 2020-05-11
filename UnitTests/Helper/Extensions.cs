@@ -40,12 +40,12 @@ namespace UnitTests.Helper
             JwtSecurityToken permissionsToken = JwtHelper.DecodeToken(content.SelectToken("permissionsToken").Value<string>());
             Claim serialClaim = permissionsToken.Claims.FirstOrDefault(c => c.Type == BeepClaimTypes.PermissionsSerial);
             Claim envIdClaim = permissionsToken.Claims.FirstOrDefault(c => c.Type == BeepClaimTypes.EnvironmentId);
-            client.DefaultRequestHeaders.Remove("PermissionsSerial");
-            client.DefaultRequestHeaders.Remove("EnvironmentId");
+            client.DefaultRequestHeaders.Remove(BeepClaimTypes.PermissionsSerial);
+            client.DefaultRequestHeaders.Remove(BeepClaimTypes.EnvironmentId);
 
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", content.SelectToken("identityToken").Value<string>());
-            client.DefaultRequestHeaders.Add("PermissionsSerial",serialClaim?.Value);
-            client.DefaultRequestHeaders.Add("EnvironmentId",envIdClaim?.Value);
+            client.DefaultRequestHeaders.Add(BeepClaimTypes.PermissionsSerial, serialClaim?.Value);
+            client.DefaultRequestHeaders.Add(BeepClaimTypes.EnvironmentId, envIdClaim?.Value);
 
 
             return content.ToObject<LoginResponseObject>();
@@ -66,10 +66,10 @@ namespace UnitTests.Helper
             Claim envId = JwtHelper.DecodeToken(login.PermissionsToken).Claims
                 .FirstOrDefault(c => c.Type == BeepClaimTypes.EnvironmentId);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login.IdentityToken);
-            client.DefaultRequestHeaders.Remove("PermissionsSerial");
-            client.DefaultRequestHeaders.Remove("EnvironmentId");
-            client.DefaultRequestHeaders.Add("PermissionsSerial", serialClaim?.Value);
-            client.DefaultRequestHeaders.Add("EnvironmentId", envId?.Value);
+            client.DefaultRequestHeaders.Remove(BeepClaimTypes.PermissionsSerial);
+            client.DefaultRequestHeaders.Remove(BeepClaimTypes.EnvironmentId);
+            client.DefaultRequestHeaders.Add(BeepClaimTypes.PermissionsSerial, serialClaim?.Value);
+            client.DefaultRequestHeaders.Add(BeepClaimTypes.EnvironmentId, envId?.Value);
             return client;
         }
 
