@@ -5,12 +5,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace BeepBackend.Data
 {
     public class PermissionsCache : IPermissionsCache
     {
-
         private readonly ConcurrentDictionary<string, Tuple<Permission, DateTime>> _serialsCache;
         private readonly int _tokenLifeTimeSeconds;
 
@@ -18,9 +18,6 @@ namespace BeepBackend.Data
         {
             _serialsCache = new ConcurrentDictionary<string, Tuple<Permission, DateTime>>();
             _tokenLifeTimeSeconds = Convert.ToInt32(config.GetSection("AppSettings:TokenLifeTime").Value);
-
-            var cleanupTimer = new Timer(Cleanup);
-            cleanupTimer.Change(new TimeSpan(), new TimeSpan(1, 0, 0, 0));
         }
 
         public PermissionsChacheResult SerialsMatch(int userId, int environmentId, string permissionSerial)
@@ -28,7 +25,7 @@ namespace BeepBackend.Data
             string key = $"{userId},{environmentId}";
 
             if (!_serialsCache.ContainsKey(key)) return PermissionsChacheResult.NotCached;
-            return _serialsCache[key].Item1.Serial == permissionSerial ? PermissionsChacheResult.DoMatch:PermissionsChacheResult.DoNotMatch;
+            return _serialsCache[key].Item1.Serial == permissionSerial ? PermissionsChacheResult.DoMatch : PermissionsChacheResult.DoNotMatch;
         }
 
         public void AddEntriesForUser(int userId, IEnumerable<Permission> permissions)
@@ -55,11 +52,12 @@ namespace BeepBackend.Data
             return _serialsCache.ContainsKey(key) ? _serialsCache[key].Item1 : null;
         }
 
-        private void Cleanup(object state)
+        public void Cleanup()
         {
             IEnumerable<string> oldKeys = _serialsCache.Where(c => c.Value.Item2 < DateTime.Now).Select(c => c.Key);
             foreach (string oldKey in oldKeys)
             {
+                Console.WriteLine($"Deleting cache entry: {oldKey}");
                 _serialsCache.Remove(oldKey, out _);
             }
         }

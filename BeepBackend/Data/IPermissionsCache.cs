@@ -26,5 +26,6 @@ namespace BeepBackend.Data
         /// <returns></returns>
         Permission GetUserPermission(int userId, int environmentId);
         void AddEntriesForUser(int userId, IEnumerable<Permission> permissions);
+        void Cleanup();
     }
 }
