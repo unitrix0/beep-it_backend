@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using BeepBackend.Helpers;
 using Utrix.WebLib;
 
 namespace BeepBackend.Permissions
@@ -20,8 +21,8 @@ namespace BeepBackend.Permissions
 
         public async Task Invoke(HttpContext context, IPermissionsCache permissionsCache, IAuthRepository authRepo)
         {
-            string serial = context.Request.Headers["permissions_serial"];
-            int environmentId = Convert.ToInt32(context.Request.Headers["environment_id"]);
+            string serial = context.Request.Headers[BeepClaimTypes.PermissionsSerial];
+            int environmentId = Convert.ToInt32(context.Request.Headers[BeepClaimTypes.EnvironmentId]);
             int userId = Convert.ToInt32(context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
 
             if (!string.IsNullOrEmpty(serial) && serial.ToLower() != "updating"
