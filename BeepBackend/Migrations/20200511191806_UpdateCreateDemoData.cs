@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using BeepBackend.Helpers;
+﻿using BeepBackend.Data;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Utrix.WebLib.Helpers;
 
@@ -9,7 +8,7 @@ namespace BeepBackend.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.SqlFromResource("BeepBackend.SQL Scripts.CreateDemoDataForUser.sql");
+            migrationBuilder.SqlFromResource(typeof(BeepDbContext).Assembly, "BeepBackend.SQL Scripts.CreateDemoDataForUser.sql");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
