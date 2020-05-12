@@ -143,6 +143,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="SQL Scripts\CreateDemoDataForUser.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="wwwroot\" />
   </ItemGroup>
 

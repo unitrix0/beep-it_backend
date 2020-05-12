@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using BeepBackend.Helpers;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace BeepBackend.Migrations
@@ -71,7 +72,7 @@ namespace BeepBackend.Migrations
                 .AppendLine("END")
                 .AppendLine("GO");
 
-            var x = migrationBuilder.Sql(qry.ToString());
+            migrationBuilder.Sql(qry.ToString());
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
