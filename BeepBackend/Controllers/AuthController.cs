@@ -87,7 +87,7 @@ namespace BeepBackend.Controllers
             if (userFromRepo == null) return Unauthorized();
 
             SignInResult signInResult = await _signInManager.CheckPasswordSignInAsync(userFromRepo, user.Password, false);
-            if (!signInResult.Succeeded) return Unauthorized(new { signInResult.IsLockedOut, signInResult.IsNotAllowed });
+            if (!signInResult.Succeeded) return Unauthorized(EvalLoginFailedReason(signInResult));
 
             var mappedUser = _mapper.Map<UserForTokenDto>(userFromRepo);
 
@@ -192,7 +192,8 @@ namespace BeepBackend.Controllers
         public async Task<IActionResult> ConfirmEmail(string id, string token, string email, bool isChange)
         {
             User user = await _userManager.FindByIdAsync(id);
-            if (user == null) throw new Exception("Failed to confirm the address");
+            if (user == null)
+                throw new Exception("Failed to confirm the address");
 
             if (!isChange)
             {
@@ -329,6 +330,17 @@ namespace BeepBackend.Controllers
             };
 
             return permissionClaims;
+        }
+
+        private string EvalLoginFailedReason(SignInResult signInResult)
+        {
+            if (signInResult.IsLockedOut)
+                return "Login is locked";
+
+            if (signInResult.IsNotAllowed)
+                return "Login is not allowed";
+
+            return "Bad username or password";
         }
     }
 }

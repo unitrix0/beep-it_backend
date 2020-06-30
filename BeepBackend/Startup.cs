@@ -21,6 +21,7 @@ using System;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
+using Newtonsoft.Json;
 using Utrix.WebLib;
 
 namespace BeepBackend
@@ -106,7 +107,20 @@ namespace BeepBackend
         {
             if (_environment.IsDevelopment())
             {
-                app.UseDeveloperExceptionPage();
+                //app.UseDeveloperExceptionPage();
+                app.UseExceptionHandler(builder =>
+                {
+                    builder.Run(async context =>
+                    {
+                        context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
+                        var handler = context.Features.Get<IExceptionHandlerFeature>();
+                        if (handler != null)
+                        {
+                            context.Response.AddApplicationError(handler.Error.Message);
+                            await context.Response.WriteAsync(JsonConvert.SerializeObject(handler.Error));
+                        }
+                    });
+                });
             }
             else
             {
@@ -145,7 +159,7 @@ namespace BeepBackend
             {
                 app.UseMvc();
             }
-            
+
         }
 
         private static void ConfigureMvc(MvcOptions options)

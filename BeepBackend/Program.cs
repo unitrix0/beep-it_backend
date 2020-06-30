@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using BeepBackend.Data;
 using BeepBackend.Helpers;
@@ -9,6 +11,7 @@ using BeepBackend.Models;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,7 +38,7 @@ namespace BeepBackend
                 catch (Exception ex)
                 {
                     var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "Error during programm startup");
+                    logger.LogError(ex, "Error during program startup");
                 }
             }
 
@@ -45,5 +48,15 @@ namespace BeepBackend
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>();
+
+        //.UseKestrel((hostBuilder, kestrelOptions) =>
+        //{
+        //    if (!hostBuilder.HostingEnvironment.IsDevelopment())
+        //        return;
+        //    kestrelOptions.Listen(IPAddress.Any, 5000);
+        //    kestrelOptions.Listen(IPAddress.Any, 5001,
+        //        options => options.UseHttps(StoreName.My, "drone02.hive.loc", false,
+        //            StoreLocation.LocalMachine));
+        //});
     }
 }
