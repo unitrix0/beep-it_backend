@@ -12,5 +12,8 @@ namespace BeepBackend.Data
         Task<IEnumerable<Permission>> GetAllUserPermissions(int userId);
         Task<int> CountDemoUsers();
         Task<User> CreateDemoData(User newUser);
+        Task AddRefreshToken(RefreshToken newToken);
+        Task<RefreshToken> GetRefreshTokenForUser(string refreshToken);
+        Task<int> SaveChangesAsync();
     }
 }

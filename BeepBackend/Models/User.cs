@@ -18,5 +18,6 @@ namespace BeepBackend.Models
         public ICollection<UserRole> UserRoles { get; set; }
         public ICollection<Invitation> InvitedFrom { get; set; }
         public ICollection<UserCamera> Cameras { get; set; }
+        public ICollection<RefreshToken> RefreshTokens { get; set; }
     }
 }

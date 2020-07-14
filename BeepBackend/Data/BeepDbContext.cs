@@ -29,6 +29,7 @@ namespace BeepBackend.Data
         public DbSet<UserCamera> UserCameras { get; set; }
         public DbSet<Camera> Cameras { get; set; }
         public DbSet<ActivityLogEntry> ActivityLogEntries { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbQuery<ShoppingListArticleEntry> ShoppingList { get; set; }
         public DbQuery<ShoppingListGroupEntry> ShoppingListGroups { get; set; }
 
@@ -132,6 +133,16 @@ namespace BeepBackend.Data
                     .WithMany(r => r.UserRoles)
                     .HasForeignKey(ur => ur.RoleId)
                     .IsRequired();
+            });
+
+            modelBuilder.Entity<RefreshToken>(rToken =>
+            {
+                rToken.HasKey(rt => rt.Id);
+
+                rToken.HasOne(rt => rt.User)
+                    .WithMany(u => u.RefreshTokens)
+                    .HasForeignKey(rt => rt.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             modelBuilder.Entity<Invitation>(inv =>

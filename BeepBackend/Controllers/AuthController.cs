@@ -11,11 +11,15 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 using Utrix.WebLib;
 using Utrix.WebLib.Helpers;
+using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace BeepBackend.Controllers
@@ -31,11 +35,14 @@ namespace BeepBackend.Controllers
         private readonly IBeepMailer _mailer;
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
+        private readonly TokenValidationParameters _tokenValidationParameters;
         private readonly string _tokenSecretKey;
         private readonly IConfigurationSection _appSettings;
+        private readonly int _tokenLifeTimeSeconds;
 
         public AuthController(IAuthRepository authRepo, IUserRepository userRepo, IMapper mapper, IConfiguration config,
-            IPermissionsCache permissionsCache, IBeepMailer mailer, UserManager<User> userManager, SignInManager<User> signInManager)
+            IPermissionsCache permissionsCache, IBeepMailer mailer, UserManager<User> userManager, SignInManager<User> signInManager,
+            TokenValidationParameters tokenValidationParameters)
         {
             _authRepo = authRepo;
             _userRepo = userRepo;
@@ -44,8 +51,10 @@ namespace BeepBackend.Controllers
             _mailer = mailer;
             _userManager = userManager;
             _signInManager = signInManager;
+            _tokenValidationParameters = tokenValidationParameters;
             _appSettings = config.GetSection("AppSettings");
             _tokenSecretKey = config.GetSection("AppSettings:Token").Value;
+            _tokenLifeTimeSeconds = Convert.ToInt32(_appSettings["TokenLifeTime"]);
         }
 
         [HttpPost("register")]
@@ -74,7 +83,6 @@ namespace BeepBackend.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(UserForLoginDto user)
         {
-            var tokenLifeTimeSeconds = Convert.ToInt32(_appSettings["TokenLifeTime"]);
             User userFromRepo = await _userManager.FindByNameAsync(user.Username);
             if (userFromRepo == null) return Unauthorized();
 
@@ -91,12 +99,53 @@ namespace BeepBackend.Controllers
             _permissionsCache.AddEntriesForUser(userFromRepo.Id,
                 await _authRepo.GetAllUserPermissions(userFromRepo.Id));
 
+            string refreshToken = await CreateRefreshToken(userFromRepo.Id);
+
             return Ok(new
             {
-                identityToken = JwtHelper.CreateToken(identityClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(tokenLifeTimeSeconds)),
-                permissionsToken = JwtHelper.CreateToken(permissionClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(tokenLifeTimeSeconds)),
+                identityToken = JwtHelper.CreateToken(identityClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
+                permissionsToken = JwtHelper.CreateToken(permissionClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
+                refreshToken,
                 mappedUser,
                 settings
+            });
+        }
+
+        [HttpPost("RefreshToken")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RefreshToken(TokenRefreshDto refreshDto)
+        {
+            ClaimsPrincipal validToken = GetPrincipalFromToken(refreshDto.Token);
+
+            if (validToken == null) return BadRequest("Token is not valid");
+
+            var expiryDateUnix =
+                long.Parse(validToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
+            
+            var expiryDateTimeUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                .AddSeconds(expiryDateUnix);
+
+            if (expiryDateTimeUtc > DateTime.UtcNow) return BadRequest("This token hasn't expired yet");
+
+            RefreshToken storedRefreshToken = await _authRepo.GetRefreshTokenForUser(refreshDto.RefreshToken);
+
+            if (storedRefreshToken == null) return BadRequest("This refresh token does not exist");
+            if (DateTime.UtcNow > storedRefreshToken.ExpiryDate) return BadRequest("This refresh token has expired");
+            if (storedRefreshToken.Invalidated) return BadRequest("This refresh token has been invalidated");
+            if (storedRefreshToken.Used) return BadRequest("This refresh token has been userd");
+
+            storedRefreshToken.Used = true;
+            await _authRepo.SaveChangesAsync();
+
+            string userId = validToken.Claims.Single(c => c.Type == ClaimTypes.NameIdentifier).Value;
+            User userFromRepo = await _userManager.FindByIdAsync(userId);
+            List<Claim> identityClaims = await BuildIdentityClaims(userFromRepo);
+            string refreshToken = await CreateRefreshToken(userFromRepo.Id);
+
+            return Ok(new
+            {
+                identityToken = JwtHelper.CreateToken(identityClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
+                refreshToken
             });
         }
 
@@ -104,7 +153,6 @@ namespace BeepBackend.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> DemoLogin()
         {
-            var tokenLifeTimeSeconds = Convert.ToInt32(_appSettings["TokenLifeTime"]);
             int demoUserCount = await _authRepo.CountDemoUsers();
             demoUserCount++;
 
@@ -113,7 +161,7 @@ namespace BeepBackend.Controllers
                 UserName = $"demo{demoUserCount}",
                 DisplayName = "Demo Benutzer",
                 Email = "demo@beep-it.ch",
-                AccountExpireDate = DateTime.Now.AddSeconds(tokenLifeTimeSeconds)
+                AccountExpireDate = DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)
             };
             
             IdentityResult creationResult = await _userManager.CreateAsync(newUser, "P@ssw0rd");
@@ -136,8 +184,8 @@ namespace BeepBackend.Controllers
 
             return Ok(new
             {
-                identityToken = JwtHelper.CreateToken(identityClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(tokenLifeTimeSeconds)),
-                permissionsToken = JwtHelper.CreateToken(permissionClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(tokenLifeTimeSeconds)),
+                identityToken = JwtHelper.CreateToken(identityClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
+                permissionsToken = JwtHelper.CreateToken(permissionClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
                 mappedUser,
                 settings
             });
@@ -200,6 +248,46 @@ namespace BeepBackend.Controllers
             return Ok(user != null);
         }
 
+        private ClaimsPrincipal GetPrincipalFromToken(string tokenString)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            try
+            {
+                var tokenValidationParameters = _tokenValidationParameters.Clone();
+                tokenValidationParameters.ValidateLifetime = false;
+                var principal = tokenHandler.ValidateToken(tokenString, tokenValidationParameters, out var token);
+                
+                return !IsJwtWithValidSecurityAlgorithm(token) ? null : principal;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
+        }
+
+        private static bool IsJwtWithValidSecurityAlgorithm(SecurityToken token)
+        {
+            return token is JwtSecurityToken jwtSecurityToken &&
+                   jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256,
+                       StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        private async Task<string> CreateRefreshToken(int userId)
+        {
+            TimeSpan.TryParse(_appSettings["RefreshTokenLifetime"], out TimeSpan refreshTokenLifetime);
+            var newToken = new RefreshToken()
+            {
+                CreationDate = DateTime.Now,
+                ExpiryDate = DateTime.Now.Add(refreshTokenLifetime),
+                UserId= userId,
+                Token = Guid.NewGuid().ToString()
+            };
+
+            await _authRepo.AddRefreshToken(newToken);
+            return newToken.Token;
+        }
 
         private async Task<SettingsDto> GetSettings(int userId, IEnumerable<CameraDto> userCameras)
         {

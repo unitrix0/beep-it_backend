@@ -135,7 +135,7 @@ namespace BeepBackend
 
         private void ConfigureBearerToken(JwtBearerOptions options, IServiceCollection services)
         {
-            options.TokenValidationParameters = new TokenValidationParameters()
+            var validationParameters = new TokenValidationParameters()
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey =
@@ -144,6 +144,9 @@ namespace BeepBackend
                 ValidateIssuer = false,
                 ValidateAudience = false
             };
+
+            services.AddSingleton(validationParameters);
+            options.TokenValidationParameters = validationParameters;
             options.EventsType = typeof(BeepBearerEvents);
         }
 

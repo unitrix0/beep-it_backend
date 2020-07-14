@@ -69,5 +69,23 @@ namespace BeepBackend.Data
 
             return !demoDataCreated ? null : newUser;
         }
+
+        public async Task AddRefreshToken(RefreshToken newRefreshToken)
+        {
+            await _context.RefreshTokens.AddAsync(newRefreshToken);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<RefreshToken> GetRefreshTokenForUser(string refreshTokenString)
+        {
+            RefreshToken refreshToken = await _context.RefreshTokens
+                .FirstOrDefaultAsync(rt => rt.Token == refreshTokenString);
+            return refreshToken;
+        }
+
+        public async Task<int> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync();
+        }
     }
 }
