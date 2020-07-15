@@ -18,6 +18,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Diagnostics;
 using System.Net;
 using System.Text;
 using Utrix.WebLib;
@@ -56,8 +57,22 @@ namespace BeepBackend
             services.AddMvc(ConfigureMvc)
                 .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
+            var tokenValidationParameters = new TokenValidationParameters()
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey =
+                    new SymmetricSecurityKey(
+                        Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
+                ValidateIssuer = false,
+                ValidateAudience = false
+            };
+            services.AddSingleton(tokenValidationParameters);
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options => ConfigureBearerToken(options, services));
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = tokenValidationParameters;
+                    options.EventsType = typeof(BeepBearerEvents);
+                });
 
             services.AddDbContext<BeepDbContext>(o =>
                 o.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
@@ -131,23 +146,6 @@ namespace BeepBackend
                 app.UseMvc();
             }
             
-        }
-
-        private void ConfigureBearerToken(JwtBearerOptions options, IServiceCollection services)
-        {
-            var validationParameters = new TokenValidationParameters()
-            {
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey =
-                    new SymmetricSecurityKey(
-                        Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
-                ValidateIssuer = false,
-                ValidateAudience = false
-            };
-
-            services.AddSingleton(validationParameters);
-            options.TokenValidationParameters = validationParameters;
-            options.EventsType = typeof(BeepBearerEvents);
         }
 
         private static void ConfigureMvc(MvcOptions options)

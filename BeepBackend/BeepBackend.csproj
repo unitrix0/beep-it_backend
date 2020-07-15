@@ -136,6 +136,8 @@
     <Compile Remove="Migrations\20200511064539_AddUserAccountExpireDate.Designer.cs" />
     <Compile Remove="Migrations\20200714121609_AddRefreshToken.cs" />
     <Compile Remove="Migrations\20200714121609_AddRefreshToken.Designer.cs" />
+    <Compile Remove="Migrations\20200714122054_AddRefreshToken.cs" />
+    <Compile Remove="Migrations\20200714122054_AddRefreshToken.Designer.cs" />
   </ItemGroup>
 
   <ItemGroup>

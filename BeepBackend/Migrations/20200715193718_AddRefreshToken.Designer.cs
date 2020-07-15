@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BeepBackend.Migrations
 {
     [DbContext(typeof(BeepDbContext))]
-    [Migration("20200714122054_AddRefreshToken")]
+    [Migration("20200715193718_AddRefreshToken")]
     partial class AddRefreshToken
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -303,7 +303,7 @@ namespace BeepBackend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("RefreshToken");
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("BeepBackend.Models.Role", b =>

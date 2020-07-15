@@ -30,6 +30,7 @@ namespace BeepBackend.Data
         public DbSet<Camera> Cameras { get; set; }
         public DbSet<ActivityLogEntry> ActivityLogEntries { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+
         public DbQuery<ShoppingListArticleEntry> ShoppingList { get; set; }
         public DbQuery<ShoppingListGroupEntry> ShoppingListGroups { get; set; }
 
