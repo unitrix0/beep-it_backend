@@ -14,8 +14,8 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
-using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Utrix.WebLib;
 using Utrix.WebLib.Helpers;
@@ -90,7 +90,6 @@ namespace BeepBackend.Controllers
             if (!signInResult.Succeeded) return Unauthorized(new { signInResult.IsLockedOut, signInResult.IsNotAllowed });
 
             var mappedUser = _mapper.Map<UserForTokenDto>(userFromRepo);
-            List<Claim> identityClaims = await BuildIdentityClaims(userFromRepo);
 
             var defaultPermission = await _authRepo.GetDefaultPermissions(userFromRepo.Id);
             List<Claim> permissionClaims = BuildPermissionClaims(defaultPermission);
@@ -103,7 +102,7 @@ namespace BeepBackend.Controllers
 
             return Ok(new
             {
-                identityToken = JwtHelper.CreateToken(identityClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
+                identityToken = await CreateIdentityToken(userFromRepo),
                 permissionsToken = JwtHelper.CreateToken(permissionClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
                 refreshToken,
                 mappedUser,
@@ -121,8 +120,8 @@ namespace BeepBackend.Controllers
 
             var expiryDateUnix =
                 long.Parse(validToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
-            
-            var expiryDateTimeUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+
+            var expiryDateTimeUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local)
                 .AddSeconds(expiryDateUnix);
 
             if (expiryDateTimeUtc > DateTime.UtcNow) return BadRequest("This token hasn't expired yet");
@@ -132,19 +131,18 @@ namespace BeepBackend.Controllers
             if (storedRefreshToken == null) return BadRequest("This refresh token does not exist");
             if (DateTime.UtcNow > storedRefreshToken.ExpiryDate) return BadRequest("This refresh token has expired");
             if (storedRefreshToken.Invalidated) return BadRequest("This refresh token has been invalidated");
-            if (storedRefreshToken.Used) return BadRequest("This refresh token has been userd");
+            if (storedRefreshToken.Used) return BadRequest("This refresh token has been used");
 
             storedRefreshToken.Used = true;
             await _authRepo.SaveChangesAsync();
 
             string userId = validToken.Claims.Single(c => c.Type == ClaimTypes.NameIdentifier).Value;
             User userFromRepo = await _userManager.FindByIdAsync(userId);
-            List<Claim> identityClaims = await BuildIdentityClaims(userFromRepo);
             string refreshToken = await CreateRefreshToken(userFromRepo.Id);
 
             return Ok(new
             {
-                identityToken = JwtHelper.CreateToken(identityClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
+                identityToken = await CreateIdentityToken(userFromRepo),
                 refreshToken
             });
         }
@@ -163,7 +161,7 @@ namespace BeepBackend.Controllers
                 Email = "demo@beep-it.ch",
                 AccountExpireDate = DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)
             };
-            
+
             IdentityResult creationResult = await _userManager.CreateAsync(newUser, "P@ssw0rd");
             if (!creationResult.Succeeded) BadRequest(creationResult.Errors);
 
@@ -171,9 +169,7 @@ namespace BeepBackend.Controllers
             if (!addRoleResult.Succeeded) return BadRequest(addRoleResult.Errors);
 
             newUser = await _authRepo.CreateDemoData(newUser);
-            if(newUser == null) throw new Exception("Error creating environment/demo data");
-
-            List<Claim> identityClaims = await BuildIdentityClaims(newUser);
+            if (newUser == null) throw new Exception("Error creating environment/demo data");
 
             Permission defaultPermissions = await _authRepo.GetDefaultPermissions(newUser.Id);
             List<Claim> permissionClaims = BuildPermissionClaims(defaultPermissions);
@@ -184,7 +180,7 @@ namespace BeepBackend.Controllers
 
             return Ok(new
             {
-                identityToken = JwtHelper.CreateToken(identityClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
+                identityToken = await CreateIdentityToken(newUser),
                 permissionsToken = JwtHelper.CreateToken(permissionClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
                 mappedUser,
                 settings
@@ -203,8 +199,7 @@ namespace BeepBackend.Controllers
                 if (user.EmailConfirmed) return Ok();
                 IdentityResult result = await _userManager.ConfirmEmailAsync(user, token.FromBase64());
                 if (result.Succeeded) return Ok();
-            }
-            else
+            } else
             {
                 IdentityResult result = await _userManager.ChangeEmailAsync(user, email.FromBase64(), token.FromBase64());
                 if (result.Succeeded) return Ok();
@@ -256,7 +251,7 @@ namespace BeepBackend.Controllers
                 var tokenValidationParameters = _tokenValidationParameters.Clone();
                 tokenValidationParameters.ValidateLifetime = false;
                 var principal = tokenHandler.ValidateToken(tokenString, tokenValidationParameters, out var token);
-                
+
                 return !IsJwtWithValidSecurityAlgorithm(token) ? null : principal;
             }
             catch (Exception e)
@@ -274,6 +269,29 @@ namespace BeepBackend.Controllers
                        StringComparison.InvariantCultureIgnoreCase);
         }
 
+        private async Task<string> CreateIdentityToken(User user)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(_tokenSecretKey);
+            var identityClaims = new List<Claim>()
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.UserName)
+            };
+            IList<string> roles = await _userManager.GetRolesAsync(user);
+            identityClaims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
+
+            var tokenDescriptor = new SecurityTokenDescriptor()
+            {
+                Expires = DateTime.Now.AddSeconds(_tokenLifeTimeSeconds),
+                IssuedAt = DateTime.Now,
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256),
+                Subject = new ClaimsIdentity(identityClaims)
+            };
+            JwtSecurityToken token = tokenHandler.CreateJwtSecurityToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
         private async Task<string> CreateRefreshToken(int userId)
         {
             TimeSpan.TryParse(_appSettings["RefreshTokenLifetime"], out TimeSpan refreshTokenLifetime);
@@ -281,7 +299,7 @@ namespace BeepBackend.Controllers
             {
                 CreationDate = DateTime.Now,
                 ExpiryDate = DateTime.Now.Add(refreshTokenLifetime),
-                UserId= userId,
+                UserId = userId,
                 Token = Guid.NewGuid().ToString()
             };
 
@@ -311,18 +329,6 @@ namespace BeepBackend.Controllers
             };
 
             return permissionClaims;
-        }
-
-        private async Task<List<Claim>> BuildIdentityClaims(User userFromRepo)
-        {
-            var identityClaims = new List<Claim>()
-            {
-                new Claim(ClaimTypes.NameIdentifier, userFromRepo.Id.ToString()),
-                new Claim(ClaimTypes.Name, userFromRepo.UserName)
-            };
-            IList<string> roles = await _userManager.GetRolesAsync(userFromRepo);
-            identityClaims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
-            return identityClaims;
         }
     }
 }
