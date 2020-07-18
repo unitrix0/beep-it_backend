@@ -21,6 +21,7 @@ using System;
 using System.Diagnostics;
 using System.Net;
 using System.Text;
+using System.Threading;
 using Newtonsoft.Json;
 using Utrix.WebLib;
 
@@ -65,8 +66,13 @@ namespace BeepBackend
                     new SymmetricSecurityKey(
                         Encoding.ASCII.GetBytes(Configuration.GetSection("AppSettings:Token").Value)),
                 ValidateIssuer = false,
-                ValidateAudience = false
+                ValidateAudience = false,
+                ValidateLifetime = true
             };
+            while (!Debugger.IsAttached)
+            {
+                Thread.Sleep(500);
+            }
             services.AddSingleton(tokenValidationParameters);
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>

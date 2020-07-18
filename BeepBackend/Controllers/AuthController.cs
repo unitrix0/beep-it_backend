@@ -273,7 +273,7 @@ namespace BeepBackend.Controllers
         private async Task<string> CreateIdentityToken(User user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(_tokenSecretKey);
+            var secret = Encoding.ASCII.GetBytes(_tokenSecretKey);
             var identityClaims = new List<Claim>()
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -286,7 +286,7 @@ namespace BeepBackend.Controllers
             {
                 Expires = DateTime.Now.AddSeconds(_tokenLifeTimeSeconds),
                 IssuedAt = DateTime.Now,
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secret), SecurityAlgorithms.HmacSha256),
                 Subject = new ClaimsIdentity(identityClaims)
             };
             JwtSecurityToken token = tokenHandler.CreateJwtSecurityToken(tokenDescriptor);
