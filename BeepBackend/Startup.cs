@@ -69,10 +69,7 @@ namespace BeepBackend
                 ValidateAudience = false,
                 ValidateLifetime = true
             };
-            while (!Debugger.IsAttached)
-            {
-                Thread.Sleep(500);
-            }
+            
             services.AddSingleton(tokenValidationParameters);
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>

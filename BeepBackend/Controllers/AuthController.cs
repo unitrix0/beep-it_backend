@@ -93,7 +93,7 @@ namespace BeepBackend.Controllers
 
             var defaultPermission = await _authRepo.GetDefaultPermissions(userFromRepo.Id);
             List<Claim> permissionClaims = BuildPermissionClaims(defaultPermission);
-            var settings = await GetSettings(userFromRepo.Id, user.Cameras);
+            var settings = await GetUserSettings(userFromRepo.Id, user.Cameras);
 
             _permissionsCache.AddEntriesForUser(userFromRepo.Id,
                 await _authRepo.GetAllUserPermissions(userFromRepo.Id));
@@ -121,10 +121,10 @@ namespace BeepBackend.Controllers
             var expiryDateUnix =
                 long.Parse(validToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
 
-            var expiryDateTimeUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Local)
+            var expiryDateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 .AddSeconds(expiryDateUnix);
 
-            if (expiryDateTimeUtc > DateTime.UtcNow) return BadRequest("This token hasn't expired yet");
+            if (expiryDateTime > DateTime.UtcNow) return BadRequest("This token hasn't expired yet");
 
             RefreshToken storedRefreshToken = await _authRepo.GetRefreshTokenForUser(refreshDto.RefreshToken);
 
@@ -173,7 +173,7 @@ namespace BeepBackend.Controllers
 
             Permission defaultPermissions = await _authRepo.GetDefaultPermissions(newUser.Id);
             List<Claim> permissionClaims = BuildPermissionClaims(defaultPermissions);
-            SettingsDto settings = await GetSettings(newUser.Id, new List<CameraDto>());
+            SettingsDto settings = await GetUserSettings(newUser.Id, new List<CameraDto>());
 
             _permissionsCache.AddEntriesForUser(newUser.Id, await _authRepo.GetAllUserPermissions(newUser.Id));
             var mappedUser = _mapper.Map<UserForTokenDto>(newUser);
@@ -284,8 +284,8 @@ namespace BeepBackend.Controllers
 
             var tokenDescriptor = new SecurityTokenDescriptor()
             {
-                Expires = DateTime.Now.AddSeconds(_tokenLifeTimeSeconds),
-                IssuedAt = DateTime.Now,
+                Expires = DateTime.UtcNow.AddSeconds(_tokenLifeTimeSeconds),
+                IssuedAt = DateTime.UtcNow,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secret), SecurityAlgorithms.HmacSha256),
                 Subject = new ClaimsIdentity(identityClaims)
             };
@@ -298,8 +298,8 @@ namespace BeepBackend.Controllers
             TimeSpan.TryParse(_appSettings["RefreshTokenLifetime"], out TimeSpan refreshTokenLifetime);
             var newToken = new RefreshToken()
             {
-                CreationDate = DateTime.Now,
-                ExpiryDate = DateTime.Now.Add(refreshTokenLifetime),
+                CreationDate = DateTime.UtcNow,
+                ExpiryDate = DateTime.UtcNow.Add(refreshTokenLifetime),
                 UserId = userId,
                 Token = Guid.NewGuid().ToString()
             };
@@ -308,7 +308,7 @@ namespace BeepBackend.Controllers
             return newToken.Token;
         }
 
-        private async Task<SettingsDto> GetSettings(int userId, IEnumerable<CameraDto> userCameras)
+        private async Task<SettingsDto> GetUserSettings(int userId, IEnumerable<CameraDto> userCameras)
         {
             Camera cam = await _userRepo.GetCamForUser(userId, userCameras.Select(uc => uc.DeviceId));
 
