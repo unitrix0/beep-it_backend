@@ -38,7 +38,7 @@ namespace BeepBackend.Controllers
         private readonly TokenValidationParameters _tokenValidationParameters;
         private readonly string _tokenSecretKey;
         private readonly IConfigurationSection _appSettings;
-        private readonly int _tokenLifeTimeSeconds;
+        private readonly TimeSpan _tokenLifeTime;
 
         public AuthController(IAuthRepository authRepo, IUserRepository userRepo, IMapper mapper, IConfiguration config,
             IPermissionsCache permissionsCache, IBeepMailer mailer, UserManager<User> userManager, SignInManager<User> signInManager,
@@ -54,7 +54,7 @@ namespace BeepBackend.Controllers
             _tokenValidationParameters = tokenValidationParameters;
             _appSettings = config.GetSection("AppSettings");
             _tokenSecretKey = config.GetSection("AppSettings:Token").Value;
-            _tokenLifeTimeSeconds = Convert.ToInt32(_appSettings["TokenLifeTime"]);
+            _tokenLifeTime = TimeSpan.FromSeconds(Convert.ToInt32(_appSettings["TokenLifeTime"]));
         }
 
         [HttpPost("register")]
@@ -92,18 +92,17 @@ namespace BeepBackend.Controllers
             var mappedUser = _mapper.Map<UserForTokenDto>(userFromRepo);
 
             var defaultPermission = await _authRepo.GetDefaultPermissions(userFromRepo.Id);
-            List<Claim> permissionClaims = BuildPermissionClaims(defaultPermission);
             var settings = await GetUserSettings(userFromRepo.Id, user.Cameras);
 
             _permissionsCache.AddEntriesForUser(userFromRepo.Id,
                 await _authRepo.GetAllUserPermissions(userFromRepo.Id));
 
             string refreshToken = await CreateRefreshToken(userFromRepo.Id);
-
+            
             return Ok(new
             {
-                identityToken = await CreateIdentityToken(userFromRepo),
-                permissionsToken = JwtHelper.CreateToken(permissionClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
+                identityToken = await CreateIdentityToken(userFromRepo, _tokenLifeTime),
+                permissionsToken = BuildPermissionToken(defaultPermission, _tokenLifeTime),
                 refreshToken,
                 mappedUser,
                 settings
@@ -138,11 +137,13 @@ namespace BeepBackend.Controllers
 
             string userId = validToken.Claims.Single(c => c.Type == ClaimTypes.NameIdentifier).Value;
             User userFromRepo = await _userManager.FindByIdAsync(userId);
+
             string refreshToken = await CreateRefreshToken(userFromRepo.Id);
+            string identityToken = await CreateIdentityToken(userFromRepo, _tokenLifeTime);
 
             return Ok(new
             {
-                identityToken = await CreateIdentityToken(userFromRepo),
+                identityToken,
                 refreshToken
             });
         }
@@ -151,6 +152,7 @@ namespace BeepBackend.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> DemoLogin()
         {
+            TimeSpan demoTokenLifeSpan = TimeSpan.Parse(_appSettings["DemoTokenLifeTime"]);
             int demoUserCount = await _authRepo.CountDemoUsers();
             demoUserCount++;
 
@@ -159,7 +161,7 @@ namespace BeepBackend.Controllers
                 UserName = $"demo{demoUserCount}",
                 DisplayName = "Demo Benutzer",
                 Email = "demo@beep-it.ch",
-                AccountExpireDate = DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)
+                AccountExpireDate = DateTime.Now.Add(demoTokenLifeSpan)
             };
 
             IdentityResult creationResult = await _userManager.CreateAsync(newUser, "P@ssw0rd");
@@ -172,18 +174,21 @@ namespace BeepBackend.Controllers
             if (newUser == null) throw new Exception("Error creating environment/demo data");
 
             Permission defaultPermissions = await _authRepo.GetDefaultPermissions(newUser.Id);
-            List<Claim> permissionClaims = BuildPermissionClaims(defaultPermissions);
-            SettingsDto settings = await GetUserSettings(newUser.Id, new List<CameraDto>());
-
             _permissionsCache.AddEntriesForUser(newUser.Id, await _authRepo.GetAllUserPermissions(newUser.Id));
+
+            SettingsDto userSettings = await GetUserSettings(newUser.Id, new List<CameraDto>());
+
             var mappedUser = _mapper.Map<UserForTokenDto>(newUser);
+
+            var permissionsToken = BuildPermissionToken(defaultPermissions, demoTokenLifeSpan);
 
             return Ok(new
             {
-                identityToken = await CreateIdentityToken(newUser),
-                permissionsToken = JwtHelper.CreateToken(permissionClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(_tokenLifeTimeSeconds)),
+                identityToken = await CreateIdentityToken(newUser, demoTokenLifeSpan),
+                permissionsToken,
+                refreshToken = "",
                 mappedUser,
-                settings
+                settings = userSettings
             });
         }
 
@@ -223,16 +228,12 @@ namespace BeepBackend.Controllers
         [HttpGet("UpdatePermissionClaims/{userId}")]
         public async Task<IActionResult> UpdatePermissionClaims(int userId, int environmentId)
         {
-            var tokenLifeTimeSeconds = Convert.ToInt32(_appSettings["TokenLifeTime"]);
             if (!this.VerifyUser(userId)) return Unauthorized();
 
             Permission permissions = await _authRepo.GetUserPermissionForEnvironment(userId, environmentId);
             if (permissions == null) return Unauthorized();
 
-            var newClaims = BuildPermissionClaims(permissions);
-            string newJwtToken = JwtHelper.CreateToken(newClaims.ToArray(), _tokenSecretKey, DateTime.Now.AddSeconds(tokenLifeTimeSeconds));
-
-            return Ok(new { permissionsToken = newJwtToken });
+            return Ok(new { permissionsToken = BuildPermissionToken(permissions, _tokenLifeTime) });
         }
 
         [HttpGet("UserExists/{userId}")]
@@ -270,7 +271,7 @@ namespace BeepBackend.Controllers
                        StringComparison.InvariantCultureIgnoreCase);
         }
 
-        private async Task<string> CreateIdentityToken(User user)
+        private async Task<string> CreateIdentityToken(User user, TimeSpan tokenLifeTime)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             var secret = Encoding.ASCII.GetBytes(_tokenSecretKey);
@@ -284,7 +285,7 @@ namespace BeepBackend.Controllers
 
             var tokenDescriptor = new SecurityTokenDescriptor()
             {
-                Expires = DateTime.UtcNow.AddSeconds(_tokenLifeTimeSeconds),
+                Expires = DateTime.UtcNow.Add(tokenLifeTime),
                 IssuedAt = DateTime.UtcNow,
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secret), SecurityAlgorithms.HmacSha256),
                 Subject = new ClaimsIdentity(identityClaims)
@@ -319,7 +320,7 @@ namespace BeepBackend.Controllers
             };
         }
 
-        private List<Claim> BuildPermissionClaims(Permission permission)
+        private string BuildPermissionToken(Permission permission, TimeSpan tokenLifeSpan)
         {
             var permissionClaims = new List<Claim>
             {
@@ -329,7 +330,8 @@ namespace BeepBackend.Controllers
                 new Claim(BeepClaimTypes.EnvironmentId, permission.EnvironmentId.ToString())
             };
 
-            return permissionClaims;
+            return JwtHelper.CreateToken(permissionClaims.ToArray(), _tokenSecretKey,
+                DateTime.Now.Add(tokenLifeSpan));
         }
 
         private string EvalLoginFailedReason(SignInResult signInResult)
