@@ -120,7 +120,10 @@ namespace BeepBackend
                         if (handler != null)
                         {
                             context.Response.AddApplicationError(handler.Error.Message);
-                            await context.Response.WriteAsync(JsonConvert.SerializeObject(handler.Error));
+                            await context.Response.WriteAsync(JsonConvert.SerializeObject(handler.Error,new JsonSerializerSettings()
+                            {
+                                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                            }));
                         }
                     });
                 });

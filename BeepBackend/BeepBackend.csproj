@@ -141,6 +141,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="SQL Scripts\RefreshTokenCleanupTrigger.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="Mail Templates\email_confirmation.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -148,6 +152,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="SQL Scripts\CreateDemoDataForUser.sql" />
+    <EmbeddedResource Include="SQL Scripts\RefreshTokenCleanupTrigger.sql" />
   </ItemGroup>
 
   <ItemGroup>
