@@ -18,7 +18,7 @@ CREATE TRIGGER [dbo].[CleanupAfterInsert]
    AFTER INSERT
 AS 
 BEGIN
-    DELETE FROM RefreshTokens where Used = 1 or Invalidated = 1 or ExpiryDate < GETUTCDATE()
+    DELETE FROM RefreshTokens where Used = 1 or Invalidated = 1 or ExpiryDate < DATEADD(m,-1,GETUTCDATE())
 END
 GO
 
