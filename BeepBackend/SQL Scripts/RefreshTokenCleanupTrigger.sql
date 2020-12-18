@@ -1,7 +1,4 @@
-﻿USE [Beep]
-GO
-
-/****** Object:  Trigger [dbo].[CleanupAfterInsert]    Script Date: 21.07.2020 13:40:43 ******/
+﻿/****** Object:  Trigger [dbo].[CleanupAfterInsert]    Script Date: 21.07.2020 13:40:43 ******/
 SET ANSI_NULLS ON
 GO
 

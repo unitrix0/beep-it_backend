@@ -1,6 +1,3 @@
-USE [Beep]
-GO
-
 /****** Object:  StoredProcedure [dbo].[CreateDemoDataForUser]    Script Date: 11.05.2020 20:53:47 ******/
 SET ANSI_NULLS ON
 GO
