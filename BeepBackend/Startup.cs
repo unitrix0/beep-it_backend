@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -18,10 +17,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System;
-using System.Diagnostics;
 using System.Net;
 using System.Text;
-using System.Threading;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Utrix.WebLib;
 
@@ -29,10 +28,10 @@ namespace BeepBackend
 {
     public class Startup
     {
-        private readonly IHostingEnvironment _environment;
+        private readonly IWebHostEnvironment _environment;
         public IConfiguration Configuration { get; }
 
-        public Startup(IConfiguration configuration, IHostingEnvironment environment)
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
             _environment = environment;
             Configuration = configuration;
@@ -57,7 +56,7 @@ namespace BeepBackend
 
             services.AddCors();
             services.AddMvc(ConfigureMvc)
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 
             var tokenValidationParameters = new TokenValidationParameters()
             {
@@ -69,7 +68,7 @@ namespace BeepBackend
                 ValidateAudience = false,
                 ValidateLifetime = true
             };
-            
+
             services.AddSingleton(tokenValidationParameters);
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -115,12 +114,12 @@ namespace BeepBackend
                 {
                     builder.Run(async context =>
                     {
-                        context.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
+                        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
                         var handler = context.Features.Get<IExceptionHandlerFeature>();
                         if (handler != null)
                         {
                             context.Response.AddApplicationError(handler.Error.Message);
-                            await context.Response.WriteAsync(JsonConvert.SerializeObject(handler.Error,new JsonSerializerSettings()
+                            await context.Response.WriteAsync(JsonConvert.SerializeObject(handler.Error, new JsonSerializerSettings()
                             {
                                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                             }));
@@ -155,15 +154,22 @@ namespace BeepBackend
 
             if (_environment.IsProduction())
             {
-                app.UseMvc(routes =>
+                app.UseEndpoints(endpoints =>
                 {
-                    routes.MapSpaFallbackRoute(name: "spa-fallback",
-                        defaults: new { controller = "Fallback", action = "Index" });
+                    endpoints.MapFallbackToController("Index", "Home");
                 });
+                //app.UseMvc(routes =>
+                //{
+                //    routes.MapSpaFallbackRoute(name: "spa-fallback",
+                //        defaults: new { controller = "Fallback", action = "Index" });
+                //});
             }
             else
             {
-                app.UseMvc();
+                app.UseEndpoints(endpoints =>
+                {
+                    endpoints.MapControllers();
+                });
             }
 
         }

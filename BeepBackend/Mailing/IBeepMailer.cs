@@ -1,6 +1,4 @@
 ﻿using System.Threading.Tasks;
-using BeepBackend.Models;
-using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace BeepBackend.Mailing
 {

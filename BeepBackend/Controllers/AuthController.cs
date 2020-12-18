@@ -19,7 +19,6 @@ using System.Threading.Tasks;
 using Microsoft.IdentityModel.Tokens;
 using Utrix.WebLib;
 using Utrix.WebLib.Helpers;
-using JwtRegisteredClaimNames = Microsoft.IdentityModel.JsonWebTokens.JwtRegisteredClaimNames;
 using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace BeepBackend.Controllers

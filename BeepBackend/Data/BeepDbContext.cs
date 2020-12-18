@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using BeepBackend.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -31,16 +30,16 @@ namespace BeepBackend.Data
         public DbSet<ActivityLogEntry> ActivityLogEntries { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
-        public DbQuery<ShoppingListArticleEntry> ShoppingList { get; set; }
-        public DbQuery<ShoppingListGroupEntry> ShoppingListGroups { get; set; }
+        public DbSet<ShoppingListArticleEntry> ShoppingList { get; set; }
+        public DbSet<ShoppingListGroupEntry> ShoppingListGroups { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Query<ShoppingListArticleEntry>(sle => sle.ToView("ShoppingList"));
+            modelBuilder.Entity<ShoppingListArticleEntry>().HasNoKey().ToView("ShoppingList");
 
-            modelBuilder.Query<ShoppingListGroupEntry>(gsle => gsle.ToView("ShoppingListGroups"));
+            modelBuilder.Entity<ShoppingListGroupEntry>().HasNoKey().ToView("ShoppingListGroups");
 
             modelBuilder.Entity<Article>(artSettings => { artSettings.Property(x => x.UnitId).HasDefaultValue(1); });
 

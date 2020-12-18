@@ -6,7 +6,7 @@ namespace UnitTests.BaseClasses
 {
     public class TestStartup : Startup
     {
-        public TestStartup(IConfiguration configuration, IHostingEnvironment env) : base(configuration, env)
+        public TestStartup(IConfiguration configuration, IWebHostEnvironment env) : base(configuration, env)
         {
         }
     }
