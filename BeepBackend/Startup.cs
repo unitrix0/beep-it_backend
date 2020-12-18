@@ -146,6 +146,7 @@ namespace BeepBackend
             }
 
             //app.UseHttpsRedirection();
+            app.UseRouting();
             app.UseAuthentication();
             app.UseCors(x => x.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             app.UseDefaultFiles();

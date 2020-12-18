@@ -253,7 +253,7 @@ namespace BeepBackend.Data
 
         public async Task<bool> CreateDemoDataForUser(int userId)
         {
-            int count = await this.Database.ExecuteSqlCommandAsync("EXEC CreateDemoDataForUser @p0", parameters: userId.ToString());
+            int count = await this.Database.ExecuteSqlRawAsync("EXEC CreateDemoDataForUser @p0", parameters: userId.ToString());
 
             return count > 0;
         }
