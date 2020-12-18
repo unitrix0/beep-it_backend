@@ -1,18 +1,19 @@
-﻿using BeepBackend;
+﻿using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using BeepBackend.Data;
 using BeepBackend.Helpers;
 using BeepBackend.Models;
 using BeepBackend.Permissions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
+using BeepBackend;
+using BeepBackend.Mailing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -30,7 +31,6 @@ namespace UnitTests.BaseClasses
         public DbTestBase(ITestOutputHelper output, CustomWebApplicationFactory factory)
         {
             OutputWriter = output;
-            string cfgPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
 
             WebApplicationFactory<TestStartup> webFactory = factory.WithWebHostBuilder(builder =>
             {
@@ -38,6 +38,7 @@ namespace UnitTests.BaseClasses
 
                 builder.ConfigureAppConfiguration((context, configurationBuilder) =>
                 {
+                    string cfgPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
                     configurationBuilder.AddJsonFile(cfgPath);
                 });
 
@@ -49,9 +50,12 @@ namespace UnitTests.BaseClasses
 
             WebClient = webFactory.CreateClient(
                 new WebApplicationFactoryClientOptions() { BaseAddress = new Uri("http://localhost/api/") });
-            UsrManager = webFactory.Server.Host.Services.GetRequiredService<UserManager<User>>();
-            DbContext = webFactory.Server.Host.Services.GetRequiredService<BeepDbContext>();
-            _roleMgr = webFactory.Server.Host.Services.GetRequiredService<RoleManager<Role>>();
+
+            //TODO IDisposable
+            var scope = factory.Server.Services.CreateScope();
+            UsrManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+            DbContext = scope.ServiceProvider.GetRequiredService<BeepDbContext>();
+            _roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
         }
 
         protected void JoinEnvironment(string userName, string environmentName, Permission withPermission)
