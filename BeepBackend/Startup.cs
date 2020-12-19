@@ -157,7 +157,7 @@ namespace BeepBackend
             {
                 app.UseEndpoints(endpoints =>
                 {
-                    endpoints.MapFallbackToController("Index", "Home");
+                    endpoints.MapFallbackToController("Index", "Fallback");
                 });
                 //app.UseMvc(routes =>
                 //{
