@@ -11,7 +11,6 @@ using System;
 using System.IO;
 using System.Net.Http;
 using BeepBackend;
-using BeepBackend.Mailing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Xunit;
@@ -20,7 +19,7 @@ using Xunit.Abstractions;
 namespace UnitTests.BaseClasses
 {
     [Collection("DB Test")]
-    public class DbTestBase : IClassFixture<CustomWebApplicationFactory>
+    public class DbTestBase : IClassFixture<CustomWebApplicationFactory>, IDisposable
     {
         protected ITestOutputHelper OutputWriter;
         protected HttpClient WebClient;
@@ -51,7 +50,6 @@ namespace UnitTests.BaseClasses
             WebClient = webFactory.CreateClient(
                 new WebApplicationFactoryClientOptions() { BaseAddress = new Uri("http://localhost/api/") });
 
-            //TODO IDisposable
             var scope = factory.Server.Services.CreateScope();
             UsrManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
             DbContext = scope.ServiceProvider.GetRequiredService<BeepDbContext>();
@@ -60,7 +58,7 @@ namespace UnitTests.BaseClasses
 
         protected void JoinEnvironment(string userName, string environmentName, Permission withPermission)
         {
-            if (withPermission == null) withPermission = new Permission();
+            withPermission ??= new Permission();
 
             User user = DbContext.Users.FirstOrDefault(u => u.UserName == userName);
             BeepEnvironment env = DbContext.Environments.FirstOrDefault(e => e.Name == environmentName);
@@ -207,6 +205,13 @@ namespace UnitTests.BaseClasses
             });
 
             DbContext.SaveChanges();
+        }
+
+        public void Dispose()
+        {
+            DbContext.Dispose();
+            UsrManager.Dispose();
+            _roleMgr.Dispose();
         }
     }
 }
