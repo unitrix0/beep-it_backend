@@ -17,13 +17,14 @@ namespace BeepBackend.Data
 
         public async Task<IEnumerable<ShoppingListEntry>> GetShoppingListAsync(int environmentId)
         {
-            List<ShoppingListEntry> listEntries = await _context.ShoppingList
+            var listEntries = await _context.ShoppingList
                 .Where(sl => sl.Needed > 0 && sl.EnvironmentId == environmentId)
-                .GroupBy(sl => sl.StoreName, sl => sl)
-                .Select(grp => new ShoppingListEntry() { StoreName = grp.Key, Articles = grp })
                 .ToListAsync();
 
-            return listEntries;
+                
+
+            return listEntries.GroupBy(sl => sl.StoreName, sl => sl)
+                .Select(grp => new ShoppingListEntry() { StoreName = grp.Key, Articles = grp });
         }
 
         public async Task<IEnumerable<ShoppingListGroupEntry>> GetShoppingListGroupEntriesAsync(int environmentId)
