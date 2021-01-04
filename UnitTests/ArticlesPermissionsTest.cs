@@ -13,7 +13,7 @@ namespace UnitTests
 {
     public class ArticlesPermissionsTest : DbTestBase
     {
-        public ArticlesPermissionsTest(ITestOutputHelper output, CustomWebApplicationFactory factory) : base(output, factory)
+        public ArticlesPermissionsTest(ITestOutputHelper output, CustomWebApplicationFactory factory, RamDrive ramDrive) : base(output, factory, ramDrive)
         {
         }
 

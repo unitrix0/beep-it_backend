@@ -1,35 +1,38 @@
-﻿using System.Linq;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+﻿using BeepBackend;
 using BeepBackend.Data;
 using BeepBackend.Helpers;
 using BeepBackend.Models;
 using BeepBackend.Permissions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
-using BeepBackend;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.Configuration;
+using UnitTests.Helper;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace UnitTests.BaseClasses
 {
-    [Collection("DB Test")]
+    [Collection(DbTestCollection.CollectionName)]
     public class DbTestBase : IClassFixture<CustomWebApplicationFactory>, IDisposable
     {
+        private readonly RoleManager<Role> _roleMgr;
         protected ITestOutputHelper OutputWriter;
         protected HttpClient WebClient;
         protected UserManager<User> UsrManager;
         protected BeepDbContext DbContext;
-        private readonly RoleManager<Role> _roleMgr;
 
-        public DbTestBase(ITestOutputHelper output, CustomWebApplicationFactory factory)
+        public DbTestBase(ITestOutputHelper output, CustomWebApplicationFactory factory, RamDrive ramDrive)
         {
             OutputWriter = output;
+            if(!ramDrive.Ready) throw new Exception($"Ramdrive not ready!: {ramDrive.Error}");
+            OutputWriter.WriteLine(ramDrive.Output.ToString());
 
             WebApplicationFactory<TestStartup> webFactory = factory.WithWebHostBuilder(builder =>
             {
@@ -139,7 +142,7 @@ namespace UnitTests.BaseClasses
 
         protected void SeedArticleGroup(string name, int userId)
         {
-            DbContext.ArticleGroups.Add(new ArticleGroup() { Name = name});
+            DbContext.ArticleGroups.Add(new ArticleGroup() { Name = name });
             DbContext.SaveChanges();
         }
 
@@ -206,6 +209,8 @@ namespace UnitTests.BaseClasses
 
             DbContext.SaveChanges();
         }
+
+
 
         public void Dispose()
         {

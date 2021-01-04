@@ -1,6 +1,5 @@
-﻿using BeepBackend.Helpers;
+﻿using System;
 using BeepBackend.Models;
-using System;
 using BeepBackend.Permissions;
 using Xunit;
 
@@ -15,9 +14,9 @@ namespace UnitTests
         [Fact]
         public void FlagConversionTest()
         {
-            var p = new Permission() { EditArticleSettings = true, CanScan = true };
+            var p = new Permission() {EditArticleSettings = true, CanScan = true};
 
-            var flags = (PermissionFlags)Convert.ToInt32(p.ToBits(), 2);
+            var flags = (PermissionFlags) Convert.ToInt32(p.ToBits(), 2);
             Assert.Equal(PermissionFlags.EditArticleSettings | PermissionFlags.CanScan, flags);
         }
     }

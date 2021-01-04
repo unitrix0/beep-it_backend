@@ -1,9 +1,7 @@
-﻿using BeepBackend.DTOs;
+﻿using System.Net.Http;
+using BeepBackend.DTOs;
 using BeepBackend.Models;
-using System.Net.Http;
-using BeepBackend.Permissions;
 using UnitTests.BaseClasses;
-using UnitTests.DTOs;
 using UnitTests.Helper;
 using Xunit;
 using Xunit.Abstractions;
@@ -12,7 +10,8 @@ namespace UnitTests
 {
     public class UpdatePermissionsDbTest : DbTestBase
     {
-        public UpdatePermissionsDbTest(ITestOutputHelper output, CustomWebApplicationFactory factory) : base(output, factory)
+        public UpdatePermissionsDbTest(ITestOutputHelper output, CustomWebApplicationFactory factory, RamDrive ramDrive) : base(output,
+            factory, ramDrive)
         {
         }
 
@@ -24,9 +23,9 @@ namespace UnitTests
         {
             ResetDb();
             OutputWriter.WriteLine(comment);
-            LoginResponseObject login = WebClient.Login("sepp", "P@ssw0rd");
+            var login = WebClient.Login("sepp", "P@ssw0rd");
 
-            HttpResponseMessage result = WebClient.PutAsJsonAsync("users/SetPermission", new PermissionsDto()
+            var result = WebClient.PutAsJsonAsync("users/SetPermission", new PermissionsDto()
             {
                 UserId = userId,
                 EnvironmentId = environmentId,
@@ -44,8 +43,8 @@ namespace UnitTests
             SeedUser("Tom");
             SeedUser("Markus");
 
-            JoinEnvironment("Markus", "Zu Hause von Tom", new Permission() { CanScan = true });
-            JoinEnvironment("Sepp", "Zu Hause von Tom", new Permission() { CanScan = true, ManageUsers = true });
+            JoinEnvironment("Markus", "Zu Hause von Tom", new Permission() {CanScan = true});
+            JoinEnvironment("Sepp", "Zu Hause von Tom", new Permission() {CanScan = true, ManageUsers = true});
         }
     }
 }
