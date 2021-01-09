@@ -20,6 +20,7 @@ using System;
 using System.Net;
 using System.Text;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using Utrix.WebLib;
@@ -57,6 +58,12 @@ namespace BeepBackend
             services.AddCors();
             services.AddMvc(ConfigureMvc)
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+            services.AddApiVersioning(cfg =>
+            {
+                cfg.DefaultApiVersion = new ApiVersion(1,0);
+                cfg.AssumeDefaultVersionWhenUnspecified = true;
+                cfg.ApiVersionReader = new HeaderApiVersionReader("X-ApiVersion");
+            });
 
             var tokenValidationParameters = new TokenValidationParameters()
             {
