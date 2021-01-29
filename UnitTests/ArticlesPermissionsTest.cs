@@ -3,6 +3,7 @@ using BeepBackend.Models;
 using System;
 using System.Net;
 using System.Net.Http;
+using BeepBackend.Articles.DTOs;
 using UnitTests.BaseClasses;
 using UnitTests.DTOs;
 using UnitTests.Helper;

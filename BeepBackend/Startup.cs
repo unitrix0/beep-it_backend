@@ -19,6 +19,7 @@ using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Net;
 using System.Text;
+using BeepBackend.Articles.Repositories;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.Hosting;
