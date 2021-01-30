@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using BeepBackend.Data;
 using BeepBackend.Helpers;
 using BeepBackend.Models;
@@ -7,6 +9,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace BeepBackend
@@ -39,6 +42,16 @@ namespace BeepBackend
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .UseKestrel((hostBuilder, kestrelOptions) =>
+                {
+                    if (!hostBuilder.HostingEnvironment.IsDevelopment())
+                        return;
+
+                    kestrelOptions.Listen(IPAddress.Any, 5000);
+                    kestrelOptions.Listen(IPAddress.Any, 5001,
+                        options => options.UseHttps(StoreName.My, "drone02.hive.loc", false,
+                            StoreLocation.CurrentUser));
+                })
                 .UseStartup<Startup>();
 
         //.UseKestrel((hostBuilder, kestrelOptions) =>
